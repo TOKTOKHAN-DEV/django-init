@@ -1,0 +1,16 @@
+# BackEnd
+__pycache__
+*.pyc
+*~
+.DS_Store
+.vscode
+db.sqlite3
+db.json
+/_static
+/_media
+venv
+.venv
+media
+.env
+.cache
+# .idea

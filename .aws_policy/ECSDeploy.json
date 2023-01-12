@@ -1,0 +1,24 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ECSDeploy",
+            "Effect": "Allow",
+            "Action": [
+                "ecs:UpdateService",
+                "ecs:RegisterTaskDefinition",
+                "ecr:GetAuthorizationToken",
+                "ecs:DescribeTaskDefinition",
+                "ecr:CompleteLayerUpload",
+                "ecr:GetAuthorizationToken",
+                "ecr:UploadLayerPart",
+                "ecr:InitiateLayerUpload",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:PutImage",
+                "ecs:DescribeServices",
+                "iam:PassRole"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
