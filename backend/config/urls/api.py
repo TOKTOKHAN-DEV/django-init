@@ -5,6 +5,7 @@ from drf_spectacular.views import SpectacularJSONAPIView, SpectacularRedocView, 
 
 urlpatterns = [
     path("", include("api.urls")),
+    path('', include('admin_volt.urls')),
     path("_health/", lambda request: HttpResponse()),
     path("openapi.json/", SpectacularJSONAPIView.as_view(), name="schema"),
     path("swagger/", SpectacularSwaggerView.as_view(), name="swagger-ui"),
