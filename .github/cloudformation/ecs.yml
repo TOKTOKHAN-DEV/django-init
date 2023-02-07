@@ -1,0 +1,672 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description:
+  'ECS IaC'
+
+Parameters:
+  ProjectName:
+    Type: String
+  ENV:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+  Websocket:
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  Celery:
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  Celerybeat:
+    Type: String
+    AllowedValues:
+      - true
+      - false
+
+Conditions:
+  IsProd: !Equals [!Ref ENV, 'prod']
+  IsWebsocket: !Equals [!Ref Websocket, 'true']
+  IsCelery: !Equals [!Ref Celery, 'true']
+  IsCelerybeat: !Equals [!Ref Celerybeat, 'true']
+
+Resources:
+  # Secret Manager
+  Secret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      Name: !Sub '${ProjectName}/key/${ENV}'
+      GenerateSecretString:
+        SecretStringTemplate: !Sub '{}'
+        GenerateStringKey: 'key'
+        PasswordLength: 50
+
+  # ECS Cluster
+  Cluster:
+    Type: 'AWS::ECS::Cluster'
+    Properties:
+      ClusterName: !Sub '${ProjectName}-${ENV}-ecs-cluster'
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+  SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: !Sub '${ProjectName}-${ENV}-ecs-cluster-sg'
+      VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
+  SecurityGroupInboundSSH:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      CidrIp: 0.0.0.0/0
+  SecurityGroupInboundHTTP:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      CidrIp: 0.0.0.0/0
+  SecurityGroupInboundHTTPS:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      CidrIp: 0.0.0.0/0
+  SecurityGroupInboundALB:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 31000
+      ToPort: 61000
+      SourceSecurityGroupId: !Ref SecurityGroup
+  SecurityGroupInboundRedis:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 6379
+      ToPort: 6379
+      SourceSecurityGroupId: !Ref SecurityGroup
+  ContainerInstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ec2.amazonaws.com]
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: ecs-instance
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ec2:DescribeTags'
+                  - 'ecs:CreateCluster'
+                  - 'ecs:DeregisterContainerInstance'
+                  - 'ecs:DiscoverPollEndpoint'
+                  - 'ecs:Poll'
+                  - 'ecs:RegisterContainerInstance'
+                  - 'ecs:StartTelemetrySession'
+                  - 'ecs:UpdateContainerInstancesState'
+                  - 'ecs:Submit*'
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:BatchGetImage'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+  ContainerInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref ContainerInstanceRole
+  ContainerInstanceLT:
+    Type: 'AWS::EC2::LaunchTemplate'
+    Properties:
+      LaunchTemplateName: !Sub '${ProjectName}-${ENV}-lt'
+      LaunchTemplateData:
+        ImageId: ami-00ad714e0f1a26a32
+        InstanceType: t3.medium
+        SecurityGroupIds: [!Ref SecurityGroup]
+        IamInstanceProfile:
+          Name: !Ref ContainerInstanceProfile
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvdcz
+            Ebs:
+              VolumeSize: 22
+              VolumeType: gp2
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash -xe
+            echo ECS_CLUSTER=${Cluster} >> /etc/ecs/ecs.config
+  ContainerInstanceASG:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    DependsOn: Cluster
+    Properties:
+      VPCZoneIdentifier:
+        - !If [ IsProd, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1'}, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1'} ]
+        - !If [ IsProd, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2'}, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2'} ]
+      LaunchTemplate:
+        LaunchTemplateId: !Ref ContainerInstanceLT
+        Version: !GetAtt ContainerInstanceLT.LatestVersionNumber
+      MinSize: 1
+      MaxSize: 10
+      Cooldown: 30
+  CapacityProvider:
+    Type: 'AWS::ECS::CapacityProvider'
+    DependsOn: Cluster
+    DeletionPolicy: Delete
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-ecs-cluster-cp'
+      AutoScalingGroupProvider:
+        AutoScalingGroupArn: !Ref ContainerInstanceASG
+        ManagedScaling:
+          Status: ENABLED
+          InstanceWarmupPeriod: 30
+          TargetCapacity: 100
+        ManagedTerminationProtection: DISABLED
+  ClusterCapacityProviderAssociation:
+    Type: 'AWS::ECS::ClusterCapacityProviderAssociations'
+    DeletionPolicy: Delete
+    Properties:
+      Cluster: !Ref Cluster
+      CapacityProviders:
+        - !Ref CapacityProvider
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: !Ref CapacityProvider
+
+  # ECS Service
+  ServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: ecs-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'elasticloadbalancing:DeregisterInstancesFromLoadBalancer'
+                  - 'elasticloadbalancing:DeregisterTargets'
+                  - 'elasticloadbalancing:Describe*'
+                  - 'elasticloadbalancing:RegisterInstancesWithLoadBalancer'
+                  - 'elasticloadbalancing:RegisterTargets'
+                  - 'ec2:Describe*'
+                  - 'ec2:AuthorizeSecurityGroupIngress'
+                Resource: '*'
+  ServiceAutoscalingRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [application-autoscaling.amazonaws.com]
+            Action: ['sts:AssumeRole']
+      Path: /
+      Policies:
+        - PolicyName: service-autoscaling
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'application-autoscaling:*'
+                  - 'cloudwatch:DescribeAlarms'
+                  - 'cloudwatch:PutMetricAlarm'
+                  - 'ecs:DescribeServices'
+                  - 'ecs:UpdateService'
+                Resource: '*'
+  ALB:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-alb'
+      Type: application
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      Subnets:
+        - {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1'}
+        - {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2'}
+      SecurityGroups: [!Ref SecurityGroup]
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: 30
+  ALBTargetGroup8080:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    DependsOn: ALB
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /_health/
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Name: !Sub '${ProjectName}-${ENV}-tg-8080'
+      Port: 8080
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+  ALBTargetGroup8081:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Condition: IsWebsocket
+    DependsOn: ALB
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /_health/
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Name: !Sub '${ProjectName}-${ENV}-tg-8081'
+      Port: 8081
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 10
+        - Key: stickiness.enabled
+          Value: true
+        - Key: stickiness.type
+          Value: lb_cookie
+  ALBListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    DependsOn: ServiceRole
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup8080
+  ALBListenerRule:
+    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    DependsOn: ALBListener
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !If [IsWebsocket, !Ref ALBTargetGroup8081, !Ref ALBTargetGroup8080]
+      Conditions:
+        - Field: path-pattern
+          Values: !If [IsWebsocket, [/ws/*], [/]]
+      ListenerArn: !Ref ALBListener
+      Priority: 1
+  TaskDefinitionLogGroup:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      LogGroupName: !Sub '/ecs/${ProjectName}/${ENV}'
+      RetentionInDays: 14
+  PrivateDnsNamespace:
+    Type: 'AWS::ServiceDiscovery::PrivateDnsNamespace'
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}.ecs'
+      Vpc: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
+
+  TaskRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ ecs-tasks.amazonaws.com ]
+            Action: [ 'sts:AssumeRole' ]
+      Path: /
+      Policies:
+        - PolicyName: ecs-task
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'ecr:GetAuthorizationToken'
+                  - 'ecr:BatchCheckLayerAvailability'
+                  - 'ecr:GetDownloadUrlForLayer'
+                  - 'ecr:GetRepositoryPolicy'
+                  - 'ecr:DescribeRepositories'
+                  - 'ecr:ListImages'
+                  - 'ecr:DescribeImages'
+                  - 'ecr:BatchGetImage'
+                  - 'ecr:GetLifecyclePolicy'
+                  - 'ecr:GetLifecyclePolicyPreview'
+                  - 'ecr:ListTagsForResource'
+                  - 'ecr:DescribeImageScanFindings'
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:DeleteLogStream'
+                  - 'logs:DescribeLogStreams'
+                  - 'logs:PutLogEvents'
+                  - 'logs:PutRetentionPolicy'
+                  - 'xray:*'
+                  - 's3:*'
+                  - 'secretsmanager:GetResourcePolicy'
+                  - 'secretsmanager:GetSecretValue'
+                  - 'secretsmanager:DescribeSecret'
+                  - 'secretsmanager:ListSecretVersionIds'
+                  - 'secretsmanager:ListSecrets'
+                Resource: '*'
+  # Redis
+  ServiceRegistryRedis:
+    Type: 'AWS::ServiceDiscovery::Service'
+    Properties:
+      Name: redis
+      NamespaceId: !Ref PrivateDnsNamespace
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - Type: A
+            TTL: 60
+          - Type: SRV
+            TTL: 60
+  TaskDefinitionRedis:
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      Family: !Sub '${ProjectName}-${ENV}-redis-family'
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      Memory: 500
+      NetworkMode: awsvpc
+      ContainerDefinitions:
+        - Name: redis
+          Image: redis:6
+          Essential: true
+          PortMappings:
+            - ContainerPort: 6379
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref TaskDefinitionLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: /ecs
+  ServiceRedis:
+    Type: 'AWS::ECS::Service'
+    Properties:
+      Cluster: !Ref Cluster
+      ServiceName: redis
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1
+      LaunchType: EC2
+      TaskDefinition: !Ref TaskDefinitionRedis
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - !Ref SecurityGroup
+          Subnets:
+            - !If [IsProd, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1'}, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1'}]
+            - !If [IsProd, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2'}, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2'}]
+      ServiceRegistries:
+        - RegistryArn: !GetAtt ServiceRegistryRedis.Arn
+          Port: 6379
+  # Web
+  TaskDefinitionWeb:
+    Type: 'AWS::ECS::TaskDefinition'
+    Properties:
+      Family: !Sub '${ProjectName}-${ENV}-web-family'
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      Memory: 900
+      Volumes:
+        - Name: static
+      ContainerDefinitions:
+        - Name: web
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8080
+          Environment:
+            - Name: DJANGO_SETTINGS_MODULE
+              Value: !Join ['.', ['config.settings', !Ref ENV]]
+            - Name: REDIS_HOST
+              Value: !Join ['.', [!GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs]]
+          EntryPoint: [sh, -c]
+          Command:
+            - /bin/bash -c "python manage.py migrate && gunicorn"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref TaskDefinitionLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: /ecs
+  ServiceWeb:
+    Type: 'AWS::ECS::Service'
+    DependsOn: ALBListenerRule
+    Properties:
+      Cluster: !Ref Cluster
+      ServiceName: web
+      TaskDefinition: !Ref TaskDefinitionWeb
+      SchedulingStrategy: REPLICA
+      DesiredCount: 2
+      Role: !Ref ServiceRole
+      CapacityProviderStrategy:
+        - CapacityProvider: !Ref CapacityProvider
+          Base: 2
+          Weight: 1
+      LoadBalancers:
+        - ContainerName: web
+          ContainerPort: 8080
+          TargetGroupArn: !Ref ALBTargetGroup8080
+      PlacementStrategies:
+        - Type: binpack
+          Field: memory
+  ServiceScalingTargetWeb:
+    Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+    DependsOn: ServiceWeb
+    Properties:
+      MinCapacity: 2
+      MaxCapacity: 10
+      ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt ServiceWeb.Name]]
+      RoleARN: !GetAtt ServiceAutoscalingRole.Arn
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+  ServiceScalingPolicyWeb:
+    Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+    Properties:
+      PolicyName: !Sub '${ProjectName}-${ENV}-asg-policy-web'
+      ScalingTargetId: !Ref ServiceScalingTargetWeb
+      PolicyType: TargetTrackingScaling
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+        TargetValue: 75
+        ScaleInCooldown: 120
+        ScaleOutCooldown: 30
+  # Websocket
+  TaskDefinitionWebsocket:
+    Type: 'AWS::ECS::TaskDefinition'
+    Condition: IsWebsocket
+    Properties:
+      Family: !Sub '${ProjectName}-${ENV}-websocket-family'
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      Memory: 900
+      ContainerDefinitions:
+        - Name: websocket
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
+          Essential: true
+          PortMappings:
+            - ContainerPort: 8081
+          Environment:
+            - Name: DJANGO_SETTINGS_MODULE
+              Value: !Join ['.', ['config.settings', !Ref ENV]]
+            - Name: REDIS_HOST
+              Value: !Join ['.', [!GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs]]
+          EntryPoint: [sh, -c]
+          Command:
+            - /bin/bash -c "daphne -b 0.0.0.0 -p 8081 config.asgi:application"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref TaskDefinitionLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: /ecs
+  ServiceWebsocket:
+    Type: 'AWS::ECS::Service'
+    Condition: IsWebsocket
+    DependsOn: ALBListenerRule
+    Properties:
+      Cluster: !Ref Cluster
+      ServiceName: websocket
+      TaskDefinition: !Ref TaskDefinitionWebsocket
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1
+      Role: !Ref ServiceRole
+      CapacityProviderStrategy:
+        - CapacityProvider: !Ref CapacityProvider
+          Base: 1
+          Weight: 1
+      LoadBalancers:
+        - ContainerName: websocket
+          ContainerPort: 8081
+          TargetGroupArn: !Ref ALBTargetGroup8081
+      PlacementStrategies:
+        - Type: binpack
+          Field: memory
+  ServiceScalingTargetWebsocket:
+    Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+    Condition: IsWebsocket
+    DependsOn: ServiceWebsocket
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 10
+      ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt ServiceWebsocket.Name]]
+      RoleARN: !GetAtt ServiceAutoscalingRole.Arn
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+  ServiceScalingPolicyWebsocket:
+    Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+    Condition: IsWebsocket
+    Properties:
+      PolicyName: !Sub '${ProjectName}-${ENV}-asg-policy-websocket'
+      ScalingTargetId: !Ref ServiceScalingTargetWebsocket
+      PolicyType: TargetTrackingScaling
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+        TargetValue: 75
+        ScaleInCooldown: 120
+        ScaleOutCooldown: 30
+  # Celery
+  TaskDefinitionCelery:
+    Type: 'AWS::ECS::TaskDefinition'
+    Condition: IsCelery
+    Properties:
+      Family: !Sub '${ProjectName}-${ENV}-celery-family'
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      Memory: 900
+      ContainerDefinitions:
+        - Name: celery
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
+          Essential: true
+          Environment:
+            - Name: DJANGO_SETTINGS_MODULE
+              Value: !Join ['.', ['config.settings', !Ref ENV]]
+            - Name: REDIS_HOST
+              Value: !Join ['.', [!GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs]]
+          EntryPoint: [sh, -c]
+          Command:
+            - /bin/bash -c "celery -A config.tasks worker"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref TaskDefinitionLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: /ecs
+  ServiceCelery:
+    Type: 'AWS::ECS::Service'
+    Condition: IsCelery
+    DependsOn: ALBListenerRule
+    Properties:
+      Cluster: !Ref Cluster
+      ServiceName: celery
+      TaskDefinition: !Ref TaskDefinitionCelery
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1
+      CapacityProviderStrategy:
+        - CapacityProvider: !Ref CapacityProvider
+          Base: 1
+          Weight: 1
+      PlacementStrategies:
+        - Type: binpack
+          Field: memory
+  ServiceScalingTargetCelery:
+    Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+    Condition: IsCelery
+    DependsOn: ServiceCelery
+    Properties:
+      MinCapacity: 1
+      MaxCapacity: 10
+      ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt ServiceCelery.Name]]
+      RoleARN: !GetAtt ServiceAutoscalingRole.Arn
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+  ServiceScalingPolicyCelery:
+    Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+    Condition: IsCelery
+    Properties:
+      PolicyName: !Sub '${ProjectName}-${ENV}-asg-policy-celery'
+      ScalingTargetId: !Ref ServiceScalingTargetCelery
+      PolicyType: TargetTrackingScaling
+      TargetTrackingScalingPolicyConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+        TargetValue: 75
+        ScaleInCooldown: 120
+        ScaleOutCooldown: 30
+  # Celerybeat
+  TaskDefinitionCelerybeat:
+    Type: 'AWS::ECS::TaskDefinition'
+    Condition: IsCelerybeat
+    Properties:
+      Family: !Sub '${ProjectName}-${ENV}-celerybeat-family'
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      Memory: 250
+      ContainerDefinitions:
+        - Name: celerybeat
+          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
+          Essential: true
+          Environment:
+            - Name: DJANGO_SETTINGS_MODULE
+              Value: !Join ['.', ['config.settings', !Ref ENV]]
+            - Name: REDIS_HOST
+              Value: !Join ['.', [!GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs]]
+          EntryPoint: [sh, -c]
+          Command:
+            - /bin/bash -c "celery -A config.tasks beat"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref TaskDefinitionLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: /ecs
+  ServiceCelerybeat:
+    Type: 'AWS::ECS::Service'
+    Condition: IsCelerybeat
+    Properties:
+      Cluster: !Ref Cluster
+      ServiceName: celerybeat
+      SchedulingStrategy: REPLICA
+      DesiredCount: 1
+      LaunchType: EC2
+      TaskDefinition: !Ref TaskDefinitionCelerybeat

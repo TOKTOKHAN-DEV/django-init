@@ -1,0 +1,12 @@
+#!/bin/bash
+
+BLACK="\033[0;37m"
+GREEN="\033[1;32m"
+NOCOLOR="\033[0m"
+
+printf "${BLACK}========= 🔵 Run Formatter 🔵 =========\n${NOCOLOR}"
+
+isort backend
+black backend
+
+echo
