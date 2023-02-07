@@ -47,6 +47,7 @@ THIRD_PARTY_APPS = [
     "ckeditor",
     "ckeditor_uploader",
     "safedelete",
+    "django_seed",
 ]
 
 DJANGO_APPS = [
