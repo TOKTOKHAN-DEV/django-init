@@ -73,7 +73,7 @@ Input Commit Message:
 
 ## Create Dummy Data
 ```
-python manage.py [app_name.model_name] -n 10
+python manage.py dummy [app_name.model_name] -n 10
 ```
 
 
