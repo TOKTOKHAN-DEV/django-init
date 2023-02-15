@@ -33,7 +33,9 @@ class CustomAutoSchema(AutoSchema):
             if issubclass(field.__class__, serializers.Serializer):
                 component = self.resolve_serializer(field, "response")
                 fields[name] = inline_serializer(
-                    name=f"{component.name}ValidationError", fields=self._get_fields(field)
+                    required=False,
+                    name=f"{component.name}ValidationError",
+                    fields=self._get_fields(field),
                 )
             else:
                 fields[name] = serializers.ListField(required=False, child=serializers.CharField())
