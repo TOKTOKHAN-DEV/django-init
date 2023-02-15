@@ -20,6 +20,20 @@ class LimitOffsetPagination(pagination.LimitOffsetPagination):
             )
         )
 
+    def get_paginated_response_schema(self, schema):
+        return {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                },
+                "is_next": {
+                    "type": "boolean",
+                },
+                "results": schema,
+            },
+        }
+
 
 class CursorPagination(pagination.CursorPagination):
     page_size = 20
@@ -42,3 +56,15 @@ class CursorPagination(pagination.CursorPagination):
                 ]
             )
         )
+
+    def get_paginated_response_schema(self, schema):
+        return {
+            "type": "object",
+            "properties": {
+                "cursor": {
+                    "type": "string",
+                    "nullable": True,
+                },
+                "results": schema,
+            },
+        }

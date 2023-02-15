@@ -9,22 +9,35 @@ class CustomAutoSchema(AutoSchema):
         response_bodies = super()._get_response_bodies(direction)
         if self.method in ["POST", "PUT", "PATCH"]:
             serializer = self.get_request_serializer()
-            component = self.resolve_serializer(serializer, direction)
-            field_list = [settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]]
-            for name, field in serializer.get_fields().items():
-                if not field.read_only:
-                    field_list.append(name)
-            response_bodies[400] = self._get_response_for_code(
-                inline_serializer(
-                    name=f"{component.name}ValidationError",
-                    fields={
-                        field: serializers.ListField(required=False, child=serializers.CharField())
-                        for field in field_list
-                    },
-                ),
-                400,
-            )
+            if serializer:
+                component = self.resolve_serializer(serializer, direction)
+                response_bodies[400] = self._get_response_for_code(
+                    inline_serializer(
+                        name=f"{component.name}ValidationError",
+                        fields={
+                            settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]: serializers.ListField(
+                                required=False, child=serializers.CharField()
+                            ),
+                            **self._get_fields(serializer),
+                        },
+                    ),
+                    400,
+                )
         return response_bodies
+
+    def _get_fields(self, serializer):
+        fields = {}
+        for name, field in serializer.get_fields().items():
+            if field.read_only:
+                continue
+            if issubclass(field.__class__, serializers.Serializer):
+                component = self.resolve_serializer(field, "response")
+                fields[name] = inline_serializer(
+                    name=f"{component.name}ValidationError", fields=self._get_fields(field)
+                )
+            else:
+                fields[name] = serializers.ListField(required=False, child=serializers.CharField())
+        return fields
 
     def _map_serializer_field(self, field, direction, bypass_extensions=False):
         map_serializer_field = super()._map_serializer_field(field, direction, bypass_extensions)
