@@ -31,7 +31,7 @@ class PushLog(BaseModel):
         failed_device_set = []
         for i in range(math.ceil(len(device_set) / 500)):
             message = messaging.MulticastMessage(
-                tokens=device_set[500 * i : 500 * (i + 1)].token,
+                tokens=[device.token for device in device_set[500 * i : 500 * (i + 1)]],
                 notification=messaging.Notification(
                     title=self.title,
                     body=self.content,
