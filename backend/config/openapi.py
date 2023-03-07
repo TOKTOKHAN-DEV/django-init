@@ -1,5 +1,6 @@
 from django.conf import settings
 from drf_spectacular.openapi import AutoSchema
+from drf_spectacular.plumbing import is_basic_serializer
 from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
 
@@ -9,7 +10,7 @@ class CustomAutoSchema(AutoSchema):
         response_bodies = super()._get_response_bodies(direction)
         if self.method in ["POST", "PUT", "PATCH"]:
             serializer = self.get_request_serializer()
-            if serializer:
+            if serializer and is_basic_serializer(serializer):
                 component = self.resolve_serializer(serializer, direction)
                 response_bodies[400] = self._get_response_for_code(
                     inline_serializer(
