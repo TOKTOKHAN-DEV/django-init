@@ -91,7 +91,7 @@ LOGGING = {
     "disable_existing_loggers": False,
     "formatters": {
         "cloudwatch": {
-            "format": "[%(levelname)] %(message)s [%(pathname)s:%(lineno)d]",
+            "format": "%(message)s",
         },
     },
     "handlers": {
