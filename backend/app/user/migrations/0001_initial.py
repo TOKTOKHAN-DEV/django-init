@@ -9,8 +9,8 @@ import app.user.models
 
 
 def create_superuser(apps, schema_editor):
-    User = apps.get_model("user", "User")
-    User.objects.create(
+    user_model = apps.get_model("user", "User")
+    user_model.objects.create(
         email="admin@admin.com",
         password=make_password("admin123!"),
         is_staff=True,
