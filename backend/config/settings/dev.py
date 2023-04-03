@@ -50,7 +50,11 @@ CHANNEL_LAYERS = {
 }
 
 # CELERY
-CELERY_BROKER_URL = f"redis://{REDIS_HOST}:6379/0"
+CELERY_BROKER_URL = f"sqs://"
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    "region": "ap-northeast-2",
+    "queue_name_prefix": f"{PROJECT_NAME}-dev-",
+}
 
 
 # S3

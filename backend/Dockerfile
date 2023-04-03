@@ -1,6 +1,6 @@
 FROM python:3.9-slim
 
-RUN apt-get update && apt-get install gcc -y
+RUN apt-get update && apt-get install gcc libcurl4-openssl-dev libssl-dev -y
 RUN pip install --upgrade pip
 RUN mkdir /backend
 WORKDIR /backend
