@@ -261,7 +261,7 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: .25 vCPU
+      Cpu: .5 vCPU
       Memory: 1GB
       ContainerDefinitions:
         - Name: web
@@ -334,8 +334,8 @@ Resources:
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
-      Cpu: .25 vCPU
-      Memory: 0.5GB
+      Cpu: .5 vCPU
+      Memory: 1GB
       ContainerDefinitions:
         - Name: websocket
           Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
