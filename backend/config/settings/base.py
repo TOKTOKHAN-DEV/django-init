@@ -184,7 +184,7 @@ REST_FRAMEWORK = {
         "djangorestframework_camel_case.parser.CamelCaseFormParser",
         "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
     ],
-    "DEFAULT_PAGINATION_CLASS": "api.common.pagination.LimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "app.common.pagination.LimitOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
     ],
