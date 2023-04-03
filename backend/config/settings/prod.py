@@ -14,10 +14,12 @@ DEBUG = False
 ALLOWED_HOSTS += [f"api.{DOMAIN}", f"admin.{DOMAIN}"]
 CSRF_TRUSTED_ORIGINS = [f"https://admin.{DOMAIN}"]
 
+METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI", "http://169.254.170.2/v2/metadata")
 try:
-    EC2_PRIVATE_IP = requests.get("http://169.254.169.254/latest/meta-data/local-ipv4", timeout=0.1).text
-    ALLOWED_HOSTS.append(EC2_PRIVATE_IP)
-except requests.exceptions.RequestException as e:
+    response = requests.get(METADATA_URI, timeout=0.1)
+    data = response.json()
+    ALLOWED_HOSTS.append(data["Containers"][0]["Networks"][0]["IPv4Addresses"][0])
+except Exception:
     print("no ec2 instance")
 
 CORS_ALLOWED_ORIGINS = [
