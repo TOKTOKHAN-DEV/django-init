@@ -3,7 +3,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
-from api.v1.presigned_url.serializers import PresignedUrlSerializer
+from app.presigned_url.v1.serializers import PresignedUrlSerializer
 
 
 @extend_schema(

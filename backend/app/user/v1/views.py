@@ -7,7 +7,8 @@ from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
-from api.v1.user.serializers import (
+from app.user.models import User
+from app.user.v1.serializers import (
     UserLoginSerializer,
     UserLogoutSerializer,
     UserPasswordResetConfirmSerializer,
@@ -16,7 +17,6 @@ from api.v1.user.serializers import (
     UserSerializer,
     UserSocialLoginSerializer,
 )
-from app.user.models import User
 
 
 @extend_schema_view(

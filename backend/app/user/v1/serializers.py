@@ -15,10 +15,10 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.v1.user.examples import login_examples
 from app.email_log.models import EmailLog
 from app.user.models import Device, Social, SocialKindChoices, User
 from app.user.social_adapters import SocialAdapter
+from app.user.v1.examples import login_examples
 from app.user.validators import validate_password
 from app.verifier.models import EmailVerifier, PhoneVerifier
 

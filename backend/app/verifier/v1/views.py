@@ -1,6 +1,6 @@
 from rest_framework.generics import CreateAPIView
 
-from api.v1.verifier.serializers import (
+from app.verifier.v1.serializers import (
     EmailVerifierConfirmSerializer,
     EmailVerifierCreateSerializer,
     PhoneVerifierConfirmSerializer,

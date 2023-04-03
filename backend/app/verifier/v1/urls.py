@@ -1,6 +1,6 @@
 from django.urls import path
 
-from api.v1.verifier.views import (
+from app.verifier.v1.views import (
     EmailVerifierConfirmView,
     EmailVerifierCreateView,
     PhoneVerifierConfirmView,

@@ -1,4 +1,4 @@
-from api.common.pagination import CursorPagination
+from app.common.pagination import CursorPagination
 
 
 class MessagePagination(CursorPagination):

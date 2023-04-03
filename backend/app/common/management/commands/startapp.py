@@ -15,44 +15,31 @@ class Command(TemplateCommand):
     def handle(self, **options):
         app_name = options.pop("name")
 
-        version = self._input_version()
-        options["api_version"] = f"v{version}"
-
         self._create_app(
             app_name=app_name,
-            app_or_api="app",
             template_name="app_template",
             **options,
         )
-        self._create_app(
-            app_name=app_name,
-            app_or_api="api",
-            template_name="api_template",
-            **options,
-        )
 
-    def _create_app(self, app_name, app_or_api, template_name, **options):
-        if app_or_api == "app":
-            target = f"app/{app_name}"
-        else:
-            target = f'api/{options["api_version"]}/{app_name}'
+    def _create_app(self, app_name, template_name, **options):
+        target = f"app/{app_name}"
         top_dir = os.path.abspath(os.path.expanduser(target))
         try:
             self._make_dirs(top_dir)
             options["template"] = "file://" + str(settings.BASE_DIR / "app" / "common" / "management" / template_name)
             super().handle("app", app_name, target, **options)
         except CommandError:
-            self.stderr.write(f'"{app_name}" {app_or_api} is already exists.')
+            self.stderr.write(f'"{app_name}" app is already exists.')
 
-    def _input_version(self):
-        version = None
-        while version is None:
-            version = input("Enter API Version [default: 1]: ") or "1"
-            try:
-                return int(version)
-            except ValueError:
-                self.stderr.write("Version must be type int.")
-                return self._input_version()
+    # def _input_version(self):
+    #     version = None
+    #     while version is None:
+    #         version = input("Enter API Version [default: 1]: ") or "1"
+    #         try:
+    #             return int(version)
+    #         except ValueError:
+    #             self.stderr.write("Version must be type int.")
+    #             return self._input_version()
 
     @staticmethod
     def _make_dirs(top_dir):

@@ -1,9 +1,9 @@
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
 
-from api.v1.chat.paginations import MessagePagination
-from api.v1.chat.serializers import ChatListSerializer, MessageListSerializer
 from app.chat.models import Chat, Message
+from app.chat.v1.paginations import MessagePagination
+from app.chat.v1.serializers import ChatListSerializer, MessageListSerializer
 
 
 class ChatCreateView(CreateAPIView):
