@@ -1,4 +1,4 @@
-name: CI/CD Web
+name: CI/CD
 on:
   push:
     branches:
@@ -114,3 +114,69 @@ jobs:
           task-definition: ${{ steps.tf-websocket-render.outputs.task-definition }}
           cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
           service: websocket
+
+      - name: Changed Celery
+        uses: tj-actions/verify-changed-files@v14
+        id: changed-celery
+        with:
+          files: |
+            backend/app/**/tasks.py
+            backend/app/**/models.py
+            backend/config/tasks.py
+            backend/config/settings/*.py
+
+      - name: Download Celery TaskDefinition
+        id: tf-celery-download
+        if: steps.changed-celery.outputs.files_changed == 'true'
+        continue-on-error: true
+        run: aws ecs describe-task-definition --task-definition ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-celery-family --query taskDefinition > celery.tf.json
+
+      - name: Render Celery TaskDefinition
+        id: tf-celery-render
+        if: steps.tf-celery-download.outcome == 'success'
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: celery.tf.json
+          container-name: celery
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend:${{ github.sha }}
+
+      - name: Deploy Celery Service
+        if: steps.tf-celery-download.outcome == 'success'
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.tf-celery-render.outputs.task-definition }}
+          cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
+          service: celery
+
+      - name: Changed Celerybeat
+        uses: tj-actions/verify-changed-files@v14
+        id: changed-celerybeat
+        with:
+          files: |
+            backend/app/**/models.py
+            backend/config/schedules.py
+            backend/config/tasks.py
+            backend/config/settings/*.py
+
+      - name: Download CeleryBeat TaskDefinition
+        id: tf-celerybeat-download
+        if: steps.changed-celery.outputs.files_changed == 'true'
+        continue-on-error: true
+        run: aws ecs describe-task-definition --task-definition ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-celerybeat-family --query taskDefinition > celerybeat.tf.json
+
+      - name: Render CeleryBeat TaskDefinition
+        id: tf-celerybeat-render
+        if: steps.tf-celerybeat-download.outcome == 'success'
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: celerybeat.tf.json
+          container-name: celerybeat
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend:${{ github.sha }}
+
+      - name: Deploy Celerybeat Service
+        if: steps.tf-celerybeat-download.outcome == 'success'
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.tf-celerybeat-render.outputs.task-definition }}
+          cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
+          service: celerybeat
