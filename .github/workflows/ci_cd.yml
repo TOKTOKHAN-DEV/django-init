@@ -116,7 +116,7 @@ jobs:
           service: websocket
 
       - name: Changed Celery
-        uses: tj-actions/verify-changed-files@v14
+        uses: tj-actions/changed-files@v35
         id: changed-celery
         with:
           files: |
@@ -127,7 +127,7 @@ jobs:
 
       - name: Download Celery TaskDefinition
         id: tf-celery-download
-        if: steps.changed-celery.outputs.files_changed == 'true'
+        if: steps.changed-celery.outputs.any_changed == 'true'
         continue-on-error: true
         run: aws ecs describe-task-definition --task-definition ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-celery-family --query taskDefinition > celery.tf.json
 
@@ -149,7 +149,7 @@ jobs:
           service: celery
 
       - name: Changed Celerybeat
-        uses: tj-actions/verify-changed-files@v14
+        uses: tj-actions/changed-files@v35
         id: changed-celerybeat
         with:
           files: |
@@ -159,7 +159,7 @@ jobs:
 
       - name: Download CeleryBeat TaskDefinition
         id: tf-celerybeat-download
-        if: steps.changed-celery.outputs.files_changed == 'true'
+        if: steps.changed-celerybeat.outputs.any_changed == 'true'
         continue-on-error: true
         run: aws ecs describe-task-definition --task-definition ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-celerybeat-family --query taskDefinition > celerybeat.tf.json
 
