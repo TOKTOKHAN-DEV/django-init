@@ -6,6 +6,8 @@ on:
       - develop
     paths:
       - backend/app/**/tasks.py
+      - backend/config/tasks.py
+      - backend/config/settings/**
 
 jobs:
   continuous_integration:
