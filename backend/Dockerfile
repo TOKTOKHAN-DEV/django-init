@@ -1,12 +1,12 @@
 FROM python:3.9-slim-buster
 
-RUN apt-get update && apt-get install gcc libcurl4-openssl-dev libssl-dev -y
-RUN pip install --upgrade pip
+RUN apt-get update && apt-get install gcc libcurl4-openssl-dev libssl-dev -y && rm -rf /var/lib/apt/lists/*
+RUN pip install --no-cache-dir --upgrade pip
 RUN mkdir /backend
 WORKDIR /backend
-COPY requirements.txt /backend/
-RUN pip install -r requirements.txt
-COPY . /backend/
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
 
 ARG CI
 ARG APP_ENV
