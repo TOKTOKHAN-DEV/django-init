@@ -1,14 +1,13 @@
-FROM python:3.9-slim
+FROM python:3.9-slim-buster
 
 RUN apt-get update && apt-get install gcc libcurl4-openssl-dev libssl-dev -y
 RUN pip install --upgrade pip
 RUN mkdir /backend
 WORKDIR /backend
-
 ADD requirements.txt /backend/
 RUN pip install -r requirements.txt
-
 ADD . /backend/
+
 ARG CI
 ARG APP_ENV
 ARG AWS_ACCESS_KEY_ID
