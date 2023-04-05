@@ -17,7 +17,7 @@ Conditions:
 
 Resources:
   S3Bucket:
-    Type: 'AWS::S3::Bucket'
+    Type: AWS::S3::Bucket
     DeletionPolicy: Retain
     Properties:
       BucketName: !Sub '${ProjectName}-${ENV}-bucket'
@@ -26,7 +26,7 @@ Resources:
         Rules:
           - ObjectOwnership: BucketOwnerPreferred
   BucketPolicy:
-    Type: 'AWS::S3::BucketPolicy'
+    Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref S3Bucket
       PolicyDocument:
