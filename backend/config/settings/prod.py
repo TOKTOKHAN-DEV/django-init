@@ -100,6 +100,11 @@ LOGGING = {
             "format": "%(message)s",
         },
     },
+    "filters": {
+        "sensitive": {
+            "()": "config.filters.SensitiveFilter",
+        },
+    },
     "handlers": {
         "watchtower_info": {
             "level": "INFO",
@@ -108,7 +113,7 @@ LOGGING = {
             "log_group": f"{PROJECT_NAME}/prod/info",
             "log_group_retention_days": 14,
             "stream_name": "web-{strftime:%Y-%m-%d}",
-            # "formatter": "cloudwatch",
+            "filters": ["sensitive"],
         },
         "watchtower_error": {
             "level": "ERROR",
@@ -117,7 +122,7 @@ LOGGING = {
             "log_group": f"{PROJECT_NAME}/prod/error",
             "log_group_retention_days": 30,
             "stream_name": "web-{strftime:%Y-%m-%d}",
-            # "formatter": "cloudwatch",
+            "filters": ["sensitive"],
         },
     },
     "loggers": {

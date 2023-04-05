@@ -1,10 +1,12 @@
 import logging
 import re
 
+SENSITIVE_KEYWORDS = {"password", "passwordConfirm", "newPassword", "newPasswordConfirm", "access", "refresh"}
+
 
 class SensitiveFilter(logging.Filter):
     def filter(self, record):
-        for keyword in ["password", "passwordConfirm", "access", "refresh"]:
+        for keyword in SENSITIVE_KEYWORDS:
             if keyword in record.msg:
                 record.msg = self.sanitize_dict(record.msg, keyword)
         return True
