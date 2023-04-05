@@ -319,9 +319,9 @@ Resources:
       PolicyType: TargetTrackingScaling
       TargetTrackingScalingPolicyConfiguration:
         PredefinedMetricSpecification:
-          PredefinedMetricType: ECSServiceAverageMemoryUtilization
-        TargetValue: 75
-        ScaleInCooldown: 120
+          PredefinedMetricType: ALBRequestCountPerTarget
+        TargetValue: 1000
+        ScaleInCooldown: 30
         ScaleOutCooldown: 30
   # Websocket
   TaskDefinitionWebsocket:
@@ -395,9 +395,9 @@ Resources:
       PolicyType: TargetTrackingScaling
       TargetTrackingScalingPolicyConfiguration:
         PredefinedMetricSpecification:
-          PredefinedMetricType: ECSServiceAverageMemoryUtilization
-        TargetValue: 75
-        ScaleInCooldown: 120
+          PredefinedMetricType: ALBRequestCountPerTarget
+        TargetValue: 1000
+        ScaleInCooldown: 30
         ScaleOutCooldown: 30
   # Celery
   TaskDefinitionCelery:
@@ -465,9 +465,9 @@ Resources:
       PolicyType: TargetTrackingScaling
       TargetTrackingScalingPolicyConfiguration:
         PredefinedMetricSpecification:
-          PredefinedMetricType: ECSServiceAverageMemoryUtilization
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
         TargetValue: 75
-        ScaleInCooldown: 120
+        ScaleInCooldown: 30
         ScaleOutCooldown: 30
   # Celerybeat
   TaskDefinitionCelerybeat:
