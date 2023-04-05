@@ -36,7 +36,7 @@ Conditions:
 Resources:
   # Secret Manager
   Secret:
-    Type: 'AWS::SecretsManager::Secret'
+    Type: AWS::SecretsManager::Secret
     Properties:
       Name: !Sub '${ProjectName}/key/${ENV}'
       GenerateSecretString:
@@ -46,19 +46,19 @@ Resources:
 
   # ECS Cluster
   Cluster:
-    Type: 'AWS::ECS::Cluster'
+    Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Sub '${ProjectName}-${ENV}-ecs-cluster'
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
   SecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
+    Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: !Sub '${ProjectName}-${ENV}-ecs-cluster-sg'
       VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
   SecurityGroupInboundSSH:
-    Type: 'AWS::EC2::SecurityGroupIngress'
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref SecurityGroup
       IpProtocol: tcp
@@ -66,7 +66,7 @@ Resources:
       ToPort: 22
       CidrIp: 0.0.0.0/0
   SecurityGroupInboundHTTP:
-    Type: 'AWS::EC2::SecurityGroupIngress'
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref SecurityGroup
       IpProtocol: tcp
@@ -74,7 +74,7 @@ Resources:
       ToPort: 80
       CidrIp: 0.0.0.0/0
   SecurityGroupInboundHTTPS:
-    Type: 'AWS::EC2::SecurityGroupIngress'
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref SecurityGroup
       IpProtocol: tcp
@@ -82,7 +82,7 @@ Resources:
       ToPort: 443
       CidrIp: 0.0.0.0/0
   SecurityGroupInboundALB:
-    Type: 'AWS::EC2::SecurityGroupIngress'
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref SecurityGroup
       IpProtocol: tcp
@@ -90,7 +90,7 @@ Resources:
       ToPort: 61000
       SourceSecurityGroupId: !Ref SecurityGroup
   SecurityGroupInboundRedis:
-    Type: 'AWS::EC2::SecurityGroupIngress'
+    Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref SecurityGroup
       IpProtocol: tcp
@@ -98,7 +98,7 @@ Resources:
       ToPort: 6379
       SourceSecurityGroupId: !Ref SecurityGroup
   ContainerInstanceRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -131,13 +131,13 @@ Resources:
                   - 'logs:PutLogEvents'
                 Resource: '*'
   ContainerInstanceProfile:
-    Type: 'AWS::IAM::InstanceProfile'
+    Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
         - !Ref ContainerInstanceRole
   ContainerInstanceLT:
-    Type: 'AWS::EC2::LaunchTemplate'
+    Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateName: !Sub '${ProjectName}-${ENV}-lt'
       LaunchTemplateData:
@@ -156,7 +156,7 @@ Resources:
             #!/bin/bash -xe
             echo ECS_CLUSTER=${Cluster} >> /etc/ecs/ecs.config
   ContainerInstanceASG:
-    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn: Cluster
     Properties:
       VPCZoneIdentifier:
@@ -169,7 +169,7 @@ Resources:
       MaxSize: 10
       Cooldown: 30
   CapacityProvider:
-    Type: 'AWS::ECS::CapacityProvider'
+    Type: AWS::ECS::CapacityProvider
     DependsOn: Cluster
     DeletionPolicy: Delete
     Properties:
@@ -182,7 +182,7 @@ Resources:
           TargetCapacity: 100
         ManagedTerminationProtection: DISABLED
   ClusterCapacityProviderAssociation:
-    Type: 'AWS::ECS::ClusterCapacityProviderAssociations'
+    Type: AWS::ECS::ClusterCapacityProviderAssociations
     DeletionPolicy: Delete
     Properties:
       Cluster: !Ref Cluster
@@ -193,7 +193,7 @@ Resources:
 
   # ECS Service
   ServiceRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -217,7 +217,7 @@ Resources:
                   - 'ec2:AuthorizeSecurityGroupIngress'
                 Resource: '*'
   ServiceAutoscalingRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -239,7 +239,7 @@ Resources:
                   - 'ecs:UpdateService'
                 Resource: '*'
   ALB:
-    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Name: !Sub '${ProjectName}-${ENV}-alb'
       Type: application
@@ -253,7 +253,7 @@ Resources:
         - Key: idle_timeout.timeout_seconds
           Value: 30
   ALBTargetGroup8080:
-    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn: ALB
     Properties:
       HealthCheckIntervalSeconds: 10
@@ -274,7 +274,7 @@ Resources:
         - Key: stickiness.type
           Value: lb_cookie
   ALBTargetGroup8081:
-    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Condition: IsWebsocket
     DependsOn: ALB
     Properties:
@@ -296,7 +296,7 @@ Resources:
         - Key: stickiness.type
           Value: lb_cookie
   ALBListener:
-    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Type: AWS::ElasticLoadBalancingV2::Listener
     DependsOn: ServiceRole
     Properties:
       LoadBalancerArn: !Ref ALB
@@ -306,7 +306,7 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref ALBTargetGroup8080
   ALBListenerRule:
-    Type: 'AWS::ElasticLoadBalancingV2::ListenerRule'
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
     DependsOn: ALBListener
     Properties:
       Actions:
@@ -318,18 +318,18 @@ Resources:
       ListenerArn: !Ref ALBListener
       Priority: 1
   TaskDefinitionLogGroup:
-    Type: 'AWS::Logs::LogGroup'
+    Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub '/ecs/${ProjectName}/${ENV}'
       RetentionInDays: 14
   PrivateDnsNamespace:
-    Type: 'AWS::ServiceDiscovery::PrivateDnsNamespace'
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
     Properties:
       Name: !Sub '${ProjectName}-${ENV}.ecs'
       Vpc: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
 
   TaskRole:
-    Type: 'AWS::IAM::Role'
+    Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Statement:
@@ -372,7 +372,7 @@ Resources:
                 Resource: '*'
   # Redis
   ServiceRegistryRedis:
-    Type: 'AWS::ServiceDiscovery::Service'
+    Type: AWS::ServiceDiscovery::Service
     Properties:
       Name: redis
       NamespaceId: !Ref PrivateDnsNamespace
@@ -384,7 +384,7 @@ Resources:
           - Type: SRV
             TTL: 60
   TaskDefinitionRedis:
-    Type: 'AWS::ECS::TaskDefinition'
+    Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Sub '${ProjectName}-${ENV}-redis-family'
       TaskRoleArn: !GetAtt TaskRole.Arn
@@ -403,7 +403,7 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: /ecs
   ServiceRedis:
-    Type: 'AWS::ECS::Service'
+    Type: AWS::ECS::Service
     Properties:
       Cluster: !Ref Cluster
       ServiceName: redis
@@ -423,7 +423,7 @@ Resources:
           Port: 6379
   # Web
   TaskDefinitionWeb:
-    Type: 'AWS::ECS::TaskDefinition'
+    Type: AWS::ECS::TaskDefinition
     Properties:
       Family: !Sub '${ProjectName}-${ENV}-web-family'
       TaskRoleArn: !GetAtt TaskRole.Arn
@@ -451,7 +451,7 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: /ecs
   ServiceWeb:
-    Type: 'AWS::ECS::Service'
+    Type: AWS::ECS::Service
     DependsOn: ALBListenerRule
     Properties:
       Cluster: !Ref Cluster
@@ -472,7 +472,7 @@ Resources:
         - Type: binpack
           Field: memory
   ServiceScalingTargetWeb:
-    Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: ServiceWeb
     Properties:
       MinCapacity: 2
@@ -482,7 +482,7 @@ Resources:
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
   ServiceScalingPolicyWeb:
-    Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Properties:
       PolicyName: !Sub '${ProjectName}-${ENV}-asg-policy-web'
       ScalingTargetId: !Ref ServiceScalingTargetWeb
@@ -495,7 +495,7 @@ Resources:
         ScaleOutCooldown: 30
   # Websocket
   TaskDefinitionWebsocket:
-    Type: 'AWS::ECS::TaskDefinition'
+    Type: AWS::ECS::TaskDefinition
     Condition: IsWebsocket
     Properties:
       Family: !Sub '${ProjectName}-${ENV}-websocket-family'
@@ -522,7 +522,7 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: /ecs
   ServiceWebsocket:
-    Type: 'AWS::ECS::Service'
+    Type: AWS::ECS::Service
     Condition: IsWebsocket
     DependsOn: ALBListenerRule
     Properties:
@@ -544,7 +544,7 @@ Resources:
         - Type: binpack
           Field: memory
   ServiceScalingTargetWebsocket:
-    Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
     Condition: IsWebsocket
     DependsOn: ServiceWebsocket
     Properties:
@@ -555,7 +555,7 @@ Resources:
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
   ServiceScalingPolicyWebsocket:
-    Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: IsWebsocket
     Properties:
       PolicyName: !Sub '${ProjectName}-${ENV}-asg-policy-websocket'
@@ -569,7 +569,7 @@ Resources:
         ScaleOutCooldown: 30
   # Celery
   TaskDefinitionCelery:
-    Type: 'AWS::ECS::TaskDefinition'
+    Type: AWS::ECS::TaskDefinition
     Condition: IsCelery
     Properties:
       Family: !Sub '${ProjectName}-${ENV}-celery-family'
@@ -594,7 +594,7 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: /ecs
   ServiceCelery:
-    Type: 'AWS::ECS::Service'
+    Type: AWS::ECS::Service
     Condition: IsCelery
     DependsOn: ALBListenerRule
     Properties:
@@ -611,7 +611,7 @@ Resources:
         - Type: binpack
           Field: memory
   ServiceScalingTargetCelery:
-    Type: 'AWS::ApplicationAutoScaling::ScalableTarget'
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
     Condition: IsCelery
     DependsOn: ServiceCelery
     Properties:
@@ -622,7 +622,7 @@ Resources:
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
   ServiceScalingPolicyCelery:
-    Type: 'AWS::ApplicationAutoScaling::ScalingPolicy'
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
     Condition: IsCelery
     Properties:
       PolicyName: !Sub '${ProjectName}-${ENV}-asg-policy-celery'
@@ -636,7 +636,7 @@ Resources:
         ScaleOutCooldown: 30
   # Celerybeat
   TaskDefinitionCelerybeat:
-    Type: 'AWS::ECS::TaskDefinition'
+    Type: AWS::ECS::TaskDefinition
     Condition: IsCelerybeat
     Properties:
       Family: !Sub '${ProjectName}-${ENV}-celerybeat-family'
@@ -661,7 +661,7 @@ Resources:
               awslogs-region: !Ref 'AWS::Region'
               awslogs-stream-prefix: /ecs
   ServiceCelerybeat:
-    Type: 'AWS::ECS::Service'
+    Type: AWS::ECS::Service
     Condition: IsCelerybeat
     Properties:
       Cluster: !Ref Cluster
