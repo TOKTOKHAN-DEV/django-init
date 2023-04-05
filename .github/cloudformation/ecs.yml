@@ -320,7 +320,7 @@ Resources:
       TargetTrackingScalingPolicyConfiguration:
         PredefinedMetricSpecification:
           PredefinedMetricType: ALBRequestCountPerTarget
-          ResourceLabel: !Join ['/', [!GetAtt ALB.LoadBalancerFullName, ALBTargetGroup8080.TargetGroupFullName]]
+          ResourceLabel: !Join ['/', [!GetAtt ALB.LoadBalancerFullName, !GetAtt ALBTargetGroup8080.TargetGroupFullName]]
         TargetValue: 1000
         ScaleInCooldown: 30
         ScaleOutCooldown: 30
@@ -397,7 +397,7 @@ Resources:
       TargetTrackingScalingPolicyConfiguration:
         PredefinedMetricSpecification:
           PredefinedMetricType: ALBRequestCountPerTarget
-          ResourceLabel: !Join ['/', [!GetAtt ALB.LoadBalancerFullName, ALBTargetGroup8081.TargetGroupFullName]]
+          ResourceLabel: !Join ['/', [!GetAtt ALB.LoadBalancerFullName, !GetAtt ALBTargetGroup8081.TargetGroupFullName]]
         TargetValue: 1000
         ScaleInCooldown: 30
         ScaleOutCooldown: 30
