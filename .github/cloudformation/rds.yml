@@ -68,7 +68,7 @@ Resources:
       VpcSecurityGroupIds: [ !GetAtt SecurityGroup.GroupId ]
       ServerlessV2ScalingConfiguration:
         MinCapacity: 0.5
-        MaxCapacity: 4
+        MaxCapacity: 5
       EnableCloudwatchLogsExports:
         - postgresql
   RDSDBInstance:
