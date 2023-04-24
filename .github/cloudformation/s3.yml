@@ -21,10 +21,14 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       BucketName: !Sub '${ProjectName}-${ENV}-bucket'
-      AccessControl: PublicRead
       OwnershipControls:
         Rules:
-          - ObjectOwnership: BucketOwnerPreferred
+          - ObjectOwnership: ObjectWriter
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
