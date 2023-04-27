@@ -38,7 +38,7 @@ Resources:
   Secret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: !Sub '${ProjectName}/key/${ENV}'
+      Name: !Sub '${ProjectName}/django/${ENV}'
       GenerateSecretString:
         SecretStringTemplate: !Sub '{}'
         GenerateStringKey: 'key'

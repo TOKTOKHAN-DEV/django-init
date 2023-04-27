@@ -5,7 +5,7 @@ import boto3
 from config.secrets import get_secret
 from config.settings.base import *
 
-DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/key/dev")
+DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/django/dev")
 SECRET_KEY = DJANGO_SECRET["key"]
 
 DEBUG = True

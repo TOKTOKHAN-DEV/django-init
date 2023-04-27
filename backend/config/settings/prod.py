@@ -6,7 +6,7 @@ import requests
 from config.secrets import get_secret
 from config.settings.base import *
 
-DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/key/prod")
+DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/django/prod")
 SECRET_KEY = DJANGO_SECRET["key"]
 
 DEBUG = False
