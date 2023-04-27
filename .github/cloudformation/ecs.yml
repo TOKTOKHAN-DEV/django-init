@@ -262,7 +262,7 @@ Resources:
       RequiresCompatibilities:
         - FARGATE
       Cpu: 1 vCPU
-      Memory: 1GB
+      Memory: 2GB
       ContainerDefinitions:
         - Name: web
           Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
