@@ -91,6 +91,7 @@ Resources:
       SourceSecurityGroupId: !Ref SecurityGroup
   SecurityGroupInboundRedis:
     Type: AWS::EC2::SecurityGroupIngress
+    Condition: IsWebsocket
     Properties:
       GroupId: !Ref SecurityGroup
       IpProtocol: tcp
@@ -206,6 +207,7 @@ Resources:
       RetentionInDays: 14
   PrivateDnsNamespace:
     Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Condition: IsWebsocket
     Properties:
       Name: !Sub '${ProjectName}-${ENV}.ecs'
       Vpc: { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC' }
@@ -268,6 +270,7 @@ Resources:
   # Redis
   ServiceRegistryRedis:
     Type: AWS::ServiceDiscovery::Service
+    Condition: IsWebsocket
     Properties:
       Name: redis
       NamespaceId: !Ref PrivateDnsNamespace
@@ -280,6 +283,7 @@ Resources:
             TTL: 60
   TaskDefinitionRedis:
     Type: AWS::ECS::TaskDefinition
+    Condition: IsWebsocket
     Properties:
       Family: !Sub '${ProjectName}-${ENV}-redis-family'
       TaskRoleArn: !GetAtt TaskRole.Arn
@@ -303,6 +307,7 @@ Resources:
               awslogs-stream-prefix: /ecs
   ServiceRedis:
     Type: AWS::ECS::Service
+    Condition: IsWebsocket
     Properties:
       Cluster: !Ref Cluster
       LaunchType: FARGATE
@@ -312,6 +317,7 @@ Resources:
       DesiredCount: 1
       NetworkConfiguration:
         AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
           Subnets:
             - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
             - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
