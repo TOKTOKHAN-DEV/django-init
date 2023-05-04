@@ -89,6 +89,14 @@ Resources:
       FromPort: 8080
       ToPort: 8081
       SourceSecurityGroupId: !Ref SecurityGroup
+  SecurityGroupInboundRedis:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref SecurityGroup
+      IpProtocol: tcp
+      FromPort: 6379
+      ToPort: 6379
+      SourceSecurityGroupId: !Ref SecurityGroup
   ServiceAutoscalingRole:
     Type: AWS::IAM::Role
     Properties:
@@ -196,6 +204,12 @@ Resources:
     Properties:
       LogGroupName: !Sub '/ecs/${ProjectName}/${ENV}'
       RetentionInDays: 14
+  PrivateDnsNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}.ecs'
+      Vpc: { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC' }
+
   TaskRole:
     Type: AWS::IAM::Role
     Properties:
@@ -251,6 +265,60 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
+  # Redis
+  ServiceRegistryRedis:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: redis
+      NamespaceId: !Ref PrivateDnsNamespace
+      DnsConfig:
+        RoutingPolicy: MULTIVALUE
+        DnsRecords:
+          - Type: A
+            TTL: 60
+          - Type: SRV
+            TTL: 60
+  TaskDefinitionRedis:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub '${ProjectName}-${ENV}-redis-family'
+      TaskRoleArn: !GetAtt TaskRole.Arn
+      ExecutionRoleArn: !Ref ExecutionRole
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 0.5 vCPU
+      Memory: 1GB
+      ContainerDefinitions:
+        - Name: redis
+          Image: redis:6
+          Essential: true
+          PortMappings:
+            - ContainerPort: 6379
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref TaskDefinitionLogGroup
+              awslogs-region: !Ref 'AWS::Region'
+              awslogs-stream-prefix: /ecs
+  ServiceRedis:
+    Type: AWS::ECS::Service
+    Properties:
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      ServiceName: redis
+      SchedulingStrategy: REPLICA
+      TaskDefinition: !Ref TaskDefinitionRedis
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
+            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
+          SecurityGroups: [!Ref SecurityGroup]
+      ServiceRegistries:
+        - RegistryArn: !GetAtt ServiceRegistryRedis.Arn
+          Port: 6379
   # Web
   TaskDefinitionWeb:
     Type: AWS::ECS::TaskDefinition
@@ -272,6 +340,8 @@ Resources:
           Environment:
             - Name: DJANGO_SETTINGS_MODULE
               Value: !Join ['.', ['config.settings', !Ref ENV]]
+            - Name: REDIS_HOST
+              Value: !Join [ '.', [ !GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs ] ]
           EntryPoint: [sh, -c]
           Command:
             - /bin/bash -c "python manage.py migrate && gunicorn"
@@ -346,6 +416,8 @@ Resources:
           Environment:
             - Name: DJANGO_SETTINGS_MODULE
               Value: !Join ['.', ['config.settings', !Ref ENV]]
+            - Name: REDIS_HOST
+              Value: !Join [ '.', [ !GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs ] ]
           EntryPoint: [sh, -c]
           Command:
             - /bin/bash -c "daphne -b 0.0.0.0 -p 8081 config.asgi:application"
@@ -421,6 +493,8 @@ Resources:
           Environment:
             - Name: DJANGO_SETTINGS_MODULE
               Value: !Join ['.', ['config.settings', !Ref ENV]]
+            - Name: REDIS_HOST
+              Value: !Join [ '.', [ !GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs ] ]
           EntryPoint: [sh, -c]
           Command:
             - /bin/bash -c "celery -A config.tasks worker"
