@@ -297,6 +297,7 @@ Resources:
         - Name: redis
           Image: redis:6
           Essential: true
+          StopTimeout: 5
           PortMappings:
             - ContainerPort: 6379
           LogConfiguration:
@@ -341,6 +342,7 @@ Resources:
         - Name: web
           Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
           Essential: true
+          StopTimeout: 5
           PortMappings:
             - ContainerPort: 8080
           Environment:
@@ -417,6 +419,7 @@ Resources:
         - Name: websocket
           Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
           Essential: true
+          StopTimeout: 5
           PortMappings:
             - ContainerPort: 8081
           Environment:
@@ -496,6 +499,7 @@ Resources:
         - Name: celery
           Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
           Essential: true
+          StopTimeout: 5
           Environment:
             - Name: DJANGO_SETTINGS_MODULE
               Value: !Join ['.', ['config.settings', !Ref ENV]]
