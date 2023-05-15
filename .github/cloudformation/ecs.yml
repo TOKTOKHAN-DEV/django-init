@@ -133,15 +133,15 @@ Resources:
       SecurityGroups: [!Ref SecurityGroup]
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
-          Value: 30
+          Value: 5
   ALBTargetGroup8080:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn: ALB
     Properties:
-      HealthCheckIntervalSeconds: 10
+      HealthCheckIntervalSeconds: 5
       HealthCheckPath: /_health/
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 5
+      HealthCheckTimeoutSeconds: 2
       HealthyThresholdCount: 2
       Name: !Sub '${ProjectName}-${ENV}-tg-8080'
       Port: 8080
@@ -151,7 +151,7 @@ Resources:
       VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
-          Value: 10
+          Value: 5
         - Key: stickiness.enabled
           Value: true
         - Key: stickiness.type
@@ -161,10 +161,10 @@ Resources:
     Condition: IsWebsocket
     DependsOn: ALB
     Properties:
-      HealthCheckIntervalSeconds: 10
+      HealthCheckIntervalSeconds: 5
       HealthCheckPath: /_health/
       HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 5
+      HealthCheckTimeoutSeconds: 2
       HealthyThresholdCount: 2
       Name: !Sub '${ProjectName}-${ENV}-tg-8081'
       Port: 8081
@@ -174,7 +174,7 @@ Resources:
       VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
-          Value: 10
+          Value: 5
         - Key: stickiness.enabled
           Value: true
         - Key: stickiness.type
