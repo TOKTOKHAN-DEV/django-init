@@ -350,6 +350,8 @@ Resources:
               Value: !Join ['.', ['config.settings', !Ref ENV]]
             - Name: REDIS_HOST
               Value: !Join [ '.', [ !GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs ] ]
+            - Name: ECS_IMAGE_PULL_BEHAVIOR
+              Value: prefer-cached
           EntryPoint: [sh, -c]
           Command:
             - /bin/bash -c "python manage.py migrate && gunicorn"
@@ -427,6 +429,8 @@ Resources:
               Value: !Join ['.', ['config.settings', !Ref ENV]]
             - Name: REDIS_HOST
               Value: !Join [ '.', [ !GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs ] ]
+            - Name: ECS_IMAGE_PULL_BEHAVIOR
+              Value: prefer-cached
           EntryPoint: [sh, -c]
           Command:
             - /bin/bash -c "daphne -b 0.0.0.0 -p 8081 config.asgi:application"
@@ -505,6 +509,8 @@ Resources:
               Value: !Join ['.', ['config.settings', !Ref ENV]]
             - Name: REDIS_HOST
               Value: !Join [ '.', [ !GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs ] ]
+            - Name: ECS_IMAGE_PULL_BEHAVIOR
+              Value: prefer-cached
           EntryPoint: [sh, -c]
           Command:
             - /bin/bash -c "celery -A config.tasks worker"
@@ -575,6 +581,8 @@ Resources:
           Environment:
             - Name: DJANGO_SETTINGS_MODULE
               Value: !Join ['.', ['config.settings', !Ref ENV]]
+            - Name: ECS_IMAGE_PULL_BEHAVIOR
+              Value: prefer-cached
           EntryPoint: [sh, -c]
           Command:
             - /bin/bash -c "celery -A config.tasks beat"
