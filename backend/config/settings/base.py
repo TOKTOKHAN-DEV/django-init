@@ -228,6 +228,7 @@ SPECTACULAR_SETTINGS = {
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",
     ],
+    "COMPONENT_SPLIT_REQUEST": True,
 }
 
 
