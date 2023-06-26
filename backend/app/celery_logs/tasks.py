@@ -11,7 +11,11 @@ def task_celery_prerun(sender=None, **kwargs):
     if not sender:
         pass
 
-    CeleryLogs.objects.create(task_id=kwargs.get("task_id"), status="PENDING", task_name=sender.name)
+    CeleryLogs.objects.create(
+        task_id=kwargs.get("task_id"),
+        status="PENDING",
+        task_name=sender.name.split(".")[-1],
+    )
     task_execution_times[kwargs["task_id"]] = time.time()
 
 
