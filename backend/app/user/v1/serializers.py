@@ -181,7 +181,7 @@ class UserRegisterSerializer(serializers.Serializer):
         password_confirm = attrs.pop("password_confirm", None)
 
         if social_token:
-            payload = jwt.decode(social_token, key=settings.SECRET_KEY)
+            payload = jwt.decode(social_token, key=settings.SECRET_KEY, algorithms=settings.SIMPLE_JWT_ALGORITHM)
             if payload["expired_at"] < timezone.now().timestamp():
                 raise ValidationError({"social_token": ["회원가입 토큰이 만료됐습니다."]})
             attrs["email"] = payload["social_email"]
