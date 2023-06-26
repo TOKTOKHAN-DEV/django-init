@@ -12,7 +12,7 @@ class CeleryLogs(BaseModel):
     task_name = models.CharField(max_length=500, verbose_name="태스크 명")
     task_id = models.CharField(max_length=500, verbose_name="태스크 ID")
     status = models.CharField(max_length=10, verbose_name="태스크 상태", default=TaskStatus.choices)
-    process_time = models.CharField(max_length=500, verbose_name="실행 시간", blank=True, null=True)
+    process_time = models.FloatField(verbose_name="실행 시간", blank=True, null=True)
     message = models.TextField(verbose_name="메세지", blank=True, null=True)
 
     class Meta:
