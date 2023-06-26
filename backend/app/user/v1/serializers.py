@@ -245,12 +245,6 @@ class UserRegisterSerializer(serializers.Serializer):
         }
 
 
-class UserMeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ["id", "email"]
-
-
 class UserPasswordResetSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
