@@ -30,12 +30,12 @@ def task_celery_success(sender=None, **kwargs):
 
 @task_failure.connect
 def task_celery_fail(sender=None, **kwargs):
-    if not sender or task_execution_times.get(sender.request.id):
+    if not sender or task_execution_times.get(kwargs.get("task_id")):
         pass
 
     end_time = time.time()
     CeleryLogs.objects.filter(task_id=kwargs["task_id"]).update(
         status="FAIL",
-        process_time=end_time - task_execution_times[sender.request.id],
+        process_time=end_time - task_execution_times[kwargs["task_id"]],
         message=kwargs.get("einfo").exception,
     )
