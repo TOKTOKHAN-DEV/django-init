@@ -2,11 +2,11 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins
 from rest_framework.viewsets import GenericViewSet
 
+from app.celery_log.models import CeleryLogs
+from app.celery_log.v1.filters import CeleryLogsFilter
+from app.celery_log.v1.permissions import CeleryLogsPermission
+from app.celery_log.v1.serializers import CeleryLogsSerializer
 from app.common.pagination import CursorPagination
-from app.celery_logs.v1.filters import CeleryLogsFilter
-from app.celery_logs.v1.permissions import CeleryLogsPermission
-from app.celery_logs.v1.serializers import CeleryLogsSerializer
-from app.celery_logs.models import CeleryLogs
 
 
 @extend_schema_view(

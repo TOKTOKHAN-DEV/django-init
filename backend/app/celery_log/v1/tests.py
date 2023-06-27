@@ -4,7 +4,7 @@ from faker import Faker
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from app.celery_logs.models import CeleryLogs
+from app.celery_log.models import CeleryLogs
 from app.user.models import User
 
 faker = Faker(locale="ko_KR")
@@ -20,7 +20,7 @@ class CeleryLogsListAPITest(APITestCase):
 
     MODEL = CeleryLogs
     METHOD = "get"
-    PATH = "/v1/celery_logs/"
+    PATH = "/v1/celery_log/"
     PAGINATED_RESPONSE_FIELDS = ["cursor", "results"]
     PAGINATION_DEFAULT_PAGE_SIZE = 20
 
@@ -89,7 +89,7 @@ class CeleryLogsCreateAPITest(APITestCase):
 
     MODEL = CeleryLogs
     METHOD = "post"
-    PATH = "/v1/celery_logs/"
+    PATH = "/v1/celery_log/"
 
     SUCCESS_STATUS_CODE = status.HTTP_201_CREATED
     SUCCESS_DATA_SET = [
@@ -162,7 +162,7 @@ class CeleryLogsRetrieveAPITest(APITestCase):
 
     MODEL = CeleryLogs
     METHOD = "get"
-    PATH = "/v1/celery_logs/{id}/"
+    PATH = "/v1/celery_log/{id}/"
 
     SUCCESS_STATUS_CODE = status.HTTP_200_OK
     SUCCESS_RESPONSE_DATA = {"id": 1}  # TODO: add success response data
@@ -208,7 +208,7 @@ class CeleryLogsUpdateAPITest(APITestCase):
 
     MODEL = CeleryLogs
     METHOD = "put"
-    PATH = "/v1/celery_logs/{id}/"
+    PATH = "/v1/celery_log/{id}/"
 
     SUCCESS_STATUS_CODE = status.HTTP_200_OK
     SUCCESS_DATA_SET = [
@@ -291,7 +291,7 @@ class CeleryLogsDestroyAPITest(APITestCase):
 
     MODEL = CeleryLogs
     METHOD = "delete"
-    PATH = "/v1/celery_logs/{id}/"
+    PATH = "/v1/celery_log/{id}/"
 
     SUCCESS_STATUS_CODE = status.HTTP_204_NO_CONTENT
 

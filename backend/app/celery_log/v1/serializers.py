@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from app.celery_logs.models import CeleryLogs
+from app.celery_log.models import CeleryLogs
 
 
 class CeleryLogsSerializer(serializers.ModelSerializer):
