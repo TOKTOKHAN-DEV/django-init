@@ -34,6 +34,7 @@ LOCAL_APPS = [
     "app.email_log.apps.EmailLogConfig",
     "app.push_log.apps.PushLogConfig",
     "app.sms_log.apps.SmsLogConfig",
+    "app.celery_log.apps.CeleryLogConfig",
 ]
 
 THIRD_PARTY_APPS = [
