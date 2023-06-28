@@ -24,12 +24,11 @@ Resources:
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
-              - *
+              - "*"
             AllowedMethods:
-              - POST
+              - PUT
             AllowedOrigins:
-              - "http://localhost:3000"
-              - "https://${ProjectName}.com"
+              - "*"
             ExposeHeaders: [ ]
       OwnershipControls:
         Rules:
