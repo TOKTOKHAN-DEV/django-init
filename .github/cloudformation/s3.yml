@@ -21,6 +21,18 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       BucketName: !Sub '${ProjectName}-${ENV}-bucket'
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - POST
+              - PUT
+            AllowedOrigins:
+              - "http://localhost:3000"
+              - "https://${ProjectName}.com"
+            ExposeHeaders: [ ]
       OwnershipControls:
         Rules:
           - ObjectOwnership: ObjectWriter
