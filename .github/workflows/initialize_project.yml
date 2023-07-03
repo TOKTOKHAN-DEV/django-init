@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Set Project Name
         run: |
-          echo PROJECT_NAME=$(echo "${{ github.repository }}" | tr -d "${{ github.repository_owner }}/" | tr -d "-" | tr -d "django" | tr "[:upper:]" "[:lower]") >> $GITHUB_ENV
+          echo PROJECT_NAME=$(echo "${{ github.repository }}" | sed "s|${{ github.repository_owner }}\/||g" | sed "s|-django||g") >> $GITHUB_ENV
 
       - name: Checkout
         uses: actions/checkout@v3
