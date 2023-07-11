@@ -1,3 +1,4 @@
+import json
 import time
 
 from celery.signals import task_failure, task_prerun, task_success
@@ -14,6 +15,8 @@ def task_celery_prerun(sender=None, **kwargs):
         task_id=kwargs["task_id"],
         name=sender.name.split(".")[-1],
         status=CeleryLogStatusChoices.PENDING,
+        args=json.dumps(kwargs.get("args", [])),
+        kwargs=json.dumps(kwargs.get("kwargs", {})),
     )
 
 

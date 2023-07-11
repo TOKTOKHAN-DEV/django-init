@@ -53,23 +53,8 @@ region = ap-northeast-2
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python manage.py githooks
 ```
 
-
-## Commit Convention
-```
-========== 🟠 Run Commit 🟠 ==========
-1) 🤖 Chore    : (기타 수정)     
-2) 📚 Docs     : (문서 관련)     
-3) ✨ Feat     : (기능 추가)     
-4) 🐛 Fix      : (버그 수정)    
-5) ⚡  Perf     : (성능 개선)     
-6) 🔨 Refactor : (리팩토링)     
-7) 🚨 Test     : (테스트) 
-Select Commit Type: 
-Input Commit Message:
-```
 
 ## Create Dummy Data
 ```

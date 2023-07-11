@@ -19,6 +19,8 @@ class CeleryLog(BaseModel):
         default=CeleryLogStatusChoices.PENDING,
     )
     message = models.TextField(verbose_name="메세지", blank=True, default="")
+    args = models.CharField(default=list, max_length=500, blank=True, verbose_name="태스크 args")
+    kwargs = models.CharField(default=dict, max_length=500, blank=True, verbose_name="태스크 kwargs")
 
     class Meta:
         db_table = "celery_log"
