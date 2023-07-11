@@ -25,6 +25,7 @@ ALLOWED_HOSTS = []
 
 LOCAL_APPS = [
     "app.staticfile",
+    "app.admin.apps.AdminConfig",
     "app.common.apps.CommonConfig",
     "app.chat.apps.ChatConfig",
     "app.device.apps.DeviceConfig",
@@ -52,7 +53,6 @@ THIRD_PARTY_APPS = [
 ]
 
 DJANGO_APPS = [
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
