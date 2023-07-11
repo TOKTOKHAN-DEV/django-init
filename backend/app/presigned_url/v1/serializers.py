@@ -1,9 +1,9 @@
-import time
 import uuid
 
 import boto3
 from botocore.config import Config
 from botocore.exceptions import ClientError
+from django.apps import apps
 from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -11,10 +11,14 @@ from rest_framework.exceptions import ValidationError
 
 class PresignedUrlSerializer(serializers.Serializer):
     name = serializers.CharField(write_only=True)
+    category = serializers.ChoiceField(
+        choices=[model.__name__.lower() for model in apps.get_models() if model.__module__.startswith("app.")],
+        write_only=True,
+    )
     url = serializers.URLField(read_only=True)
 
     def validate(self, attrs):
-        attrs["url"] = self.create_presigned_url(attrs["name"])
+        attrs["url"] = self.create_presigned_url(attrs["name"], attrs["category"])
 
         return attrs
 
@@ -22,7 +26,7 @@ class PresignedUrlSerializer(serializers.Serializer):
         return validated_data
 
     @staticmethod
-    def create_presigned_url(name):
+    def create_presigned_url(name, category):
         s3_config = Config(
             region_name="ap-northeast-2",
             signature_version="s3v4",
@@ -30,7 +34,7 @@ class PresignedUrlSerializer(serializers.Serializer):
         s3_client = boto3.client("s3", config=s3_config)
         ext = name.split(".")[-1]
 
-        object_key = "/".join(["media", f"{uuid.uuid4()}.{ext}"])
+        object_key = "/".join(["media/category", f"{uuid.uuid4()}.{ext}"])
         try:
             url = s3_client.generate_presigned_url(
                 "put_object",
