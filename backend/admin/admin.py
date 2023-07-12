@@ -1,28 +1,28 @@
 import datetime
 import json
 import re
-import time
 import statistics
+import time
 from collections import defaultdict
-
 from functools import update_wrapper
 
+import boto3
+from botocore.exceptions import ClientError
+from django.conf import settings
+from django.contrib import admin
 from django.contrib.admin import AdminSite as DjangoAdminSite
 from django.http import JsonResponse
 from django.template.response import TemplateResponse
 from django.urls import path
 from django.utils import timezone
 from django.utils.safestring import mark_safe
-from django.contrib import admin
-from django.conf import settings
-
-import boto3
-from botocore.exceptions import ClientError
 
 
 class AdminSite(DjangoAdminSite):
     site_header = (
-        mark_safe(f'<img src="{settings.STATIC_URL + settings.SITE_LOGO}" height="28" style="vertical-align: bottom;" />')
+        mark_safe(
+            f'<img src="{settings.STATIC_URL + settings.SITE_LOGO}" height="28" style="vertical-align: bottom;" />'
+        )
         if settings.SITE_LOGO
         else f"{settings.SITE_NAME} 어드민"
     )
@@ -40,9 +40,9 @@ class AdminSite(DjangoAdminSite):
             path("log/info/", wrap(self.log_info_view), name="log_info"),
             path("log/error/", wrap(self.log_error_view), name="log_error"),
             path("log/dashboard/", wrap(self.log_dashboard_view), name="log_dashboard"),
-            path("api/log/info/", wrap(self.log_info_api_view), name='log_info_api'),
-            path("api/log/error/", wrap(self.log_error_api_view),name='log_error_api'),
-            path("api/log/dashboard/", wrap(self.log_dashboard_api_view),name='log_dashboard_api_view'),
+            path("api/log/info/", wrap(self.log_info_api_view), name="log_info_api"),
+            path("api/log/error/", wrap(self.log_error_api_view), name="log_error_api"),
+            path("api/log/dashboard/", wrap(self.log_dashboard_api_view), name="log_dashboard_api_view"),
         ]
         urls += super().get_urls()
         return urls
@@ -70,7 +70,7 @@ class AdminSite(DjangoAdminSite):
         for log_stream in log_stream_list:
             try:
                 response = client.get_log_events(
-                    logGroupName=f"somyeong/dev/{log_type}",
+                    logGroupName=f"{settings.PROJECT_NAME}/dev/{log_type}",
                     logStreamName=f"web-{log_stream}",
                     limit=100,
                     startFromHead=False,
@@ -87,7 +87,7 @@ class AdminSite(DjangoAdminSite):
         client = boto3.client("logs", region_name="ap-northeast-2")
 
         # # 로그 그룹 이름과 로그 스트림 이름을 지정
-        log_group_name = f"somyeong/dev/{log_type}"
+        log_group_name = f"{settings.PROJECT_NAME}/dev/{log_type}"
         log_data = []
 
         try:
@@ -220,7 +220,9 @@ class AdminSite(DjangoAdminSite):
             log_stream_list.append(std_date.strftime("%Y-%m-%d"))
             std_date += datetime.timedelta(days=1)
 
-        log_dashboard_data_list = self.__get_cw_dash_board_data("info", log_stream_list) + self.__get_cw_dash_board_data("error", log_stream_list)
+        log_dashboard_data_list = self.__get_cw_dash_board_data(
+            "info", log_stream_list
+        ) + self.__get_cw_dash_board_data("error", log_stream_list)
 
         response = []
         for event in log_dashboard_data_list:
@@ -233,9 +235,7 @@ class AdminSite(DjangoAdminSite):
                         ),
                         "method": message[1] if type(message) == list else None,
                         "status_code": message[2] if type(message) == list else None,
-                        "execution_time": float(message[3].strip("[]").strip("s"))
-                        if type(message) == list
-                        else None,
+                        "execution_time": float(message[3].strip("[]").strip("s")) if type(message) == list else None,
                         "path": message[4] if type(message) == list else None,
                         "message": message[-1] if type(message) == list else message,
                     }
