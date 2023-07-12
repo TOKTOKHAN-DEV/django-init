@@ -5,11 +5,11 @@ import boto3
 from config.secrets import get_secret
 from config.settings.base import *
 
+APP_ENV = "dev"
 DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/django/dev")
 SECRET_KEY = DJANGO_SECRET["key"]
 
 DEBUG = True
-
 ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = [f"https://admin.dev.{DOMAIN}"]
 

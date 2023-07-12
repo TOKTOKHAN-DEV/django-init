@@ -70,7 +70,7 @@ class AdminSite(DjangoAdminSite):
         for log_stream in log_stream_list:
             try:
                 response = client.get_log_events(
-                    logGroupName=f"{settings.PROJECT_NAME}/dev/{log_type}",
+                    logGroupName=f"{settings.PROJECT_NAME}/{settigns.APP_ENV}/{log_type}",
                     logStreamName=f"web-{log_stream}",
                     limit=100,
                     startFromHead=False,
@@ -87,7 +87,7 @@ class AdminSite(DjangoAdminSite):
         client = boto3.client("logs", region_name="ap-northeast-2")
 
         # # 로그 그룹 이름과 로그 스트림 이름을 지정
-        log_group_name = f"{settings.PROJECT_NAME}/dev/{log_type}"
+        log_group_name = f"{settings.PROJECT_NAME}/{settings.APP_ENV}/{log_type}"
         log_data = []
 
         try:
