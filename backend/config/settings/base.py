@@ -25,7 +25,7 @@ ALLOWED_HOSTS = []
 
 LOCAL_APPS = [
     "app.staticfile",
-    "app.admin.apps.AdminConfig",
+    "admin.apps.AdminConfig",
     "app.common.apps.CommonConfig",
     "app.chat.apps.ChatConfig",
     "app.device.apps.DeviceConfig",
@@ -80,7 +80,7 @@ MIDDLEWARE = [
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / 'templates'],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

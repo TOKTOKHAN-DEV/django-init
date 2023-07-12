@@ -1,0 +1,45 @@
+{% extends "admin/index.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block content_title %}
+   <div class="layout-between">
+       {% if title %}
+           <h1>{{ title }}</h1>
+       {% endif %}
+       <a class="custom-btn" href=""  style="margin: 0 0 20px; color: #ffffff;">서버 모니러팅</a>
+   </div>
+   <link rel="stylesheet" href="{% static 'css/custom_admin.css' %}">
+{% endblock %}
+
+{% block content %}
+   <div id="content-main">
+       <div class="module">
+           <table>
+               <caption>
+                   <div class="section">서버 모니터링</div>
+               </caption>
+               <tbody>
+               <tr class="model-attachment">
+                   <th scope="row">
+                       <a href="{% url 'admin:log_info' %}">Info 로그</a>
+                   </th>
+                   <td></td>
+               </tr>
+               <tr class="model-attachment">
+                   <th scope="row">
+                       <a href="{% url 'admin:log_error' %}">Error 로그</a>
+                   </th>
+                   <td></td>
+               </tr>
+               <tr class="model-attachment">
+                   <th scope="row">
+                       <a href="{% url 'admin:log_dashboard' %}">대시보드</a>
+                   </th>
+                   <td></td>
+               </tr>
+               </tbody>
+           </table>
+       </div>
+       {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+   </div>
+{% endblock %}
