@@ -133,7 +133,7 @@ Resources:
       SecurityGroups: [!Ref SecurityGroup]
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
-          Value: 5
+          Value: 15
   ALBTargetGroup8080:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     DependsOn: ALB
@@ -439,7 +439,7 @@ Resources:
               Value: prefer-cached
           EntryPoint: [sh, -c]
           Command:
-            - /bin/bash -c "daphne -b 0.0.0.0 -p 8081 config.asgi:application"
+            - /bin/bash -c "daphne -b 0.0.0.0 -p 8081 --ping-interval=10 config.asgi:application"
           LogConfiguration:
             LogDriver: awslogs
             Options:
