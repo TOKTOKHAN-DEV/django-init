@@ -6,11 +6,11 @@ import requests
 from config.secrets import get_secret
 from config.settings.base import *
 
+APP_ENV = "prod"
 DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/django/prod")
 SECRET_KEY = DJANGO_SECRET["key"]
 
 DEBUG = False
-
 ALLOWED_HOSTS += [f"api.{DOMAIN}", f"admin.{DOMAIN}"]
 CSRF_TRUSTED_ORIGINS = [f"https://admin.{DOMAIN}"]
 

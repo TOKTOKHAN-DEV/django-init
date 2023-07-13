@@ -1,0 +1,232 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_list %}
+{% load static %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border: 3px solid #007bff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spinner-rotate 1s linear infinite;
+  }
+
+  .loading-text {
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  @keyframes spinner-rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+  @-moz-keyframes spinner-rotate {
+      from { -moz-transform: rotate(0deg); }
+      to { -moz-transform: rotate(360deg); }
+  }
+  @-webkit-keyframes spinner-rotate {
+      from { -webkit-transform: rotate(0deg); }
+      to { -webkit-transform: rotate(360deg); }
+  }
+  </style>
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+  <title>모니터링 대시보드</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" />
+{% endblock %}
+
+{% if not is_popup %}
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% translate 'Home' %}</a>
+&rsaquo; monitoring
+</div>
+{% endblock %}
+{% endif %}
+
+{% block content %}
+<!-- Render our chart -->
+<div class="content">
+  <div class="content">
+    <h1 class="heading-section">로그 대시보드</h1>
+    <div class="content-main">
+      <div class="module" id="change-list">
+        <div id="loading-modal" class="modal">
+          <div class="modal-content">
+            <div id="spinner" class="spinner"></div>
+            <h5 id="loading-text" class="loading-text">로딩 중...</h5>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+          <div style="width: 80%;">
+            <canvas style="margin-top: 30px; margin-bottom: 30px; width: 100%; height: 300px;" id="statusCodeChard"></canvas>
+          </div>
+          <div style="width: 80%;">
+            <canvas style="margin-top: 100px; margin-bottom: 30px; width: 100%; height: 200px;" id="executionTimeChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+  const generateBackgroundColors = (labels) => {
+    const colorMap = {
+      200:"#00B894",
+      201:"#00D9A6",
+      204:"#00E6AC",
+      300:"#ADD8E6",
+      301:"#4169E1",
+      303:"#6495ED",
+      400:"#FF5733",
+      401: "#FF0000",
+      403: "#FF2400",
+      404:"#FF4500",
+      405: "#FF6347",
+      408: "#FF7F50",
+      429: "#FF8C00",
+      500:"#FFA500",
+    };
+
+    // 레이블 순서에 맞게 배경색 배열 생성
+    const backgroundColors = labels.map(label => colorMap[label]);
+
+    return backgroundColors;
+  }
+
+  // 모달 요소 선택
+  // Axios 요청 전에 모달 표시
+  const loadingModal = document.getElementById('loading-modal');
+
+  // Axios 요청 전에 모달 표시
+  axios.interceptors.request.use(function (config) {
+    loadingModal.style.display = 'flex';  // 모달 표시
+    return config;
+  }, function (error) {
+    return Promise.reject(error);
+  });
+
+  // Axios 응답 후에 모달 숨김
+  axios.interceptors.response.use(function (response) {
+    loadingModal.style.display = 'none';  // 모달 숨김
+    return response;
+  }, function (error) {
+    return Promise.reject(error);
+  });
+  const fetchStatusCodeData = () => {
+
+      const logDashBoardApiUrl = '{% url "admin:log_dashboard_api_view" %}';
+      axios.get(logDashBoardApiUrl, { withCredentials: true })
+      .then(response => {
+        // 요청 성공 시 동작
+        const newData = response.data;
+        drawDashBoard(newData);
+        return newData;
+      })
+      .catch(error => {
+        // 요청 실패 시 동작
+        alert(error.message);
+      });
+  }
+
+  const drawDashBoard = (data) => {
+    const statusCodeCtx = document.getElementById('statusCodeChard').getContext('2d');
+    const  executionTimeCtx= document.getElementById('executionTimeChart').getContext('2d');
+    const pieData = data["statusData"];
+    const executionBarData = data['executionData'];
+    //
+    // // Parse the dates to JS
+    const pieLabel = pieData.map(x => x.statusCode);
+    const pieChartData = pieData.map(x => x.data)
+
+    const executionLabel = executionBarData.map(x => x.path);
+    const executionChartData = executionBarData.map(x => x.data);
+
+    // Render the chart
+    const statusCodeChart = new Chart(statusCodeCtx, {
+      type: 'doughnut',
+      data: {
+        labels: pieLabel,
+        datasets: [{
+          label: "하이",
+          data: pieChartData,
+          backgroundColor: generateBackgroundColors(pieLabel),
+          hoverOffset: 10
+        }]
+      }
+    });
+
+    const executionTimeChart = new Chart(executionTimeCtx, {
+        type: 'bar',
+        data: {
+          labels: executionLabel,
+          datasets: [{
+            label: 'API별 응답 시간',
+            data: executionChartData,
+            backgroundColor: Array.from({length: executionChartData.length}, () => {
+              const r = Math.floor(Math.random() * 256);
+              const g = Math.floor(Math.random() * 256);
+              const b = Math.floor(Math.random() * 256);
+              return `rgba(${r}, ${g}, ${b}, 0.2)`;
+            }),
+            borderColor: Array.from({length: executionChartData.length}, () => {
+              const r = Math.floor(Math.random() * 256);
+              const g = Math.floor(Math.random() * 256);
+              const b = Math.floor(Math.random() * 256);
+              return `rgb(${r}, ${g}, ${b})`;
+            }),
+            borderWidth: 1
+          }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+      });
+  }
+
+  $(document).ready(() => {
+    fetchStatusCodeData();
+  });
+</script>
+</html>
+
+
+<!-- Render the rest of the ChangeList view -->
+{{ block.super }}
+{% endblock %}
