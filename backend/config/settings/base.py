@@ -24,8 +24,8 @@ SECRET_KEY = "pj%2ze09(g)i^joilp-f8gvs)6ou_m036u3ejs^ky&9nse5k92"
 ALLOWED_HOSTS = []
 
 LOCAL_APPS = [
+    "admin.apps.AdminConfig",
     "app.staticfile",
-    "app.admin.apps.AdminConfig",
     "app.common.apps.CommonConfig",
     "app.chat.apps.ChatConfig",
     "app.device.apps.DeviceConfig",
@@ -92,7 +92,6 @@ TEMPLATES = [
         },
     },
 ]
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
