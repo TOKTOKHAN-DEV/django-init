@@ -18,9 +18,13 @@ env = os.getenv("ENV")
 
 def handler(event, context):
     user_id = 0
-    access = event.get("queryStringParameters") and event["queryStringParameters"].get("access")
+    access = event.get("queryStringParameters") and event["queryStringParameters"].get(
+        "access"
+    )
     if access:
-        response = secretmanager.get_secret_value(SecretId=f"{project_name}/django/{env}")
+        response = secretmanager.get_secret_value(
+            SecretId=f"{project_name}/django/{env}"
+        )
         secret = json.loads(response["SecretString"])
         payload = jwt_decode(access, secret["key"])
         user_id = payload["user_id"]

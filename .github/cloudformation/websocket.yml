@@ -158,16 +158,14 @@ Resources:
       Handler: index.handler
       Code:
         ZipFile: |
-          import boto3
           import os
+
+          import boto3
 
           db = boto3.client("dynamodb")
 
 
-          def handler(event, context):
-              print(event)
-              print(context)
-
+          def lambda_handler(event, context):
               db.delete_item(
                   TableName=os.getenv("TABLE_NAME"),
                   Key={"connection_id": {"S": event["requestContext"]["connectionId"]}},
