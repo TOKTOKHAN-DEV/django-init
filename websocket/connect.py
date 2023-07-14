@@ -5,7 +5,6 @@ import json
 import os
 
 import boto3
-import jwt
 
 db = boto3.client("dynamodb")
 secretmanager = boto3.client(
