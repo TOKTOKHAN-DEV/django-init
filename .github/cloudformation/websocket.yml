@@ -79,8 +79,8 @@ Resources:
     Properties:
       FunctionName: WebsocketConnectFunction
       Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: python3.8
-      Handler: WebsocketConnectFunction.index.lambda_handler
+      Runtime: python3.9
+      Handler: index.handler
       Code:
         ZipFile: |
           import boto3
@@ -89,7 +89,7 @@ Resources:
           db = boto3.client("dynamodb")
 
 
-          def lambda_handler(event, context):
+          def handler(event, context):
               print(event)
               print(context)
 
@@ -111,8 +111,8 @@ Resources:
     Properties:
       FunctionName: WebsocketDisconnectFunction
       Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: python3.8
-      Handler: WebsocketDisconnectFunction.index.lambda_handler
+      Runtime: python3.9
+      Handler: index.handler
       Code:
         ZipFile: |
           import boto3
@@ -121,7 +121,7 @@ Resources:
           db = boto3.client("dynamodb")
 
 
-          def lambda_handler(event, context):
+          def handler(event, context):
               print(event)
               print(context)
 
@@ -140,8 +140,8 @@ Resources:
     Properties:
       FunctionName: WebsocketSendFunction
       Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: python3.8
-      Handler: WebsocketSendFunction.index.lambda_handler
+      Runtime: python3.9
+      Handler: index.handler
       Code:
         ZipFile: |
           import json
@@ -152,7 +152,7 @@ Resources:
           db = boto3.client("dynamodb")
 
 
-          def lambda_handler(event, context):
+          def handler(event, context):
               print(event)
               print(context)
 
