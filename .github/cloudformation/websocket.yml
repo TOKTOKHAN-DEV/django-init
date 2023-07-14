@@ -51,7 +51,7 @@ Resources:
     Properties:
       ApiId: !Ref WebSocketAPI
       IntegrationType: AWS_PROXY
-      IntegrationUri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectLambdaFunction.Arn}/invocations
+      IntegrationUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectLambdaFunction.Arn}/invocations
       IntegrationMethod: POST
   DisconnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -59,7 +59,7 @@ Resources:
     Properties:
       ApiId: !Ref WebSocketAPI
       IntegrationType: AWS_PROXY
-      IntegrationUri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectLambdaFunction.Arn}/invocations
+      IntegrationUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectLambdaFunction.Arn}/invocations
       IntegrationMethod: POST
   SendIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -67,7 +67,7 @@ Resources:
     Properties:
       ApiId: !Ref WebSocketAPI
       IntegrationType: AWS_PROXY
-      IntegrationUri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendLambdaFunction.Arn}/invocations
+      IntegrationUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendLambdaFunction.Arn}/invocations
       IntegrationMethod: POST
 
   ConnectLambdaFunction:
