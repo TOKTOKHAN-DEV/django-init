@@ -21,6 +21,7 @@ Resources:
     Properties:
       Name: !Sub '${ProjectName}-${ENV}-websocket-api'
       ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
 
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
@@ -40,7 +41,7 @@ Resources:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref WebSocketAPI
-      RouteKey: $default
+      RouteKey: sendMessage
       AuthorizationType: NONE
       Target: !Join ["/", ["integrations", !Ref SendIntegration]]
 
