@@ -45,10 +45,9 @@ class Message(BaseModel):
                 ":user_id": {"N": str(user_id)},
             },
         )
-
         apigw = boto3.client(
             "apigatewaymanagementapi",
-            endpoint_url=f"https://xc19amjy9i.execute-api.ap-northeast-2.amazonaws.com/prod",
+            endpoint_url=f"https://ws.{settings.DOMAIN}",
         )
         for item in items["Items"]:
             apigw.post_to_connection(
@@ -58,6 +57,7 @@ class Message(BaseModel):
                         "chat_id": self.chat_id,
                         "user_id": self.user_id,
                         "text": self.text,
+                        "image": self.image,
                     }
                 ),
             )
