@@ -16,6 +16,13 @@ Conditions:
   IsProd: !Equals [!Ref ENV, 'prod']
 
 Resources:
+  HttpAPI:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-http-api'
+      ProtocolType: HTTP
+      RouteSelectionExpression: $request.body.action
+
   WebsocketAPI:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -51,21 +58,21 @@ Resources:
     Properties:
       ApiId: !Ref WebsocketAPI
       IntegrationType: AWS_PROXY
-      IntegrationUri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectFunction.Arn}/invocations
+      IntegrationUri: !GetAtt ConnectFunction.Arn
   DisconnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     DependsOn: DisconnectFunction
     Properties:
       ApiId: !Ref WebsocketAPI
       IntegrationType: AWS_PROXY
-      IntegrationUri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectFunction.Arn}/invocations
+      IntegrationUri: !GetAtt DisconnectFunction.Arn
   SendIntegration:
     Type: AWS::ApiGatewayV2::Integration
     DependsOn: SendFunction
     Properties:
       ApiId: !Ref WebsocketAPI
       IntegrationType: AWS_PROXY
-      IntegrationUri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendFunction.Arn}/invocations
+      IntegrationUri: !GetAtt SendFunction.Arn
 
   ConnectFunction:
     Type: AWS::Lambda::Function
@@ -99,7 +106,6 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-ConnectionTable' }
-
   DisconnectFunction:
     Type: AWS::Lambda::Function
     Properties:
