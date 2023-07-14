@@ -1,0 +1,206 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description:
+  'DDB IaC'
+
+Parameters:
+  ProjectName:
+    Type: String
+  ENV:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+
+Conditions:
+  IsProd: !Equals [!Ref ENV, 'prod']
+
+Resources:
+  WebSocketAPI:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-websocket-api'
+      ProtocolType: WEBSOCKET
+
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: $connect
+      AuthorizationType: NONE
+      Target: !Join ["/", ["integrations", !Ref ConnectIntegration]]
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      Target: !Join ["/", ["integrations", !Ref DisconnectIntegration]]
+  SendRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      RouteKey: $default
+      AuthorizationType: NONE
+      Target: !Join ["/", ["integrations", !Ref SendIntegration]]
+
+  ConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS_PROXY
+      IntegrationUri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectLambdaFunction.Arn}/invocations
+      IntegrationMethod: POST
+  DisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS_PROXY
+      IntegrationUri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectLambdaFunction.Arn}/invocations
+      IntegrationMethod: POST
+  SendIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebSocketAPI
+      IntegrationType: AWS_PROXY
+      IntegrationUri: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendLambdaFunction.Arn}/invocations
+      IntegrationMethod: POST
+
+  ConnectLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: YourConnectLambdaFunction
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.8
+      Handler: connect.lambda_handler
+      Code:
+        Zipfile: |
+          import boto3
+          import os
+
+          db = boto3.client("dynamodb")
+
+
+          def lambda_handler(event, context):
+              print(event)
+              print(context)
+
+              db.put_item(
+                  TableName=os.getenv("TABLE_NAME"),
+                  Item={
+                      "connection_id": {"S": event["requestContext"]["connectionId"]},
+                      # "user_id": {"N": event['body']}
+                  },
+              )
+
+              return {}
+
+      Environment:
+        Variables:
+          TABLE_NAME: { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-ConnectionTable' }
+
+  DisconnectLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: YourDisconnectLambdaFunction
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.8
+      Handler: disconnect.lambda_handler
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+
+          db = boto3.client("dynamodb")
+
+
+          def lambda_handler(event, context):
+              print(event)
+              print(context)
+
+              db.delete_item(
+                  TableName=os.getenv("TABLE_NAME"),
+                  Key={"connection_id": {"S": event["requestContext"]["connectionId"]}},
+              )
+
+              return {}
+
+      Environment:
+        Variables:
+          TABLE_NAME: { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-ConnectionTable' }
+  SendLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: YourSendLambdaFunction
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.8
+      Handler: send.lambda_handler
+      Code:
+        ZipFile: |
+          import json
+
+          import boto3
+          import os
+
+          db = boto3.client("dynamodb")
+
+
+          def lambda_handler(event, context):
+              print(event)
+              print(context)
+
+              message = json.loads(event["body"])["message"]
+
+              items = db.query(
+                  TableName=os.getenv("TABLE_NAME"),
+                  IndexName="UserIdIndex",
+                  KeyConditionExpression="user_id = :user_id",
+                  ExpressionAttributeValues={
+                      ":user_id": {"N": str(event["body"]["user_id"])},
+                  },
+              )
+
+              api = boto3.client(
+                  "apigatewaymanagementapi",
+                  endpoint_url=f"https://{event['requestContext']['domainName']}/{event['requestContext']['stage']}",
+              )
+              for item in items:
+                  api.post_to_connection(
+                      ConnectionId=item["connectionId"],
+                      Data=message,
+                  )
+
+              return {}
+
+      Environment:
+        Variables:
+          TABLE_NAME: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-ConnectionTable'}
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: YourLambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                Resource: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-ConnectionTableArn'}
