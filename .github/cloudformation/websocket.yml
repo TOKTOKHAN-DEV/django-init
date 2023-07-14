@@ -77,10 +77,10 @@ Resources:
   ConnectFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: WebsocketConnectLambda
+      FunctionName: WebsocketConnectFunction
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.8
-      Handler: index.lambda_handler
+      Handler: WebsocketConnectFunction.index.lambda_handler
       Code:
         ZipFile: |
           import boto3
@@ -109,10 +109,10 @@ Resources:
   DisconnectFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: WebsocketDisconnectLambda
+      FunctionName: WebsocketDisconnectFunction
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.8
-      Handler: index.lambda_handler
+      Handler: WebsocketDisconnectFunction.index.lambda_handler
       Code:
         ZipFile: |
           import boto3
@@ -138,10 +138,10 @@ Resources:
   SendFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: WebsocketSendLambda
+      FunctionName: WebsocketSendFunction
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.8
-      Handler: index.lambda_handler
+      Handler: WebsocketSendFunction.index.lambda_handler
       Code:
         ZipFile: |
           import json
