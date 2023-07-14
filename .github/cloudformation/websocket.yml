@@ -227,6 +227,20 @@ Resources:
   Stage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
+      ApiId: !Ref WebsocketAPI
       StageName: !Ref ENV
       DeploymentId: !Ref Deployment
-      ApiId: !Ref WebsocketAPI
+      DefaultRouteSettings:
+        DetailedMetricsEnabled: true
+        LoggingLevel: INFO
+        DataTraceEnabled: false
+        ThrottlingBurstLimit: 10
+        ThrottlingRateLimit: 10
+      AccessLogSettings:
+        DestinationArn: !Sub 'arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/apigw/${ProjectName}/${ENV}'
+        Format: >-
+          {"requestId":"$context.requestId", "ip": "$context.identity.sourceIp",
+          "caller":"$context.identity.caller",
+          "user":"$context.identity.user","requestTime":"$context.requestTime",
+          "eventType":"$context.eventType","routeKey":"$context.routeKey",
+          "status":"$context.status","connectionId":"$context.connectionId"}
