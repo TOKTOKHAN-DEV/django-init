@@ -47,6 +47,7 @@ Resources:
 
   ConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
+    DependsOn: ConnectLambdaFunction
     Properties:
       ApiId: !Ref WebSocketAPI
       IntegrationType: AWS_PROXY
@@ -54,6 +55,7 @@ Resources:
       IntegrationMethod: POST
   DisconnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
+    DependsOn: DisconnectLambdaFunction
     Properties:
       ApiId: !Ref WebSocketAPI
       IntegrationType: AWS_PROXY
@@ -61,6 +63,7 @@ Resources:
       IntegrationMethod: POST
   SendIntegration:
     Type: AWS::ApiGatewayV2::Integration
+    DependsOn: SendLambdaFunction
     Properties:
       ApiId: !Ref WebSocketAPI
       IntegrationType: AWS_PROXY
