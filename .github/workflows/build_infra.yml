@@ -133,7 +133,6 @@ jobs:
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
             ENV=${{ inputs.env }},
-            Websocket=${{ inputs.websocket }},
             Celery=${{ inputs.celery }},
             Celerybeat=${{ inputs.celerybeat }}
 
