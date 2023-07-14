@@ -199,7 +199,7 @@ Resources:
                   - secretsmanager:DescribeSecret
                   - secretsmanager:ListSecretVersionIds
                   - secretsmanager:ListSecrets
-                Resource: *
+                Resource: '*'
               - Effect: Allow
                 Action:
                   - execute-api:ManageConnections
