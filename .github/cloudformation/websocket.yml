@@ -102,16 +102,18 @@ Resources:
 
           def handler(event, context):
               user_id = 0
-              access = event["queryStringParameters"].get("access")
+              access = event.get("queryStringParameters") and event["queryStringParameters"].get("access")
               if access:
                   response = secretmanager.get_secret_value(SecretId=f"{project_name}/django/{env}")
                   secret = json.loads(response["SecretString"])
                   decoded_payload = jwt_decode(access, secret["key"])
                   user_id = decoded_payload["user_id"]
-
               db.put_item(
                   TableName=os.getenv("TABLE_NAME"),
-                  Item={"connection_id": {"S": event["requestContext"]["connectionId"]}, "user_id": {"N": str(user_id)}},
+                  Item={
+                      "connection_id": {"S": event["requestContext"]["connectionId"]},
+                      "user_id": {"N": str(user_id)},
+                  },
               )
 
               return {}

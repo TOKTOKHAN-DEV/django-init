@@ -23,10 +23,12 @@ def handler(event, context):
         secret = json.loads(response["SecretString"])
         decoded_payload = jwt_decode(access, secret["key"])
         user_id = decoded_payload["user_id"]
-
     db.put_item(
         TableName=os.getenv("TABLE_NAME"),
-        Item={"connection_id": {"S": event["requestContext"]["connectionId"]}, "user_id": {"N": str(user_id)}},
+        Item={
+            "connection_id": {"S": event["requestContext"]["connectionId"]},
+            "user_id": {"N": str(user_id)},
+        },
     )
 
     return {}
