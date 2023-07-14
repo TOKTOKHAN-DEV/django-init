@@ -184,7 +184,7 @@ jobs:
 
   build_websocket:
     runs-on: ubuntu-latest
-    needs: [ set_environment ]
+    needs: [ set_environment, build_ecs ]
     if: ${{ inputs.websocket == 'true' }}
     steps:
       - name: Checkout
