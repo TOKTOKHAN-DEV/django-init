@@ -231,16 +231,32 @@ Resources:
       DeploymentId: !Ref Deployment
       StageName: !Ref ENV
       AccessLogSettings:
-        DestinationArn: !GetAtt LogGroup.Arn
+        DestinationArn: !GetAtt LogRole.Arn
         Format: >-
           {"requestId":"$context.requestId", "ip": "$context.identity.sourceIp",
           "caller":"$context.identity.caller",
           "user":"$context.identity.user","requestTime":"$context.requestTime",
           "eventType":"$context.eventType","routeKey":"$context.routeKey",
           "status":"$context.status","connectionId":"$context.connectionId"}
-
-  LogGroup:
-    Type: AWS::Logs::LogGroup
+  LogRole:
+    Type: AWS::IAM::Role
     Properties:
-      LogGroupName: !Sub '/apigw/${ProjectName}/${ENV}'
-      RetentionInDays: 14
+      RoleName: ApiGatewayLogsRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: ApiGatewayLogsPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: "*"
