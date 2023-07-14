@@ -94,7 +94,7 @@ Resources:
                   TableName=os.getenv("TABLE_NAME"),
                   Item={
                       "connection_id": {"S": event["requestContext"]["connectionId"]},
-                      # "user_id": {"N": event['body']}
+                      "user_id": {"N": str(1)}
                   },
               )
 
