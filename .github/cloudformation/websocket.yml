@@ -58,13 +58,6 @@ Resources:
       RouteKey: $disconnect
       AuthorizationType: NONE
       Target: !Join ["/", ["integrations", !Ref DisconnectIntegration]]
-#  SendRoute:
-#    Type: AWS::ApiGatewayV2::Route
-#    Properties:
-#      ApiId: !Ref WebsocketAPI
-#      RouteKey: $default
-#      AuthorizationType: NONE
-#      Target: !Join ["/", ["integrations", !Ref SendIntegration]]
 
   ConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
@@ -80,13 +73,6 @@ Resources:
       IntegrationType: AWS_PROXY
       IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectFunction.Arn}/invocations'
       IntegrationMethod: POST
-#  SendIntegration:
-#    Type: AWS::ApiGatewayV2::Integration
-#    Properties:
-#      ApiId: !Ref WebsocketAPI
-#      IntegrationType: AWS_PROXY
-#      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendFunction.Arn}/invocations'
-#      IntegrationMethod: POST
 
   ConnectFunction:
     Type: AWS::Lambda::Function
@@ -98,14 +84,16 @@ Resources:
       Code:
         ZipFile: |
           import boto3
+          import requests
           import os
 
           db = boto3.client("dynamodb")
 
 
           def handler(event, context):
-              print(event)
-              print(context)
+              # access = event["queryStringParameters"].get("access")
+              if access:
+                  # requests.post(url=, headers={"Authorization": f"Bearer {access}"})
 
               db.put_item(
                   TableName=os.getenv("TABLE_NAME"),
@@ -149,53 +137,7 @@ Resources:
       Environment:
         Variables:
           TABLE_NAME: !Ref ConnectionTable
-#  SendFunction:
-#    Type: AWS::Lambda::Function
-#    Properties:
-#      FunctionName: WebsocketSendFunction
-#      Role: !GetAtt LambdaExecutionRole.Arn
-#      Runtime: python3.9
-#      Handler: index.handler
-#      Code:
-#        ZipFile: |
-#          import json
-#
-#          import boto3
-#          import os
-#
-#          db = boto3.client("dynamodb")
-#
-#
-#          def handler(event, context):
-#              print(event)
-#              print(context)
-#
-#              message = json.loads(event["body"])["message"]
-#
-#              items = db.query(
-#                  TableName=os.getenv("TABLE_NAME"),
-#                  IndexName="UserIdIndex",
-#                  KeyConditionExpression="user_id = :user_id",
-#                  ExpressionAttributeValues={
-#                      ":user_id": {"N": str(event["body"]["user_id"])},
-#                  },
-#              )
-#
-#              api = boto3.client(
-#                  "apigatewaymanagementapi",
-#                  endpoint_url=f"https://{event['requestContext']['domainName']}/{event['requestContext']['stage']}",
-#              )
-#              for item in items:
-#                  api.post_to_connection(
-#                      ConnectionId=item["connectionId"],
-#                      Data=message,
-#                  )
-#
-#              return {}
-#
-#      Environment:
-#        Variables:
-#          TABLE_NAME: !Ref ConnectionTable
+
   ConnectFunctionPermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -210,13 +152,6 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: apigateway.amazonaws.com
       SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketAPI}/*"
-#  SendFunctionPermission:
-#    Type: AWS::Lambda::Permission
-#    Properties:
-#      FunctionName: !GetAtt SendFunction.Arn
-#      Action: lambda:InvokeFunction
-#      Principal: apigateway.amazonaws.com
-#      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketAPI}/*"
 
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -265,14 +200,7 @@ Resources:
       ApiId: !Ref WebsocketAPI
       DeploymentId: !Ref Deployment
       StageName: !Ref ENV
-#      AccessLogSettings:
-#        DestinationArn: !GetAtt LogGroup.Arn
-#        Format: $context.extendedRequestId $context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] "$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId
-#  LogGroup:
-#    Type: AWS::Logs::LogGroup
-#    Properties:
-#      LogGroupName: !Sub '/apigw/${ProjectName}/${ENV}'
-#
+
   ApiCWLRoleArn:
     Type: AWS::ApiGateway::Account
     Properties:

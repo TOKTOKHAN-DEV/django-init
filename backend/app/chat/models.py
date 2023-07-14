@@ -37,7 +37,7 @@ class Message(BaseModel):
 
     def send(self, user_id):
         db = boto3.client("dynamodb")
-        items = db.query(
+        response = db.query(
             TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection-table",
             IndexName="UserIdIndex",
             KeyConditionExpression="user_id = :user_id",
@@ -49,7 +49,7 @@ class Message(BaseModel):
             "apigatewaymanagementapi",
             endpoint_url=f"https://ws.{settings.DOMAIN}",
         )
-        for item in items["Items"]:
+        for item in response["Items"]:
             apigw.post_to_connection(
                 ConnectionId=item["connection_id"]["S"],
                 Data=json.dumps(
