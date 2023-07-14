@@ -44,8 +44,8 @@ Outputs:
   ConnectionTable:
     Value: !Ref ConnectionTable
     Export:
-      Name: '${ProjectName}-${ENV}-ConnectionTable'
+      Name: !Sub '${ProjectName}-${ENV}-ConnectionTable'
   ConnectionTableArn:
     Value: !GetAtt ConnectionTable.Arn
     Export:
-      Name: '${ProjectName}-${ENV}-ConnectionTableArn'
+      Name: !Sub '${ProjectName}-${ENV}-ConnectionTableArn'
