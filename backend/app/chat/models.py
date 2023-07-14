@@ -1,3 +1,7 @@
+import json
+
+import boto3
+from django.conf import settings
 from django.db import models
 
 from app.common.models import BaseModel
@@ -30,3 +34,30 @@ class Message(BaseModel):
 
     def __str__(self):
         return self.text
+
+    def send(self, user_id):
+        db = boto3.client("dynamodb")
+        items = db.query(
+            TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection-table",
+            IndexName="UserIdIndex",
+            KeyConditionExpression="user_id = :user_id",
+            ExpressionAttributeValues={
+                ":user_id": {"N": str(user_id)},
+            },
+        )
+
+        apigw = boto3.client(
+            "apigatewaymanagementapi",
+            endpoint_url=f"https://xc19amjy9i.execute-api.ap-northeast-2.amazonaws.com/prod",
+        )
+        for item in items["Items"]:
+            apigw.post_to_connection(
+                ConnectionId=item["connection_id"]["S"],
+                Data=json.dumps(
+                    {
+                        "chat_id": self.chat_id,
+                        "user_id": self.user_id,
+                        "text": self.text,
+                    }
+                ),
+            )
