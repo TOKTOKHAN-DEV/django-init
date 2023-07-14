@@ -54,21 +54,18 @@ Resources:
 
   ConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
-    DependsOn: ConnectFunction
     Properties:
       ApiId: !Ref WebsocketAPI
       IntegrationType: AWS_PROXY
       IntegrationUri: !GetAtt ConnectFunction.Arn
   DisconnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
-    DependsOn: DisconnectFunction
     Properties:
       ApiId: !Ref WebsocketAPI
       IntegrationType: AWS_PROXY
       IntegrationUri: !GetAtt DisconnectFunction.Arn
   SendIntegration:
     Type: AWS::ApiGatewayV2::Integration
-    DependsOn: SendFunction
     Properties:
       ApiId: !Ref WebsocketAPI
       IntegrationType: AWS_PROXY
@@ -80,7 +77,7 @@ Resources:
       FunctionName: WebsocketConnectLambda
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.8
-      Handler: connect.lambda_handler
+      Handler: index.lambda_handler
       Code:
         ZipFile: |
           import boto3
@@ -112,7 +109,7 @@ Resources:
       FunctionName: WebsocketDisconnectLambda
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.8
-      Handler: disconnect.lambda_handler
+      Handler: index.lambda_handler
       Code:
         ZipFile: |
           import boto3
@@ -141,7 +138,7 @@ Resources:
       FunctionName: WebsocketSendLambda
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.8
-      Handler: send.lambda_handler
+      Handler: index.lambda_handler
       Code:
         ZipFile: |
           import json
