@@ -16,13 +16,13 @@ Conditions:
   IsProd: !Equals [!Ref ENV, 'prod']
 
 Resources:
-#  WebSocketAPI:
-#    Type: AWS::ApiGatewayV2::Api
-#    Properties:
-#      Name: !Sub '${ProjectName}-${ENV}-websocket-api'
-#      ProtocolType: WEBSOCKET
-#      RouteSelectionExpression: $request.body.action
-#
+  WebSocketAPI:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-websocket-api'
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+
 #  ConnectRoute:
 #    Type: AWS::ApiGatewayV2::Route
 #    Properties:
@@ -73,7 +73,7 @@ Resources:
   ConnectLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: YourConnectLambdaFunction
+      FunctionName: WSConnectinoLambda
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.8
       Handler: connect.lambda_handler
@@ -106,7 +106,7 @@ Resources:
   DisconnectLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: YourDisconnectLambdaFunction
+      FunctionName: WSDisconnectinoLambda
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.8
       Handler: disconnect.lambda_handler
@@ -135,7 +135,7 @@ Resources:
   SendLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: YourSendLambdaFunction
+      FunctionName: WSSendLambda
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.8
       Handler: send.lambda_handler
