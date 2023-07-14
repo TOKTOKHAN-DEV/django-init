@@ -1,7 +1,7 @@
 import json
+import os
 
 import boto3
-import os
 
 db = boto3.client("dynamodb")
 
