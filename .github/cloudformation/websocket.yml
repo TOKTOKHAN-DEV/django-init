@@ -231,7 +231,7 @@ Resources:
       DeploymentId: !Ref Deployment
       StageName: !Ref ENV
       AccessLogSettings:
-        DestinationArn: !GetAtt AccessLogBucket.Arn
+        DestinationArn: !GetAtt LogGroup.Arn
         Format: >-
           {"requestId":"$context.requestId", "ip": "$context.identity.sourceIp",
           "caller":"$context.identity.caller",
@@ -239,7 +239,8 @@ Resources:
           "eventType":"$context.eventType","routeKey":"$context.routeKey",
           "status":"$context.status","connectionId":"$context.connectionId"}
 
-  AccessLogBucket:
-    Type: AWS::S3::Bucket
+  LogGroup:
+    Type: AWS::Logs::LogGroup
     Properties:
-      BucketName: !Sub '${ProjectName}-${ENV}-apigw-log'
+      LogGroupName: !Sub '/apigw/${ProjectName}/${ENV}'
+      RetentionInDays: 14
