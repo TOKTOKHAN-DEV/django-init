@@ -3,6 +3,7 @@ import hashlib
 import hmac
 import json
 import os
+import time
 
 import boto3
 
@@ -21,8 +22,10 @@ def handler(event, context):
     if access:
         response = secretmanager.get_secret_value(SecretId=f"{project_name}/django/{env}")
         secret = json.loads(response["SecretString"])
-        decoded_payload = jwt_decode(access, secret["key"])
-        user_id = decoded_payload["user_id"]
+        payload = jwt_decode(access, secret["key"])
+        user_id = payload["user_id"]
+        if time.time() > payload["exp"]:
+            raise Exception("expired access token.")
     db.put_item(
         TableName=os.getenv("TABLE_NAME"),
         Item={
