@@ -230,10 +230,10 @@ Resources:
       ApiId: !Ref WebsocketAPI
       DeploymentId: !Ref Deployment
       StageName: !Ref ENV
-      AccessLogSettings:
-        DestinationArn: !GetAtt LogGroup.Arn
-        Format: $context.extendedRequestId $context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] "$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId
-  LogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub '/apigw/${ProjectName}/${ENV}'
+#      AccessLogSettings:
+#        DestinationArn: !GetAtt LogGroup.Arn
+#        Format: $context.extendedRequestId $context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] "$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId
+#  LogGroup:
+#    Type: AWS::Logs::LogGroup
+#    Properties:
+#      LogGroupName: !Sub '/apigw/${ProjectName}/${ENV}'
