@@ -79,6 +79,7 @@ jobs:
         with:
           name: ${{ needs.set_environment.outputs.project_name }}-${{ inputs.env }}-websocket
           template: .github/cloudformation/websocket.yml
+          capabilities: CAPABILITY_NAMED_IAM
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
             ENV=${{ inputs.env }}
