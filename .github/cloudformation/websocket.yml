@@ -16,12 +16,12 @@ Conditions:
   IsProd: !Equals [!Ref ENV, 'prod']
 
 Resources:
-  HttpAPI:
-    Type: AWS::ApiGatewayV2::Api
-    Properties:
-      Name: !Sub '${ProjectName}-${ENV}-http-api'
-      ProtocolType: HTTP
-      RouteSelectionExpression: $request.body.action
+#  HttpAPI:
+#    Type: AWS::ApiGatewayV2::Api
+#    Properties:
+#      Name: !Sub '${ProjectName}-${ENV}-http-api'
+#      ProtocolType: HTTP
+#      RouteSelectionExpression: $request.body.action
 
   WebsocketAPI:
     Type: AWS::ApiGatewayV2::Api
