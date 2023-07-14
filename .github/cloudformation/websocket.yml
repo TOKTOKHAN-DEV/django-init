@@ -83,6 +83,9 @@ Resources:
       Handler: index.handler
       Code:
         ZipFile: |
+          import base64
+          import hashlib
+          import hmac
           import json
           import os
 
@@ -104,8 +107,8 @@ Resources:
               if access:
                   response = secretmanager.get_secret_value(SecretId=f"{project_name}/django/{env}")
                   secret = json.loads(response["SecretString"])
-                  payload = jwt.decode(access, key=secret["key"], algorithms="HS256")
-                  user_id = payload["user_id"]
+                  decoded_payload = jwt_decode(access, secret["key"])
+                  user_id = decoded_payload["user_id"]
 
               db.put_item(
                   TableName=os.getenv("TABLE_NAME"),
@@ -113,6 +116,29 @@ Resources:
               )
 
               return {}
+
+
+          def jwt_decode(access, key):
+              token_parts = access.split(".")
+              header = token_parts[0]
+              payload = token_parts[1]
+              signature = token_parts[2]
+
+              decoded_payload = base64.urlsafe_b64decode(payload + "=" * (4 - len(payload) % 4))
+
+              expected_signature = hmac.new(
+                  key.encode("utf-8"),
+                  (header + "." + payload).encode("utf-8"),
+                  digestmod=hashlib.sha256,
+              ).digest()
+              signature = base64.urlsafe_b64decode(signature + "=" * (4 - len(signature) % 4))
+
+              if not hmac.compare_digest(expected_signature, signature):
+                  raise ValueError("Invalid JWT signature")
+
+              payload_data = json.loads(decoded_payload)
+
+              return payload_data
 
       Environment:
         Variables:
