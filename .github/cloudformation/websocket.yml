@@ -230,7 +230,7 @@ Resources:
       ApiId: !Ref WebsocketAPI
       DeploymentId: !Ref Deployment
       StageName: !Ref ENV
-      AccessPolicyId: !Ref ApiGatewayLogPolicy
+      AccessPolicyId: arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
       AccessLogSettings:
         DestinationArn: !GetAtt LogGroup.Arn
         Format: $context.extendedRequestId $context.identity.sourceIp $context.identity.caller $context.identity.user [$context.requestTime] "$context.httpMethod $context.resourcePath $context.protocol" $context.status $context.responseLength $context.requestId
@@ -239,20 +239,3 @@ Resources:
     Properties:
       LogGroupName: !Sub '/apigw/${ProjectName}/${ENV}'
 
-  ApiGatewayLogPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: ApiGatewayLogPolicy
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - logs:CreateLogGroup
-              - logs:CreateLogStream
-              - logs:DescribeLogGroups
-              - logs:DescribeLogStreams
-              - logs:PutLogEvents
-              - logs:GetLogEvents
-              - logs:FilterLogEvent
-            Resource: '*'
