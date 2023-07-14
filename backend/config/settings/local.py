@@ -7,6 +7,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from config.secrets import get_secret
 from config.settings.base import *
 
+APP_ENV = "dev"
 DEBUG = True
 
 ALLOWED_HOSTS += ["*"]
