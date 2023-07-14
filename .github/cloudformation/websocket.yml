@@ -16,59 +16,59 @@ Conditions:
   IsProd: !Equals [!Ref ENV, 'prod']
 
 Resources:
-  WebSocketAPI:
-    Type: AWS::ApiGatewayV2::Api
-    Properties:
-      Name: !Sub '${ProjectName}-${ENV}-websocket-api'
-      ProtocolType: WEBSOCKET
-      RouteSelectionExpression: $request.body.action
-
-  ConnectRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: $connect
-      AuthorizationType: NONE
-      Target: !Join ["/", ["integrations", !Ref ConnectIntegration]]
-  DisconnectRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: $disconnect
-      AuthorizationType: NONE
-      Target: !Join ["/", ["integrations", !Ref DisconnectIntegration]]
-  SendRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      RouteKey: sendMessage
-      AuthorizationType: NONE
-      Target: !Join ["/", ["integrations", !Ref SendIntegration]]
-
-  ConnectIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    DependsOn: ConnectLambdaFunction
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS_PROXY
-      IntegrationUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectLambdaFunction.Arn}/invocations
-      IntegrationMethod: POST
-  DisconnectIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    DependsOn: DisconnectLambdaFunction
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS_PROXY
-      IntegrationUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectLambdaFunction.Arn}/invocations
-      IntegrationMethod: POST
-  SendIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    DependsOn: SendLambdaFunction
-    Properties:
-      ApiId: !Ref WebSocketAPI
-      IntegrationType: AWS_PROXY
-      IntegrationUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendLambdaFunction.Arn}/invocations
-      IntegrationMethod: POST
+#  WebSocketAPI:
+#    Type: AWS::ApiGatewayV2::Api
+#    Properties:
+#      Name: !Sub '${ProjectName}-${ENV}-websocket-api'
+#      ProtocolType: WEBSOCKET
+#      RouteSelectionExpression: $request.body.action
+#
+#  ConnectRoute:
+#    Type: AWS::ApiGatewayV2::Route
+#    Properties:
+#      ApiId: !Ref WebSocketAPI
+#      RouteKey: $connect
+#      AuthorizationType: NONE
+#      Target: !Join ["/", ["integrations", !Ref ConnectIntegration]]
+#  DisconnectRoute:
+#    Type: AWS::ApiGatewayV2::Route
+#    Properties:
+#      ApiId: !Ref WebSocketAPI
+#      RouteKey: $disconnect
+#      AuthorizationType: NONE
+#      Target: !Join ["/", ["integrations", !Ref DisconnectIntegration]]
+#  SendRoute:
+#    Type: AWS::ApiGatewayV2::Route
+#    Properties:
+#      ApiId: !Ref WebSocketAPI
+#      RouteKey: sendMessage
+#      AuthorizationType: NONE
+#      Target: !Join ["/", ["integrations", !Ref SendIntegration]]
+#
+#  ConnectIntegration:
+#    Type: AWS::ApiGatewayV2::Integration
+#    DependsOn: ConnectLambdaFunction
+#    Properties:
+#      ApiId: !Ref WebSocketAPI
+#      IntegrationType: AWS_PROXY
+#      IntegrationUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectLambdaFunction.Arn}/invocations
+#      IntegrationMethod: POST
+#  DisconnectIntegration:
+#    Type: AWS::ApiGatewayV2::Integration
+#    DependsOn: DisconnectLambdaFunction
+#    Properties:
+#      ApiId: !Ref WebSocketAPI
+#      IntegrationType: AWS_PROXY
+#      IntegrationUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectLambdaFunction.Arn}/invocations
+#      IntegrationMethod: POST
+#  SendIntegration:
+#    Type: AWS::ApiGatewayV2::Integration
+#    DependsOn: SendLambdaFunction
+#    Properties:
+#      ApiId: !Ref WebSocketAPI
+#      IntegrationType: AWS_PROXY
+#      IntegrationUri: arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SendLambdaFunction.Arn}/invocations
+#      IntegrationMethod: POST
 
   ConnectLambdaFunction:
     Type: AWS::Lambda::Function
