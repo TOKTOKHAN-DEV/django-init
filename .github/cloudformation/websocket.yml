@@ -58,18 +58,24 @@ Resources:
       ApiId: !Ref WebsocketAPI
       IntegrationType: AWS_PROXY
       IntegrationUri: !GetAtt ConnectFunction.Arn
+      IntegrationMethod: POST
+      ConnectionType: INTERNET
   DisconnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebsocketAPI
       IntegrationType: AWS_PROXY
       IntegrationUri: !GetAtt DisconnectFunction.Arn
+      IntegrationMethod: POST
+      ConnectionType: INTERNET
   SendIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebsocketAPI
       IntegrationType: AWS_PROXY
       IntegrationUri: !GetAtt SendFunction.Arn
+      IntegrationMethod: POST
+      ConnectionType: INTERNET
 
   ConnectFunction:
     Type: AWS::Lambda::Function
