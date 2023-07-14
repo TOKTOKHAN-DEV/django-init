@@ -93,27 +93,27 @@ jobs:
           cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
           service: web
 
-      - name: Download Websocket TaskDefinition
-        id: tf-websocket-download
-        continue-on-error: true
-        run: aws ecs describe-task-definition --task-definition ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-websocket-family --query taskDefinition > websocket.tf.json
-
-      - name: Render Websocket TaskDefinition
-        id: tf-websocket-render
-        if: steps.tf-websocket-download.outcome == 'success'
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: websocket.tf.json
-          container-name: websocket
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend:${{ github.sha }}
-
-      - name: Deploy Websocket Service
-        if: steps.tf-websocket-download.outcome == 'success'
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.tf-websocket-render.outputs.task-definition }}
-          cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
-          service: websocket
+#      - name: Download Websocket TaskDefinition
+#        id: tf-websocket-download
+#        continue-on-error: true
+#        run: aws ecs describe-task-definition --task-definition ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-websocket-family --query taskDefinition > websocket.tf.json
+#
+#      - name: Render Websocket TaskDefinition
+#        id: tf-websocket-render
+#        if: steps.tf-websocket-download.outcome == 'success'
+#        uses: aws-actions/amazon-ecs-render-task-definition@v1
+#        with:
+#          task-definition: websocket.tf.json
+#          container-name: websocket
+#          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend:${{ github.sha }}
+#
+#      - name: Deploy Websocket Service
+#        if: steps.tf-websocket-download.outcome == 'success'
+#        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#        with:
+#          task-definition: ${{ steps.tf-websocket-render.outputs.task-definition }}
+#          cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
+#          service: websocket
 
       - name: Changed Celery
         uses: tj-actions/changed-files@v35
