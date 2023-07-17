@@ -77,7 +77,7 @@ Resources:
   ConnectFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: WebsocketConnectFunction
+      FunctionName: !Sub '${ProjectName}-${ENV}-connect-function'
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.9
       Handler: index.handler
@@ -156,7 +156,7 @@ Resources:
   DisconnectFunction:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: WebsocketDisconnectFunction
+      FunctionName: !Sub '${ProjectName}-${ENV}-disconnect-function'
       Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: python3.9
       Handler: index.handler
