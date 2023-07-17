@@ -242,7 +242,6 @@ Resources:
     DependsOn:
       - ConnectRoute
       - DisconnectRoute
-#      - SendRoute
     Properties:
       ApiId: !Ref WebsocketAPI
   Stage:
