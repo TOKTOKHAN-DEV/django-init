@@ -19,7 +19,7 @@ Resources:
   ConnectionTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub '${ProjectName}-${ENV}-connection-table'
+      TableName: !Sub '${ProjectName}-${ENV}-connection'
       AttributeDefinitions:
         - AttributeName: connection_id
           AttributeType: S

@@ -38,7 +38,7 @@ class Message(BaseModel):
     def send(self, user_id):
         db = boto3.client("dynamodb")
         response = db.query(
-            TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection-table",
+            TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection",
             IndexName="UserIdIndex",
             KeyConditionExpression="user_id = :user_id",
             ExpressionAttributeValues={
