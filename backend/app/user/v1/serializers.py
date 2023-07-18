@@ -33,6 +33,9 @@ class DeviceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Device
         fields = ["uid", "token"]
+        extra_kwargs = {
+            "uid": {"unique": False},
+        }
 
 
 @extend_schema_serializer(examples=login_examples)
