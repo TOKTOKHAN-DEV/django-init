@@ -34,7 +34,7 @@ class DeviceSerializer(serializers.ModelSerializer):
         model = Device
         fields = ["uid", "token"]
         extra_kwargs = {
-            "uid": {"unique": False},
+            "uid": {"validators": None},
         }
 
 
