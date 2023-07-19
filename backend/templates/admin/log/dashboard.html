@@ -5,26 +5,7 @@
 {% block extrastyle %}
   {{ block.super }}
   <style>
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 9999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
 
-  .modal-content {
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 4px;
-    text-align: center;
-  }
 
   .spinner {
     display: inline-block;
@@ -35,7 +16,16 @@
     border-top-color: transparent;
     animation: spinner-rotate 1s linear infinite;
   }
-
+  .modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 4px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
   .loading-text {
     margin-top: 10px;
     font-weight: bold;
@@ -63,7 +53,7 @@
 {% block extrahead %}
 {{ block.super }}
   <title>모니터링 대시보드</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" />
@@ -85,18 +75,24 @@
     <h1 class="heading-section">로그 대시보드</h1>
     <div class="content-main">
       <div class="module" id="change-list">
-        <div id="loading-modal" class="modal">
-          <div class="modal-content">
-            <div id="spinner" class="spinner"></div>
-            <h5 id="loading-text" class="loading-text">로딩 중...</h5>
-          </div>
-        </div>
         <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <div style="width: 80%;">
-            <canvas style="margin-top: 30px; margin-bottom: 30px; width: 100%; height: 300px;" id="statusCodeChard"></canvas>
+          <div style="width: 100%;">
+            <h3>ECS - Web CPU 점유율</h3>
+            <canvas style="margin-top: 10px; margin-bottom: 30px; width: 100%; height: 200px;" id="ecsWebCpuUtilizationMultipleLineChartCanvas"></canvas>
           </div>
-          <div style="width: 80%;">
-            <canvas style="margin-top: 100px; margin-bottom: 30px; width: 100%; height: 200px;" id="executionTimeChart"></canvas>
+          <div style="width: 100%;">
+            <h3>ECS - Celery CPU 점유율</h3>
+            <canvas style="margin-top: 10px; margin-bottom: 30px; width: 100%; height: 200px;" id="ecsCeleryCpuUtilizationMultipleLineChartCanvas"></canvas>
+          </div>
+          <div style="width: 100%;">
+            <h3>서버 응답 코드 비율</h3>
+            <div style="width: 30%; margin: 0 auto;">
+              <canvas style="margin-top: 30px; margin-bottom: 40px; width: 100%; height: 300px;" id="statusCodeChard"></canvas>
+            </div>
+          </div>
+          <div style="width: 100%;">
+            <h3>API별 평균 응답 시간</h3>
+            <canvas style="margin-top: 15px; margin-bottom: 30px; width: 100%; height: 300px;" id="executionTimeChart"></canvas>
           </div>
         </div>
       </div>
@@ -129,47 +125,122 @@
     return backgroundColors;
   }
 
-  // 모달 요소 선택
-  // Axios 요청 전에 모달 표시
-  const loadingModal = document.getElementById('loading-modal');
+  const drawCpuUsageDashBoard = () => {
+    const ecsWebCpuCtx = document.getElementById('ecsWebCpuUtilizationMultipleLineChartCanvas').getContext('2d');
+    const ecsCeleryCpuCtx = document.getElementById('ecsCeleryCpuUtilizationMultipleLineChartCanvas').getContext('2d');
 
-  // Axios 요청 전에 모달 표시
-  axios.interceptors.request.use(function (config) {
-    loadingModal.style.display = 'flex';  // 모달 표시
-    return config;
-  }, function (error) {
-    return Promise.reject(error);
-  });
+    const data = {{ ecs_cpu_usage_data|safe }};
+    const ecsWebCpuData = data["ecsWebCpuData"];
+    const ecsCeleryCpuData = data["ecsCeleryCpuData"];
 
-  // Axios 응답 후에 모달 숨김
-  axios.interceptors.response.use(function (response) {
-    loadingModal.style.display = 'none';  // 모달 숨김
-    return response;
-  }, function (error) {
-    return Promise.reject(error);
-  });
-  const fetchStatusCodeData = () => {
+    // ECS Web 차트
+    new Chart(ecsWebCpuCtx, {
+        type: 'bar',
+        data: {
+          labels: ecsWebCpuData.map(x => x.timestamp),
+          datasets: [
+              {
+                  label: '평균 CPU 점유율',
+                  data: ecsWebCpuData.map(x => x.avgCpu),
+                  backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                  borderColor: 'rgba(255, 99, 132, 1)',
+                  borderWidth: 1,
+                  stack: 'combined',
+                  type: 'bar',
+                  tension: 0.4,
+              },
+              {
+                  label: '최대 CPU 점유율',
+                  data: ecsWebCpuData.map(x => x.maxCpu),
+                  backgroundColor: 'rgba(153, 102, 255, 0)',
+                  borderColor: 'rgba(153, 102, 255, 1)',
+                  borderWidth: 1,
+                  stack: 'combined',
+                  type: 'line',
+                  tension: 0.4,
+              },
+              {
+                  label: '최소 CPU 점유율',
+                  data: ecsWebCpuData.map(x => x.minCpu),
+                  backgroundColor: 'rgba(255, 159, 64, 0)',
+                  borderColor: 'rgba(255, 159, 64, 1)',
+                  borderWidth: 1,
+                  stack: 'combined',
+                  type: 'line',
+                  tension: 0.4,
+              }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            x: {
+              stacked: true,
+            }
+          },
+        }
+    });
 
-      const logDashBoardApiUrl = '{% url "admin:log_dashboard_api_view" %}';
-      axios.get(logDashBoardApiUrl, { withCredentials: true })
-      .then(response => {
-        // 요청 성공 시 동작
-        const newData = response.data;
-        drawDashBoard(newData);
-        return newData;
-      })
-      .catch(error => {
-        // 요청 실패 시 동작
-        alert(error.message);
-      });
+    // ECS Celery 차트
+    new Chart(ecsCeleryCpuCtx, {
+      type: 'bar',
+      data: {
+          labels: ecsCeleryCpuData.map(x => x.timestamp),
+          datasets: [
+              {
+                label: '평균 CPU 점유율',
+                data: ecsCeleryCpuData.map(x => x.avgCpu),
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                stack: 'combined',
+                type: 'bar',
+                tension: 0.4,
+              },
+              {
+                label: '최대 CPU 점유율',
+                data: ecsCeleryCpuData.map(x => x.maxCpu),
+                backgroundColor: 'rgba(153, 102, 255, 0)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                stack: 'combined',
+                type: 'line',
+                tension: 0.4,
+              },
+              {
+                label: '최소 CPU 점유율',
+                data: ecsCeleryCpuData.map(x => x.minCpu),
+                backgroundColor: 'rgba(255, 159, 64, 0)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1,
+                stack: 'combined',
+                type: 'line',
+                tension: 0.4,
+              }
+          ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          },
+          y: {
+            stacked: true
+          }
+        }
+      }
+    });
   }
 
-  const drawDashBoard = (data) => {
+  const drawDashBoard = () => {
     const statusCodeCtx = document.getElementById('statusCodeChard').getContext('2d');
-    const  executionTimeCtx= document.getElementById('executionTimeChart').getContext('2d');
+    const executionTimeCtx = document.getElementById('executionTimeChart').getContext('2d');
+
+    const data = {{ log_dashboard_data|safe }};
     const pieData = data["statusData"];
     const executionBarData = data['executionData'];
-    //
+
     // // Parse the dates to JS
     const pieLabel = pieData.map(x => x.statusCode);
     const pieChartData = pieData.map(x => x.data)
@@ -177,32 +248,34 @@
     const executionLabel = executionBarData.map(x => x.path);
     const executionChartData = executionBarData.map(x => x.data);
 
-    // Render the chart
-    const statusCodeChart = new Chart(statusCodeCtx, {
+    let executionTimeDelayed;
+
+    // 응답 코드 차트
+    new Chart(statusCodeCtx, {
       type: 'doughnut',
       data: {
         labels: pieLabel,
         datasets: [{
-          label: "하이",
           data: pieChartData,
           backgroundColor: generateBackgroundColors(pieLabel),
           hoverOffset: 10
         }]
-      }
+      },
     });
 
-    const executionTimeChart = new Chart(executionTimeCtx, {
+    // API 수행 시간 차트
+    new Chart(executionTimeCtx, {
         type: 'bar',
         data: {
           labels: executionLabel,
           datasets: [{
-            label: 'API별 응답 시간',
+            label: 'API별 평균 응답 시간',
             data: executionChartData,
             backgroundColor: Array.from({length: executionChartData.length}, () => {
               const r = Math.floor(Math.random() * 256);
               const g = Math.floor(Math.random() * 256);
               const b = Math.floor(Math.random() * 256);
-              return `rgba(${r}, ${g}, ${b}, 0.2)`;
+              return `rgba(${r}, ${g}, ${b}, 1)`;
             }),
             borderColor: Array.from({length: executionChartData.length}, () => {
               const r = Math.floor(Math.random() * 256);
@@ -214,19 +287,39 @@
           }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-      });
+          animation: {
+            onComplete: () => {
+              executionTimeDelayed = true;
+            },
+            delay: (context) => {
+              let delay = 0;
+              if (context.type === 'data' && context.mode === 'default' && !executionTimeDelayed) {
+                delay = context.dataIndex * 100 + context.datasetIndex * 100;
+              }
+              return delay;
+            },
+          },
+          indexAxis: 'x',
+          elements: {
+            bar: {
+              borderWidth: 9,
+            }
+          },
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+          },
+        },
+    });
   }
 
   $(document).ready(() => {
-    fetchStatusCodeData();
+    drawDashBoard();
+    drawCpuUsageDashBoard();
   });
 </script>
 </html>
-
-
-<!-- Render the rest of the ChangeList view -->
 {{ block.super }}
 {% endblock %}
