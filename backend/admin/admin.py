@@ -76,8 +76,7 @@ def get_cw_dash_board_data(log_type, log_stream_list):
     for log_stream in log_stream_list:
         try:
             response = client.get_log_events(
-                # logGroupName=f"{settings.PROJECT_NAME}/{settings.APP_ENV}/{log_type}",
-                logGroupName=f"somyeong/prod/{log_type}",
+                logGroupName=f"{settings.PROJECT_NAME}/{settings.APP_ENV}/{log_type}",
                 logStreamName=f"web-{log_stream}",
                 limit=500,
                 startFromHead=True,
