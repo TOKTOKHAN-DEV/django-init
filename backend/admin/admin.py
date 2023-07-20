@@ -78,8 +78,8 @@ def get_cw_dash_board_data(log_type, log_stream_list):
             response = client.get_log_events(
                 logGroupName=f"{settings.PROJECT_NAME}/{settings.APP_ENV}/{log_type}",
                 logStreamName=f"web-{log_stream}",
-                limit=100,
-                startFromHead=False,
+                limit=500,
+                startFromHead=True,
             )
 
             log_data.extend([event for event in response["events"] if response["events"]])
