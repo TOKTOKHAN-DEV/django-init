@@ -234,62 +234,48 @@ def get_log_dashboard_data():
     return {"statusData": preprocessed_status_code_list, "executionData": preprocessed_execution_data_list}
 
 
+def get_ecs_metrics(client, metric_name, service):
+    cw_ecs_metrics_response = client.get_metric_statistics(
+        Namespace="AWS/ECS",
+        MetricName=metric_name,
+        Dimensions=[
+            {"Name": "ClusterName", "Value": f"{settings.PROJECT_NAME}-{settings.APP_ENV}-ecs-cluster"},
+            {"Name": "ServiceName", "Value": service},
+        ],
+        StartTime=datetime.datetime.utcnow() - datetime.timedelta(hours=5),  # 조회 시작 시간 설정
+        EndTime=datetime.datetime.utcnow(),  # 조회 종료 시간 설정
+        Period=1200,  # 데이터 포인트 간격 (10분)
+        Statistics=["Average", "Maximum", "Minimum"],  # 평균값 조회
+        Unit="Percent",  # 사용률 단위 (퍼센트)
+    )
+    return [
+        {
+            "timestamp": (datapoint["Timestamp"] + datetime.timedelta(hours=9)).strftime("%H:%M"),
+            "maxValue": round(datapoint["Maximum"], 2),
+            "avgValue": round(datapoint["Average"], 2),
+            "minValue": round(datapoint["Minimum"], 2),
+        }
+        for datapoint in cw_ecs_metrics_response["Datapoints"]
+    ]
+
 def get_ecs_cpu_usage_data():
     # ECS CPU 사용률 조회
-    ecs_cpu_client = boto3.client("cloudwatch", region_name="ap-northeast-2")
-    ecs_web_cpu_cw_response = ecs_cpu_client.get_metric_statistics(
-        Namespace="AWS/ECS",
-        MetricName="CPUUtilization",
-        Dimensions=[
-            {"Name": "ClusterName", "Value": f"{settings.PROJECT_NAME}-{settings.APP_ENV}-ecs-cluster"},
-            {"Name": "ServiceName", "Value": "web"},
-        ],
-        StartTime=datetime.datetime.utcnow() - datetime.timedelta(hours=5),  # 조회 시작 시간 설정
-        EndTime=datetime.datetime.utcnow(),  # 조회 종료 시간 설정
-        Period=600,  # 데이터 포인트 간격 (10분)
-        Statistics=["Average", "Maximum", "Minimum"],  # 평균값 조회
-        Unit="Percent",  # 사용률 단위 (퍼센트)
-    )
-
-    ecs_celery_cpu_cw_response = ecs_cpu_client.get_metric_statistics(
-        Namespace="AWS/ECS",
-        MetricName="CPUUtilization",
-        Dimensions=[
-            {"Name": "ClusterName", "Value": f"{settings.PROJECT_NAME}-{settings.APP_ENV}-ecs-cluster"},
-            {"Name": "ServiceName", "Value": "celery"},
-        ],
-        StartTime=datetime.datetime.utcnow() - datetime.timedelta(hours=5),  # 조회 시작 시간 설정
-        EndTime=datetime.datetime.utcnow(),  # 조회 종료 시간 설정
-        Period=600,  # 데이터 포인트 간격 (10분)
-        Statistics=["Average", "Maximum", "Minimum"],  # 평균값 조회
-        Unit="Percent",  # 사용률 단위 (퍼센트)
-    )
-
-    ecs_web_cpu_data_list = [
-        {
-            "timestamp": (datapoint["Timestamp"] + datetime.timedelta(hours=9)).strftime("%H:%M"),
-            "maxCpu": round(datapoint["Maximum"], 2),
-            "avgCpu": round(datapoint["Average"], 2),
-            "minCpu": round(datapoint["Minimum"], 2),
-        }
-        for datapoint in ecs_web_cpu_cw_response["Datapoints"]
-    ]
-
-    ecs_celery_cpu_data_list = [
-        {
-            "timestamp": (datapoint["Timestamp"] + datetime.timedelta(hours=9)).strftime("%H:%M"),
-            "maxCpu": round(datapoint["Maximum"], 2),
-            "avgCpu": round(datapoint["Average"], 2),
-            "minCpu": round(datapoint["Minimum"], 2),
-        }
-        for datapoint in ecs_celery_cpu_cw_response["Datapoints"]
-    ]
+    client = boto3.client("cloudwatch", region_name="ap-northeast-2")
 
     return {
-        "ecsWebCpuData": sorted(ecs_celery_cpu_data_list, key=lambda d: d["timestamp"]),
-        "ecsCeleryCpuData": sorted(ecs_web_cpu_data_list, key=lambda d: d["timestamp"]),
+        "ecsWebCpuData": sorted(get_ecs_metrics(client, "CPUUtilization", "web"), key=lambda d: d["timestamp"]),
+        "ecsCeleryCpuData": sorted(get_ecs_metrics(client, "CPUUtilization", "celery"), key=lambda d: d["timestamp"]),
     }
 
+
+def get_ecs_memory_usage_data():
+    # ECS Memory 사용률 조회
+    client = boto3.client("cloudwatch", region_name="ap-northeast-2")
+
+    return {
+        "ecsWebMemoryData": sorted(get_ecs_metrics(client, "MemoryUtilization", "web"), key=lambda d: d["timestamp"]),
+        "ecsCeleryMemoryData": sorted(get_ecs_metrics(client, "MemoryUtilization", "celery"), key=lambda d: d["timestamp"]),
+    }
 
 """
 ================================================
@@ -356,6 +342,7 @@ class AdminSite(DjangoAdminSite):
 
         context["log_dashboard_data"] = get_log_dashboard_data()
         context["ecs_cpu_usage_data"] = get_ecs_cpu_usage_data()
+        context["ecs_memory_usage_data"] = get_ecs_memory_usage_data()
         return TemplateResponse(request, "admin/log/dashboard.html", context)
 
     def log_info_view(self, request):

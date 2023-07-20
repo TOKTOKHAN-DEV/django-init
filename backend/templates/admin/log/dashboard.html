@@ -76,13 +76,25 @@
     <div class="content-main">
       <div class="module" id="change-list">
         <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <div style="width: 100%;">
-            <h3>ECS - Web CPU 점유율</h3>
-            <canvas style="margin-top: 10px; margin-bottom: 30px; width: 100%; height: 200px;" id="ecsWebCpuUtilizationMultipleLineChartCanvas"></canvas>
+          <div style="display: flex; justify-content: space-evenly; align-items: center; width: 100%; margin: 20px 0 20px 0;">
+            <div style="width: 100%; margin: 0 30px 0 0;">
+              <h3>ECS - Web CPU 점유율</h3>
+              <canvas style="margin-top: 10px; margin-bottom: 30px; width: 100%; height: 200px;" id="ecsWebCpuUtilizationMultipleLineChartCanvas"></canvas>
+            </div>
+            <div style="width: 100%;">
+              <h3>ECS - Web Memory 점유율</h3>
+              <canvas style="margin-top: 10px; margin-bottom: 30px; width: 100%; height: 200px;" id="ecsWebMemoryUtilizationMultipleLineChartCanvas"></canvas>
+            </div>
           </div>
-          <div style="width: 100%;">
-            <h3>ECS - Celery CPU 점유율</h3>
-            <canvas style="margin-top: 10px; margin-bottom: 30px; width: 100%; height: 200px;" id="ecsCeleryCpuUtilizationMultipleLineChartCanvas"></canvas>
+          <div style="display: flex; justify-content: space-evenly; align-items: center; width: 100%; margin: 0 0 20px 0;">
+            <div style="width: 100%; margin: 0 30px 0 0;">
+              <h3>ECS - Celery CPU 점유율</h3>
+              <canvas style="margin-top: 10px; margin-bottom: 30px; width: 100%; height: 200px;" id="ecsCeleryCpuUtilizationMultipleLineChartCanvas"></canvas>
+            </div>
+            <div style="width: 100%;">
+              <h3>ECS - Celery Memory 점유율</h3>
+              <canvas style="margin-top: 10px; margin-bottom: 30px; width: 100%; height: 200px;" id="ecsCeleryMemoryUtilizationMultipleLineChartCanvas"></canvas>
+            </div>
           </div>
           <div style="width: 100%;">
             <h3>서버 응답 코드 비율</h3>
@@ -127,13 +139,19 @@
 
   const drawCpuUsageDashBoard = () => {
     const ecsWebCpuCtx = document.getElementById('ecsWebCpuUtilizationMultipleLineChartCanvas').getContext('2d');
+    const ecsWebMemoryCtx = document.getElementById('ecsWebMemoryUtilizationMultipleLineChartCanvas').getContext('2d');
     const ecsCeleryCpuCtx = document.getElementById('ecsCeleryCpuUtilizationMultipleLineChartCanvas').getContext('2d');
+    const ecsCeleryMemoryCtx = document.getElementById('ecsCeleryMemoryUtilizationMultipleLineChartCanvas').getContext('2d');
 
-    const data = {{ ecs_cpu_usage_data|safe }};
-    const ecsWebCpuData = data["ecsWebCpuData"];
-    const ecsCeleryCpuData = data["ecsCeleryCpuData"];
+    const ecsCpuData = {{ ecs_cpu_usage_data|safe }};
+    const ecsMemoryData = {{ ecs_memory_usage_data|safe }};
+    const ecsWebCpuData = ecsCpuData["ecsWebCpuData"];
+    const ecsCeleryCpuData = ecsCpuData["ecsCeleryCpuData"];
 
-    // ECS Web 차트
+    const ecsWebMemoryData = ecsMemoryData["ecsWebMemoryData"];
+    const ecsCeleryMemoryData = ecsMemoryData["ecsCeleryMemoryData"];;
+
+    // ECS Web Cpu 차트
     new Chart(ecsWebCpuCtx, {
         type: 'bar',
         data: {
@@ -141,31 +159,28 @@
           datasets: [
               {
                   label: '평균 CPU 점유율',
-                  data: ecsWebCpuData.map(x => x.avgCpu),
-                  backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                  borderColor: 'rgba(255, 99, 132, 1)',
+                  data: ecsWebCpuData.map(x => x.avgValue),
+                  backgroundColor: 'rgba(13, 231, 151, 0.2)',
+                  borderColor: 'rgba(13, 231, 151, 0.4)',
                   borderWidth: 1,
-                  stack: 'combined',
                   type: 'bar',
                   tension: 0.4,
               },
               {
                   label: '최대 CPU 점유율',
-                  data: ecsWebCpuData.map(x => x.maxCpu),
-                  backgroundColor: 'rgba(153, 102, 255, 0)',
+                  data: ecsWebCpuData.map(x => x.maxValue),
+                  backgroundColor: 'rgba(153, 102, 255, 1)',
                   borderColor: 'rgba(153, 102, 255, 1)',
                   borderWidth: 1,
-                  stack: 'combined',
                   type: 'line',
                   tension: 0.4,
               },
               {
                   label: '최소 CPU 점유율',
-                  data: ecsWebCpuData.map(x => x.minCpu),
-                  backgroundColor: 'rgba(255, 159, 64, 0)',
+                  data: ecsWebCpuData.map(x => x.minValue),
+                  backgroundColor: 'rgba(255, 159, 64, 1)',
                   borderColor: 'rgba(255, 159, 64, 1)',
                   borderWidth: 1,
-                  stack: 'combined',
                   type: 'line',
                   tension: 0.4,
               }
@@ -181,7 +196,52 @@
         }
     });
 
-    // ECS Celery 차트
+    // ECS Web Memory
+    new Chart(ecsWebMemoryCtx, {
+      type: 'bar',
+      data: {
+        labels: ecsWebMemoryData.map(x => x.timestamp),
+        datasets: [
+            {
+                label: '평균 Memory 점유율',
+                data: ecsWebMemoryData.map(x => x.avgValue),
+                backgroundColor: 'rgba(13, 231, 151, 0.2)',
+                borderColor: 'rgba(13, 231, 151, 0.4)',
+                borderWidth: 1,
+                type: 'bar',
+                tension: 0.4,
+            },
+            {
+                label: '최대 Memory 점유율',
+                data: ecsWebMemoryData.map(x => x.maxValue),
+                backgroundColor: 'rgba(153, 102, 255, 1)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                type: 'line',
+                tension: 0.4,
+            },
+            {
+                label: '최소 Memory 점유율',
+                data: ecsWebMemoryData.map(x => x.minValue),
+                backgroundColor: 'rgba(255, 159, 64, 1)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1,
+                type: 'line',
+                tension: 0.4,
+            }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
+          }
+        },
+      }
+    });
+
+    // ECS Celery Cpu 차트
     new Chart(ecsCeleryCpuCtx, {
       type: 'bar',
       data: {
@@ -189,31 +249,28 @@
           datasets: [
               {
                 label: '평균 CPU 점유율',
-                data: ecsCeleryCpuData.map(x => x.avgCpu),
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
+                data: ecsCeleryCpuData.map(x => x.avgValue),
+                backgroundColor: 'rgba(13, 231, 151, 0.2)',
+                borderColor: 'rgba(13, 231, 151, 0.4)',
                 borderWidth: 1,
-                stack: 'combined',
                 type: 'bar',
                 tension: 0.4,
               },
               {
                 label: '최대 CPU 점유율',
-                data: ecsCeleryCpuData.map(x => x.maxCpu),
-                backgroundColor: 'rgba(153, 102, 255, 0)',
+                data: ecsCeleryCpuData.map(x => x.maxValue),
+                backgroundColor: 'rgba(153, 102, 255, 1)',
                 borderColor: 'rgba(153, 102, 255, 1)',
                 borderWidth: 1,
-                stack: 'combined',
                 type: 'line',
                 tension: 0.4,
               },
               {
                 label: '최소 CPU 점유율',
-                data: ecsCeleryCpuData.map(x => x.minCpu),
-                backgroundColor: 'rgba(255, 159, 64, 0)',
+                data: ecsCeleryCpuData.map(x => x.minValue),
+                backgroundColor: 'rgba(255, 159, 64, 1)',
                 borderColor: 'rgba(255, 159, 64, 1)',
                 borderWidth: 1,
-                stack: 'combined',
                 type: 'line',
                 tension: 0.4,
               }
@@ -225,8 +282,50 @@
           x: {
             stacked: true,
           },
-          y: {
-            stacked: true
+        }
+      }
+    });
+
+    // ECS Celery Memory
+    new Chart(ecsCeleryMemoryCtx, {
+      type: 'bar',
+      data: {
+          labels: ecsCeleryMemoryData.map(x => x.timestamp),
+          datasets: [
+              {
+                label: '평균 Memory 점유율',
+                data: ecsCeleryMemoryData.map(x => x.avgValue),
+                backgroundColor: 'rgba(13, 231, 151, 0.2)',
+                borderColor: 'rgba(13, 231, 151, 0.4)',
+                borderWidth: 1,
+                type: 'bar',
+                tension: 0.4,
+              },
+              {
+                label: '최대 Memory 점유율',
+                data: ecsCeleryMemoryData.map(x => x.maxValue),
+                backgroundColor: 'rgba(153, 102, 255, 1)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                type: 'line',
+                tension: 0.4,
+              },
+              {
+                label: '최소 Memory 점유율',
+                data: ecsCeleryMemoryData.map(x => x.minValue),
+                backgroundColor: 'rgba(255, 159, 64, 1)',
+                borderColor: 'rgba(255, 159, 64, 1)',
+                borderWidth: 1,
+                type: 'line',
+                tension: 0.4,
+              }
+          ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            stacked: true,
           }
         }
       }
