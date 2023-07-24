@@ -1,8 +1,8 @@
 from celery.schedules import crontab
 
 CELERY_BEAT_SCHEDULE = dict(
-    task_korea_timezone={
-        "task": "app.user.tasks.task_korea_timezone",
-        "schedule": crontab(hour="18,19,20,21,22"),
+    task_delete_withdrawal_user={
+        "task": "app.withdrawal_user.tasks.task_delete_withdrawal_user",
+        "schedule": crontab(hour="0"),
     },
 )
