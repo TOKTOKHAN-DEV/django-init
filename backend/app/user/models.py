@@ -35,7 +35,7 @@ class UserManager(DjangoUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-class BaseUser(BaseModelMixin, AbstractBaseUser):
+class BaseUser(BaseModelMixin, AbstractUser):
     first_name = None
     last_name = None
     username = None
@@ -60,7 +60,7 @@ class BaseUser(BaseModelMixin, AbstractBaseUser):
         abstract = True
 
 
-class User(PermissionsMixin, BaseUser):
+class User(BaseUser):
     class Meta:
         db_table = "user"
         verbose_name = "유저"
