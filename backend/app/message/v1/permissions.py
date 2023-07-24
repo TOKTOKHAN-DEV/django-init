@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 
-class CeleryLogsPermission(permissions.BasePermission):
+class MessagePermission(permissions.BasePermission):
     def has_permission(self, request, view):
         return super().has_permission(request, view)
 

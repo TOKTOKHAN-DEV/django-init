@@ -28,6 +28,7 @@ LOCAL_APPS = [
     "app.staticfile",
     "app.common.apps.CommonConfig",
     "app.chat.apps.ChatConfig",
+    "app.message.apps.MessageConfig",
     "app.device.apps.DeviceConfig",
     "app.user.apps.UserConfig",
     "app.verifier.apps.VerifierConfig",

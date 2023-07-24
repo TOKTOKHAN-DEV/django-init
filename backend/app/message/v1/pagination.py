@@ -1,5 +1,5 @@
 from api.common.pagination import CursorPagination
 
 
-class CeleryLogsCursorPagination(CursorPagination):
+class MessageCursorPagination(CursorPagination):
     pass

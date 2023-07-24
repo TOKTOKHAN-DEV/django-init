@@ -1,10 +1,10 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from app.celery_log.v1.views import CeleryLogsViewSet
+from app.message.v1.views import MessageViewSet
 
 router = DefaultRouter()
-router.register("celery_log", CeleryLogsViewSet)
+router.register("message", MessageViewSet)
 
 urlpatterns = [
     path("", include(router.urls)),

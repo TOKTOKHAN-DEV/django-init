@@ -1,46 +1,28 @@
-from rest_framework.generics import CreateAPIView, ListAPIView
+from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework import mixins
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.viewsets import GenericViewSet
 
-from app.chat.models import Chat, Message
-from app.chat.v1.paginations import MessagePagination
-from app.chat.v1.serializers import ChatListSerializer, MessageListSerializer
-
-
-class ChatCreateView(CreateAPIView):
-
-    """
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        str(user.pk),
-        {
-            'type': 'send_message',
-            'chat_id': data['chat_id'],
-            'user_id': message.user.pk,
-            'text': message.text,
-            'created': message.created,
-        },
-    )
-    """
-
-    pass
+from app.chat.models import Chat
+from app.chat.v1.paginations import ChatPagination
+from app.chat.v1.serializers import ChatSerializer
 
 
-class ChatListView(ListAPIView):
+@extend_schema_view(
+    list=extend_schema(summary="채팅 목록 조회"),
+    create=extend_schema(summary="채팅 생성"),
+)
+class ChatViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    GenericViewSet,
+):
     queryset = Chat.objects.prefetch_related("user_set").all()
-    serializer_class = ChatListSerializer
+    serializer_class = ChatSerializer
+    pagination_class = ChatPagination
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-        return self.queryset.filter(user_set=user)
-
-
-class MessageListView(ListAPIView):
-    queryset = Message.objects.select_related("user").all()
-    serializer_class = MessageListSerializer
-    pagination_class = MessagePagination
-
-    # permission_classes = [IsChatOwner]
-
-    def get_queryset(self):
-        return self.queryset.filter(chat_id=self.kwargs["pk"])
+        queryset = super().get_queryset()
+        queryset = queryset.filter(user_set=self.request.user)
+        return queryset

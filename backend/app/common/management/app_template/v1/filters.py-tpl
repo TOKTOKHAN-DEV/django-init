@@ -1,7 +1,7 @@
-from django_filters.rest_framework import FilterSet
+import django_filters
 
 from app.{{ app_name }}.models import {{ camel_case_app_name }}
 
 
-class {{ camel_case_app_name }}Filter(FilterSet):
+class {{ camel_case_app_name }}Filter(django_filters.FilterSet):
     pass
