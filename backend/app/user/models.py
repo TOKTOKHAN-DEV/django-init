@@ -1,7 +1,9 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.contrib.auth.models import UserManager as DjangoUserManager
 from django.core.validators import MinLengthValidator, validate_integer
 from django.db import models
+from django.utils import timezone
 
 from app.common.models import BaseModel, BaseModelMixin
 from app.device.models import Device
@@ -33,7 +35,7 @@ class UserManager(DjangoUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
-class User(BaseModelMixin, AbstractUser):
+class BaseUser(BaseModelMixin, AbstractBaseUser):
     first_name = None
     last_name = None
     username = None
@@ -47,15 +49,22 @@ class User(BaseModelMixin, AbstractUser):
     VERIFY_FIELDS = []  # 회원가입 시 검증 받을 필드 (email, phone)
     REGISTER_FIELDS = ["phone", "password"]  # 회원가입 시 입력 받을 필드 (email, phone, password)
 
+    is_staff = models.BooleanField(verbose_name="스태프", default=False)
+    is_superuser = models.BooleanField(verbose_name="슈퍼유저여부", default=False)
+    is_active = models.BooleanField(verbose_name="활성화여부", default=True)
+    date_joined = models.DateTimeField(verbose_name="가입일", default=timezone.now)
+
     objects = UserManager()
 
+    class Meta:
+        abstract = True
+
+
+class User(PermissionsMixin, BaseUser):
     class Meta:
         db_table = "user"
         verbose_name = "유저"
         verbose_name_plural = verbose_name
-
-    def __str__(self):
-        return self.email
 
     def connect_device(self, uid, token):
         Device.objects.update_or_create(uid=uid, defaults={"user": self, "token": token})

@@ -31,6 +31,7 @@ LOCAL_APPS = [
     "app.message.apps.MessageConfig",
     "app.device.apps.DeviceConfig",
     "app.user.apps.UserConfig",
+    "app.withdrawal_user.apps.WithdrawalUserConfig",
     "app.verifier.apps.VerifierConfig",
     "app.alarmtalk_log.apps.AlarmTalkLogConfig",
     "app.email_log.apps.EmailLogConfig",
@@ -147,7 +148,7 @@ SOCIAL_REGISTER = True
 
 # APPLICATION
 WSGI_APPLICATION = "config.wsgi.application"
-ASGI_APPLICATION = "config.routing.application"
+ASGI_APPLICATION = "config.asgi.application"
 
 
 # HOST

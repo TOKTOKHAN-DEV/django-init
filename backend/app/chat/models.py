@@ -5,6 +5,7 @@ from app.common.models import BaseModel
 
 class Chat(BaseModel):
     user_set = models.ManyToManyField("user.User", verbose_name="참여자", blank=True)
+    password = None
 
     class Meta:
         db_table = "chat"

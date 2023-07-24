@@ -1,5 +1,5 @@
 from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import status
+from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -21,6 +21,7 @@ from app.user.v1.serializers import (
 
 @extend_schema_view(
     retrieve=extend_schema(summary="유저 조회"),
+    delete=extend_schema(summary="유저 삭제(탈퇴)"),
     login=extend_schema(summary="유저 로그인"),
     social_login=extend_schema(summary="유저 소셜 로그인"),
     logout=extend_schema(summary="유저 로그아웃"),
@@ -30,12 +31,14 @@ from app.user.v1.serializers import (
     password_reset_confirm=extend_schema(summary="유저 비밀번호 재설정"),
 )
 class UserViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.DestroyModelMixin,
     GenericViewSet,
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
-    lookup_value_regex = ".+"
+    lookup_value_regex = "me"
 
     def get_object(self):
         if self.kwargs.get("pk") == "me":

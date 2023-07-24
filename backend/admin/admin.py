@@ -258,6 +258,7 @@ def get_ecs_metrics(client, metric_name, service):
         for datapoint in cw_ecs_metrics_response["Datapoints"]
     ]
 
+
 def get_ecs_cpu_usage_data():
     # ECS CPU 사용률 조회
     client = boto3.client("cloudwatch", region_name="ap-northeast-2")
@@ -274,8 +275,11 @@ def get_ecs_memory_usage_data():
 
     return {
         "ecsWebMemoryData": sorted(get_ecs_metrics(client, "MemoryUtilization", "web"), key=lambda d: d["timestamp"]),
-        "ecsCeleryMemoryData": sorted(get_ecs_metrics(client, "MemoryUtilization", "celery"), key=lambda d: d["timestamp"]),
+        "ecsCeleryMemoryData": sorted(
+            get_ecs_metrics(client, "MemoryUtilization", "celery"), key=lambda d: d["timestamp"]
+        ),
     }
+
 
 """
 ================================================
