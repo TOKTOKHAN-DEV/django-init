@@ -29,7 +29,6 @@ Resources:
               - PUT
             AllowedOrigins:
               - "*"
-            ExposeHeaders: [ ]
       OwnershipControls:
         Rules:
           - ObjectOwnership: ObjectWriter
