@@ -1,11 +1,14 @@
 import os
 
 import boto3
+import dotenv
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from config.secrets import get_secret
 from config.settings.base import *
+
+dotenv.load_dotenv()
 
 APP_ENV = "dev"
 DEBUG = True
