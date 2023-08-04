@@ -2,11 +2,16 @@ import os
 
 import boto3
 
-db = boto3.client("dynamodb")
+ddb = None
 
 
 def handler(event, context):
-    db.delete_item(
+    global ddb
+
+    if not ddb:
+        ddb = boto3.client("dynamodb")
+
+    ddb.delete_item(
         TableName=os.getenv("TABLE_NAME"),
         Key={"connection_id": {"S": event["requestContext"]["connectionId"]}},
     )
