@@ -35,7 +35,7 @@ jobs:
       - name: Build & Push Backend Image
         uses: docker/build-push-action@v2
         with:
-          context: backend
+          context: src
           build-args: |
             CI=true
             APP_ENV=${{ env.PROJECT_ENV }}

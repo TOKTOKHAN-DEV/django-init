@@ -4,13 +4,13 @@
 ```
 ├── .github              # github action directory
 ├── .idea                # pycharm config directory
-└── backend              # django project root directory
+└── src                  # django project root directory
 ```
 
 
-## Backend Directory Structure
+## Src Directory Structure
 ```
-└── backend
+└── src
     ├── api              # django api directory
     ├── app              # django app directory
     ├── config           # django config directory
@@ -19,7 +19,7 @@
 
 
 ## Package
-- [requirements.txt](./backend/requirements.txt)
+- [requirements.txt](src/requirements.txt)
 
 
 ## Set AWS Profile
