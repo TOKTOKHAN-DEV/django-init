@@ -19,21 +19,22 @@
 ## App Directory Structure
 ```
 └── app
-    ├── migrations
-    ├── v1
-        ├── filters.py
-        ├── nested_serializers.py
-        ├── paginations.py
-        ├── permissions.py
-        ├── serializers.py
-        ├── tests.py
-        ├── urls.py
-        └── views.py
-    ├── admin.py
-    ├── apps.py
-    ├── models.py
-    ├── signals.py
-    └── tasks.py
+    └── app_name
+        ├── migrations
+        ├── v1
+            ├── filters.py
+            ├── nested_serializers.py
+            ├── paginations.py
+            ├── permissions.py
+            ├── serializers.py
+            ├── tests.py
+            ├── urls.py
+            └── views.py
+        ├── admin.py
+        ├── apps.py
+        ├── models.py
+        ├── signals.py
+        └── tasks.py
 ```
 
 ## Package
