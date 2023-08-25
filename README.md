@@ -40,18 +40,6 @@
 - [requirements.txt](src/requirements.txt)
 
 
-## Set AWS Profile
-AWS Secret Manager, S3 Role을 가진 IAM Profile 등록  
-mkdir ~/.aws  
-vi ~/.aws/config
-```
-[profile #{PROJECT_NAME}]
-aws_access_key_id=**
-aws_secret_access_key=**
-region = ap-northeast-2
-```
-
-
 ## Set Environments
 1. `.env.temp` -> `.env` 복사
 2. `.env`에 AWS 키 등록
