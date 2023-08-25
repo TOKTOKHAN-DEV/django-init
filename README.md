@@ -11,12 +11,30 @@
 ## Src Directory Structure
 ```
 └── src
-    ├── api              # django api directory
     ├── app              # django app directory
     ├── config           # django config directory
     └── templates        # django template directory
 ```
 
+## App Directory Structure
+```
+└── app
+    ├── migrations
+    ├── v1
+        ├── filters.py
+        ├── nested_serializers.py
+        ├── paginations.py
+        ├── permissions.py
+        ├── serializers.py
+        ├── tests.py
+        ├── urls.py
+        └── views.py
+    ├── admin.py
+    ├── apps.py
+    ├── models.py
+    ├── signals.py
+    └── tasks.py
+```
 
 ## Package
 - [requirements.txt](src/requirements.txt)
