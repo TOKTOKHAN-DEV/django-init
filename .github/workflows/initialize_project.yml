@@ -21,7 +21,7 @@ jobs:
           sed -i "s|#{PROJECT_NAME}|${PROJECT_NAME}|g" .idea/django.iml
           sed -i "s|#{PROJECT_NAME}|${PROJECT_NAME}|g" .idea/workspace.temp.xml
           sed -i "s|#{PROJECT_NAME}|${PROJECT_NAME}|g" README.md
-          sed -i "s|#{PROJECT_NAME}|${PROJECT_NAME}|g" backend/config/settings/base.py
+          sed -i "s|#{PROJECT_NAME}|${PROJECT_NAME}|g" src/config/settings/base.py
 
       - name: Commit
         run: |
