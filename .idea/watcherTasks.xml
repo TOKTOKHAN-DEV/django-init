@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectTasksOptions">
     <TaskOptions isEnabled="true">
-      <option name="arguments" value="backend" />
+      <option name="arguments" value="src" />
       <option name="checkSyntaxErrors" value="true" />
       <option name="description" />
       <option name="exitCodeBehavior" value="ERROR" />
@@ -38,7 +38,7 @@
       <option name="runOnExternalChanges" value="true" />
       <option name="scopeName" value="Project Files" />
       <option name="trackOnlyRoot" value="false" />
-      <option name="workingDir" value="$ProjectFileDir$/backend" />
+      <option name="workingDir" value="$ProjectFileDir$/src" />
       <envs />
     </TaskOptions>
   </component>
