@@ -30,7 +30,6 @@ class UserLoginAPITest(APITestCase):
         response = getattr(self.client, self.METHOD)(
             self.PATH, data={"email": "test2@test.com", "password": "test123!"}
         )
-
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertDictEqual(
             {

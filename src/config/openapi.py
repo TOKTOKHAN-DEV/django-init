@@ -8,18 +8,48 @@ from rest_framework import serializers
 class CustomAutoSchema(AutoSchema):
     def _get_response_bodies(self, direction="response"):
         response_bodies = super()._get_response_bodies(direction)
+        filter_parameters = self._get_filter_parameters()
+        if filter_parameters:
+            required_fields = []
+            for filter_parameter in filter_parameters:
+                if filter_parameter["required"]:
+                    required_fields.append(filter_parameter["name"])
+            if required_fields:
+                name = self.view.filterset_class.__name__
+                response_bodies[400] = self._get_response_for_code(
+                    inline_serializer(
+                        name=f"{name}Error",
+                        fields={
+                            "message": inline_serializer(
+                                name=f"{name}ErrorMessage",
+                                fields={
+                                    field: serializers.ListField(required=False, child=serializers.CharField())
+                                    for field in required_fields
+                                },
+                            ),
+                            "error_code": serializers.CharField(),
+                        },
+                    ),
+                    "400",
+                )
         if self.method in ["POST", "PUT", "PATCH"]:
             serializer = self.get_request_serializer()
             if serializer and is_basic_serializer(serializer):
                 component = self.resolve_serializer(serializer, direction)
                 response_bodies[400] = self._get_response_for_code(
                     inline_serializer(
-                        name=f"{component.name}ValidationError",
+                        name=f"{component.name}Error",
                         fields={
-                            settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]: serializers.ListField(
-                                required=False, child=serializers.CharField()
+                            "message": inline_serializer(
+                                name=f"{component.name}ErrorMessage",
+                                fields={
+                                    settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]: serializers.ListField(
+                                        required=False, child=serializers.CharField()
+                                    ),
+                                    **self._get_fields(serializer),
+                                },
                             ),
-                            **self._get_fields(serializer),
+                            "error_code": serializers.CharField(),
                         },
                     ),
                     400,
