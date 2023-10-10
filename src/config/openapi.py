@@ -93,5 +93,7 @@ class CustomAutoSchema(AutoSchema):
     def _map_serializer_field(self, field, direction, bypass_extensions=False):
         map_serializer_field = super()._map_serializer_field(field, direction, bypass_extensions)
         if isinstance(field, serializers.MultipleChoiceField) or isinstance(field, serializers.ChoiceField):
-            map_serializer_field.update({"x-enumNames": [field.choices.get(key) for key in field.choices]})
+            map_serializer_field.update(
+                {"x-enumNames": [field.choices.get(key) for key in sorted(field.choices, key=str)]}
+            )
         return map_serializer_field
