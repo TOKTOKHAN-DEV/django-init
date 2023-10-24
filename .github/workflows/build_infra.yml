@@ -184,7 +184,7 @@ jobs:
 
   build_websocket:
     runs-on: ubuntu-latest
-    needs: [ set_environment, build_ecs ]
+    needs: [ set_environment ]
     if: ${{ inputs.websocket == 'true' }}
     steps:
       - name: Checkout
@@ -197,12 +197,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Build Websocket
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
-        with:
-          name: ${{ needs.set_environment.outputs.project_name }}-${{ inputs.env }}-websocket
-          template: .github/cloudformation/websocket.yml
-          capabilities: CAPABILITY_NAMED_IAM
-          parameter-overrides: >-
-            ProjectName=${{ needs.set_environment.outputs.project_name }},
-            ENV=${{ inputs.env }}
+      - name: Build Websocket Application
+        run: |
+          sam build -t .github/sam/websocket.yaml
+
+      - name: Deploy Websocket Application
+        run: |
+          sam deploy --stack-name ${{needs.set_environment.outputs.project_name}}-${{inputs.env}}-websocket \
+            --resolve-s3 \
+            --template .github/sam/.aws-sam/build/template.yaml \
+            --region ap-northeast-2 \
+            --capabilities CAPABILITY_NAMED_IAM \
+            --parameter-overrides ProjectName=${{needs.set_environment.outputs.project_name}} ENV=${{inputs.env}}

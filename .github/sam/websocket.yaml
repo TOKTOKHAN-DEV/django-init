@@ -1,0 +1,242 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Websocket SAM Template"
+
+Parameters:
+  ProjectName:
+    Type: String
+  ENV:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+
+Resources:
+  ##########################################################################
+  #   Lambda Function                                                      #
+  ##########################################################################
+  ConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub '${ProjectName}-${ENV}-lambda-connect'
+      Handler: connect.handler
+      Runtime: python3.9
+      Timeout: 10
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Environment:
+        Variables:
+          PROJECT_NAME: !Ref ProjectName
+          ENV: !Ref ENV
+          TABLE_NAME: !Ref DynamoTable
+      AutoPublishAlias: live
+#      DeploymentPreference:
+#          # Specifies the deployment configuration
+#          Type: Linear10PercentEvery2Minutes
+      Policies:
+        ## Read more about SAM Policy templates at:
+        ## https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy:
+            TableName: !Ref DynamoTable
+
+  DisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      FunctionName: !Sub '${ProjectName}-${ENV}-lambda-disconnect'
+      Handler: disconnect.handler
+      Runtime: python3.9
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Timeout: 10
+      Environment:
+        Variables:
+          PROJECT_NAME: !Ref ProjectName
+          ENV: !Ref ENV
+          TABLE_NAME: !Ref DynamoTable
+      AutoPublishAlias: live
+#      DeploymentPreference:
+#          # Specifies the deployment configuration
+#          Type: Linear10PercentEvery2Minutes
+      Policies:
+        ## Read more about SAM Policy templates at:
+        ## https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+        - DynamoDBWritePolicy:
+            TableName: !Ref DynamoTable
+
+
+  ##########################################################################
+  #   DynamoDB                                                            #
+  ##########################################################################
+  DynamoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${ProjectName}-${ENV}-websocket-connection'
+      AttributeDefinitions:
+        - AttributeName: connection_id
+          AttributeType: S
+        - AttributeName: user_id
+          AttributeType: N
+      KeySchema:
+        - AttributeName: connection_id
+          KeyType: HASH
+        - AttributeName: user_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+      GlobalSecondaryIndexes:
+        - IndexName: UserIdIndex
+          KeySchema:
+            - AttributeName: user_id
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  ##########################################################################
+  #   API Gateway                                                          #
+  ##########################################################################
+  WebsocketApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-websocket-api'
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: $request.body.action
+
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebsocketApi
+      RouteKey: $connect
+      AuthorizationType: NONE
+      Target: !Sub integrations/${ConnectIntegration}
+
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebsocketApi
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      Target: !Sub integrations/${DisconnectIntegration}
+
+  ConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebsocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectFunction.Arn}/invocations
+
+  DisconnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebsocketApi
+      IntegrationType: AWS_PROXY
+      IntegrationUri:
+        Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectFunction.Arn}/invocations
+
+  ConnectFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt ConnectFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketApi}/*"
+
+  DisconnectFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt DisconnectFunction.Arn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketApi}/*"
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                Resource: !GetAtt DynamoTable.Arn # Resource 이름을 SAM 템플릿에 맞게 수정하였습니다.
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetResourcePolicy
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                  - secretsmanager:ListSecretVersionIds
+                  - secretsmanager:ListSecrets
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - execute-api:ManageConnections
+                Resource:
+                  - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketApi}/*'
+
+  Deployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+      - ConnectRoute
+      - DisconnectRoute
+    Properties:
+      ApiId: !Ref WebsocketApi
+
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref WebsocketApi
+      DeploymentId: !Ref Deployment
+      StageName: !Ref ENV
+
+  ApiCWLRoleArn:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt CloudWatchRole.Arn
+
+  CloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Action: 'sts:AssumeRole'
+          Effect: Allow
+          Principal:
+            Service: apigateway.amazonaws.com
+      Path: /
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs'
+
+Outputs:
+  LambdaConnectFunction:
+    Value: !Ref ConnectFunction
+    Description: ConnectFunction Arn
+
+  LambdaDisconnectFunction:
+    Value: !Ref DisconnectFunction
+    Description: DisconnectFunction Arn
+
+  DynamoDbTable:
+    Value: !Ref DynamoTable
+    Description: DynamoDb Table
+
+  ApiGatewayId:
+    Value: !Ref WebsocketApi
+    Description: API Gateway ID
