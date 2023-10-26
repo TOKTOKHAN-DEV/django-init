@@ -10,6 +10,7 @@ class LimitOffsetPagination(pagination.LimitOffsetPagination):
     default_limit = 20
     max_limit = 100
 
+
     def get_paginated_response(self, data):
         return Response(
             OrderedDict(
@@ -38,7 +39,11 @@ class LimitOffsetPagination(pagination.LimitOffsetPagination):
 class CursorPagination(pagination.CursorPagination):
     page_size = 20
     page_size_query_param = "page_size"
-    ordering = ["-created_at"]
+    ordering = None
+
+    def get_ordering(self, request, queryset, view):
+        ordering = super().get_ordering(request, queryset, view)
+        return ordering + ("pk",)
 
     def encode_cursor(self, cursor):
         url = super().encode_cursor(cursor)

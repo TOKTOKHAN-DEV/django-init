@@ -48,13 +48,13 @@ class CustomAutoSchema(AutoSchema):
     def _get_400_error(self, direction, response_bodies):
         serializer = self.get_request_serializer()
         if serializer and is_basic_serializer(serializer):
-            component = self.resolve_serializer(serializer, direction)
+            component_name = self._get_serializer_name(serializer, direction)
             response_bodies[400] = self._get_response_for_code(
                 inline_serializer(
-                    name=f"{component.name}Error",
+                    name=f"{component_name}Error",
                     fields={
                         "message": inline_serializer(
-                            name=f"{component.name}ErrorMessage",
+                            name=f"{component_name}ErrorMessage",
                             fields={
                                 settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]: serializers.ListField(
                                     required=False, child=serializers.CharField()
