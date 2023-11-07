@@ -191,7 +191,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "app.common.pagination.LimitOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
-        "conf.filter_backends.OrderingFilter",
+        "config.filter_backends.OrderingFilter",
     ],
     "EXCEPTION_HANDLER": "config.exception_handler.custom_exception_handler",
     "DEFAULT_SCHEMA_CLASS": "config.openapi.CustomAutoSchema",
@@ -221,7 +221,9 @@ SPECTACULAR_SETTINGS = {
         "filter": True,
     },
     "SERVE_INCLUDE_SCHEMA": False,
-    "APPEND_COMPONENTS": {"securitySchemes": {"Bearer": {"type": "apiKey", "in": "header", "name": "Authorization"}}},
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {"Bearer": {"type": "apiKey", "in": "header", "name": "Authorization"}},
+    },
     "SECURITY": [
         {
             "Bearer": [],

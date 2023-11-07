@@ -41,7 +41,7 @@ class CustomAutoSchema(AutoSchema):
             self._get_400_error(direction, response_bodies)
         response_bodies[401] = self._get_common_error("401")
         response_bodies[403] = self._get_common_error("403")
-        if self.view.detail:
+        if hasattr(self.view, "detail"):
             response_bodies[404] = self._get_common_error("404")
         return response_bodies
 
