@@ -222,7 +222,16 @@ SPECTACULAR_SETTINGS = {
     },
     "SERVE_INCLUDE_SCHEMA": False,
     "APPEND_COMPONENTS": {
-        "securitySchemes": {"Bearer": {"type": "apiKey", "in": "header", "name": "Authorization"}},
+        "securitySchemes": {
+            "Bearer": {
+                "type": "oauth2",
+                "flows": {
+                    "password": {
+                        "tokenUrl": "/v1/user/swagger_login/",
+                    },
+                },
+            },
+        }
     },
     "SECURITY": [
         {
