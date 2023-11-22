@@ -2,6 +2,7 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
@@ -16,6 +17,7 @@ from app.user.v1.serializers import (
     UserRegisterSerializer,
     UserSerializer,
     UserSocialLoginSerializer,
+    UserSwaggerLoginSerializer,
 )
 
 
@@ -23,6 +25,7 @@ from app.user.v1.serializers import (
     retrieve=extend_schema(summary="유저 조회"),
     delete=extend_schema(summary="유저 삭제(탈퇴)"),
     login=extend_schema(summary="유저 로그인"),
+    swagger_login=extend_schema(exclude=True),
     social_login=extend_schema(summary="유저 소셜 로그인"),
     logout=extend_schema(summary="유저 로그아웃"),
     refresh=extend_schema(summary="유저 리프레시"),
@@ -53,6 +56,16 @@ class UserViewSet(
 
     @action(methods=["POST"], detail=False, serializer_class=UserLoginSerializer, permission_classes=[])
     def login(self, request, *args, **kwargs):
+        return self._create(request, *args, **kwargs)
+
+    @action(
+        methods=["POST"],
+        detail=False,
+        serializer_class=UserSwaggerLoginSerializer,
+        permission_classes=[],
+        renderer_classes=[JSONRenderer],
+    )
+    def swagger_login(self, request, *args, **kwargs):
         return self._create(request, *args, **kwargs)
 
     @action(methods=["POST"], detail=False, serializer_class=UserSocialLoginSerializer, permission_classes=[])
