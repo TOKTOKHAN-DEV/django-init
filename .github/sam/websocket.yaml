@@ -29,6 +29,8 @@ Resources:
           PROJECT_NAME: !Ref ProjectName
           ENV: !Ref ENV
           TABLE_NAME: !Ref DynamoTable
+          SECRET_KEY: !Sub '{{resolve:secretsmanager:${ProjectName}/django/${ENV}:SecretString:key}}'
+
       AutoPublishAlias: live
 #      DeploymentPreference:
 #          # Specifies the deployment configuration
