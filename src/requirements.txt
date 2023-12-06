@@ -126,6 +126,7 @@ pycparser==2.21
 pydantic==2.4.2
 pydantic_core==2.10.1
 Pygments==2.16.1
+pycurl==7.44.1
 PyJWT==2.6.0
 pyOpenSSL==23.2.0
 pyparsing==3.0.9

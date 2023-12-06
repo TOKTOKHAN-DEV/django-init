@@ -29,7 +29,7 @@ class {{ camel_case_app_name }}ViewSet(
     serializer_class = {{ camel_case_app_name }}Serializer
     permission_classes = [{{ camel_case_app_name }}Permission]
     pagination_class = CursorPagination
-    filter_class = {{ camel_case_app_name }}Filter
+    filterset_class = {{ camel_case_app_name }}Filter
 
     def get_queryset(self):
         queryset = super().get_queryset()

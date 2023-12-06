@@ -120,10 +120,10 @@ jobs:
         id: changed-celery
         with:
           files: |
-            backend/app/**/tasks.py
-            backend/app/**/models.py
-            backend/config/tasks.py
-            backend/config/settings/*.py
+            src/app/**/tasks.py
+            src/app/**/models.py
+            src/config/tasks.py
+            src/config/settings/*.py
 
       - name: Download Celery TaskDefinition
         id: tf-celery-download
@@ -153,9 +153,9 @@ jobs:
         id: changed-celerybeat
         with:
           files: |
-            backend/config/schedules.py
-            backend/config/tasks.py
-            backend/config/settings/*.py
+            src/config/schedules.py
+            src/config/tasks.py
+            src/config/settings/*.py
 
       - name: Download CeleryBeat TaskDefinition
         id: tf-celerybeat-download
