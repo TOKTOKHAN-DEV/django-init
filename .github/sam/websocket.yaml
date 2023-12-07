@@ -13,6 +13,16 @@ Parameters:
 
 Resources:
   ##########################################################################
+  #   Lambda Layer for jwt lib                                             #
+  ##########################################################################
+  ConnectFunctionLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      Content:
+        S3Bucket: nws-lambda-layer-bucket
+        S3Key: python.zip
+
+  ##########################################################################
   #   Lambda Function                                                      #
   ##########################################################################
   ConnectFunction:
@@ -23,6 +33,8 @@ Resources:
       Handler: connect.handler
       Runtime: python3.9
       Timeout: 10
+      Layers:
+        - !Ref ConnectFunctionLayer
       Role: !GetAtt LambdaExecutionRole.Arn
       Environment:
         Variables:
@@ -30,9 +42,6 @@ Resources:
           ENV: !Ref ENV
           TABLE_NAME: !Ref DynamoTable
       AutoPublishAlias: live
-#      DeploymentPreference:
-#          # Specifies the deployment configuration
-#          Type: Linear10PercentEvery2Minutes
       Policies:
         ## Read more about SAM Policy templates at:
         ## https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
@@ -54,9 +63,6 @@ Resources:
           ENV: !Ref ENV
           TABLE_NAME: !Ref DynamoTable
       AutoPublishAlias: live
-#      DeploymentPreference:
-#          # Specifies the deployment configuration
-#          Type: Linear10PercentEvery2Minutes
       Policies:
         ## Read more about SAM Policy templates at:
         ## https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
@@ -95,6 +101,97 @@ Resources:
           ProvisionedThroughput:
             ReadCapacityUnits: 1
             WriteCapacityUnits: 1
+
+  ##########################################################################
+  #   DynamoDB WCU Auto Scaling Target                                     #
+  ##########################################################################
+  TableWriteUnitAutoScalingTaget:
+      Type: AWS::ApplicationAutoScaling::ScalableTarget
+      DependsOn: ConnectionTable
+      Properties:
+        MaxCapacity: 5
+        MinCapacity: 1
+        ResourceId: !Sub 'table/${ConnectionTable}'
+        ScalableDimension: dynamodb:table:WriteCapacityUnits
+        ServiceNamespace: dynamodb
+
+  ##########################################################################
+  #   DynamoDB RCU Auto Scaling Target                                     #
+  ##########################################################################
+  TableReadUnitAutoScalingTaget:
+      Type: AWS::ApplicationAutoScaling::ScalableTarget
+      DependsOn: ConnectionTable
+      Properties:
+        MaxCapacity: 5
+        MinCapacity: 1
+        ResourceId: !Sub 'table/${ConnectionTable}'
+        ScalableDimension: dynamodb:table:ReadCapacityUnits
+        ServiceNamespace: dynamodb
+
+  ##########################################################################
+  #   DynamoDB GSI RCU Auto Scaling Target                                 #
+  ##########################################################################
+  TableGSIReadUnitAutoScalingTarget:
+      Type: AWS::ApplicationAutoScaling::ScalableTarget
+      DependsOn: ConnectionTable
+      Properties:
+        MaxCapacity: 5
+        MinCapacity: 1
+        ResourceId: !Sub 'table/${ConnectionTable}/index/UserIdIndex'
+        ScalableDimension: dynamodb:index:ReadCapacityUnits
+        ServiceNamespace: dynamodb
+
+  ##########################################################################
+  #   DynamoDB WCU Auto Scaling Policy                                     #
+  ##########################################################################
+  TableWriteUnitAutoscalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    DependsOn: ConnectionTable
+    Properties:
+      PolicyName: WriteAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref TableWriteUnitAutoScalingTaget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBWriteCapacityUtilization
+
+  ##########################################################################
+  #   DynamoDB RCU Auto Scaling Policy                                     #
+  ##########################################################################
+  TableReadUnitAutoscalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    DependsOn: ConnectionTable
+    Properties:
+      PolicyName: ReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref TableReadUnitAutoScalingTaget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
+  ##########################################################################
+  #   DynamoDB GSI RCU Auto Scaling Policy                                 #
+  ##########################################################################
+  TableGSIReadUnitAutoscalingPolicy:
+    Type: "AWS::ApplicationAutoScaling::ScalingPolicy"
+    DependsOn: ConnectionTable
+    Properties:
+      PolicyName: GSIReadAutoScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref TableGSIReadUnitAutoScalingTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 70
+        ScaleInCooldown: 60
+        ScaleOutCooldown: 60
+        PredefinedMetricSpecification:
+          PredefinedMetricType: DynamoDBReadCapacityUtilization
+
 
   ##########################################################################
   #   API Gateway                                                          #

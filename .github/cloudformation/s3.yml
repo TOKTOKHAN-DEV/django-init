@@ -51,6 +51,36 @@ Resources:
             Action: 's3:GetObject'
             Resource: !Sub 'arn:aws:s3:::${S3Bucket}/*'
 
+  ##########################################################################
+  #   S3 for Lambda Function                                               #
+  ##########################################################################
+  LambdaS3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: !Sub '${ProjectName}-${ENV}-lambda-layer-bucket'
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - GET
+              - POST
+            AllowedOrigins:
+              - "*"
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: ObjectWriter
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
 Outputs:
   S3BucketHost:
     Value: !Sub '${ProjectName}-${ENV}-bucket'
+
+  LambdaS3Bucket:
+    Value: !Sub '${ProjectName}-${ENV}-lambda-layer-bucket'
