@@ -83,7 +83,10 @@ Resources:
           KeyType: HASH
         - AttributeName: user_id
           KeyType: RANGE
-      BillingMode: PAY_PER_REQUEST
+      BillingMode: PROVISIONED
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
       GlobalSecondaryIndexes:
         - IndexName: UserIdIndex
           KeySchema:
@@ -91,6 +94,9 @@ Resources:
               KeyType: HASH
           Projection:
             ProjectionType: ALL
+          ProvisionedThroughput:
+            ReadCapacityUnits: 1
+            WriteCapacityUnits: 1
 
   ##########################################################################
   #   API Gateway                                                          #
