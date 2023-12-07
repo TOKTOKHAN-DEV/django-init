@@ -34,7 +34,7 @@ class PresignedUrlSerializer(serializers.Serializer):
         s3_client = boto3.client("s3", config=s3_config)
         ext = name.split(".")[-1]
 
-        object_key = "/".join(["media/category", f"{uuid.uuid4()}.{ext}"])
+        object_key = "/".join(["_media/category", f"{uuid.uuid4()}.{ext}"])
         try:
             url = s3_client.generate_presigned_url(
                 "put_object",

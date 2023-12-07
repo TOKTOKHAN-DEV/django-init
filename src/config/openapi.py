@@ -5,26 +5,52 @@ from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers
 
 
+class CommonErrorSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+
+
 class CustomAutoSchema(AutoSchema):
     def _get_response_bodies(self, direction="response"):
         response_bodies = super()._get_response_bodies(direction)
+
         if self.method in ["POST", "PUT", "PATCH"]:
-            serializer = self.get_request_serializer()
-            if serializer and is_basic_serializer(serializer):
-                component = self.resolve_serializer(serializer, direction)
-                response_bodies[400] = self._get_response_for_code(
-                    inline_serializer(
-                        name=f"{component.name}ValidationError",
-                        fields={
-                            settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]: serializers.ListField(
-                                required=False, child=serializers.CharField()
-                            ),
-                            **self._get_fields(serializer),
-                        },
-                    ),
-                    400,
-                )
+            self._get_400_error(direction, response_bodies)
+        response_bodies[401] = self._get_common_error("401")
+        response_bodies[403] = self._get_common_error("403")
+        if hasattr(self.view, "detail"):
+            response_bodies[404] = self._get_common_error("404")
         return response_bodies
+
+    def _get_400_error(self, direction, response_bodies):
+        if response_bodies.get("400"):
+            return None
+        serializer = self.get_request_serializer()
+        if serializer and is_basic_serializer(serializer):
+            component_name = self._get_serializer_name(serializer, direction)
+            response_bodies[400] = self._get_response_for_code(
+                inline_serializer(
+                    name=f"{component_name}Error",
+                    fields={
+                        "message": inline_serializer(
+                            name=f"{component_name}ErrorMessage",
+                            fields={
+                                settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]: serializers.ListField(
+                                    required=False, child=serializers.CharField()
+                                ),
+                                **self._get_fields(serializer),
+                            },
+                        ),
+                        "error_code": serializers.CharField(),
+                    },
+                ),
+                400,
+            )
+
+    def _get_common_error(self, status_code):
+        return self._get_response_for_code(
+            CommonErrorSerializer(),
+            status_code,
+        )
 
     def _get_fields(self, serializer):
         fields = {}
@@ -45,5 +71,10 @@ class CustomAutoSchema(AutoSchema):
     def _map_serializer_field(self, field, direction, bypass_extensions=False):
         map_serializer_field = super()._map_serializer_field(field, direction, bypass_extensions)
         if isinstance(field, serializers.MultipleChoiceField) or isinstance(field, serializers.ChoiceField):
-            map_serializer_field.update({"x-enumNames": [field.choices.get(key) for key in field.choices]})
+            map_serializer_field.update(
+                {
+                    "enum": sorted(field.choices.keys()),
+                    "x-enumNames": [field.choices.get(key) for key in sorted(field.choices.keys())],
+                },
+            )
         return map_serializer_field
