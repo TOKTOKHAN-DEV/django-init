@@ -12,7 +12,6 @@ secretmanager = None
 
 project_name = os.getenv("PROJECT_NAME")
 env = os.getenv("ENV")
-secret_key = os.getenv("SECRET_KEY")
 
 
 def handler(event, context):
@@ -32,7 +31,11 @@ def handler(event, context):
         "access"
     )
     if access:
-        payload = jwt_decode(access, secret_key)
+        response = secretmanager.get_secret_value(
+            SecretId=f"{project_name}/django/{env}"
+        )
+        secret = json.loads(response["SecretString"])
+        payload = jwt_decode(access, secret["key"])
         user_id = payload["user_id"]
         if time.time() > payload["exp"]:
             raise Exception("expired access token.")
