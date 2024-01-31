@@ -190,7 +190,7 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "app.common.pagination.LimitOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": [
-        "django_filters.rest_framework.DjangoFilterBackend",
+        "config.filter_backends.FilterBackend",
         "config.filter_backends.OrderingFilter",
     ],
     "EXCEPTION_HANDLER": "config.exception_handler.custom_exception_handler",
