@@ -1,5 +1,16 @@
 from django.utils.encoding import force_str
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter as DjangoOrderingFilter
+
+
+class FilterBackend(DjangoFilterBackend):
+    def get_filterset_class(self, view, queryset=None):
+        filterset_class = None
+        if view.action == "list":
+            filterset_class = super().get_filterset_class(view, queryset)
+        if hasattr(view, "get_filterset_class"):
+            filterset_class = view.get_filterset_class()
+        return filterset_class
 
 
 class OrderingFilter(DjangoOrderingFilter):
