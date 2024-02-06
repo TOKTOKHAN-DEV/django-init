@@ -43,8 +43,8 @@ class UserLoginSerializer(serializers.Serializer):
     username = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True)
     device = DeviceSerializer(required=False, write_only=True, allow_null=True, help_text="모바일앱에서만 사용합니다.")
-    access = serializers.CharField(read_only=True)
-    refresh = serializers.CharField(read_only=True)
+    access_token = serializers.CharField(read_only=True)
+    refresh_token = serializers.CharField(read_only=True)
 
     @classmethod
     def get_token(cls, user):
@@ -67,8 +67,8 @@ class UserLoginSerializer(serializers.Serializer):
             )
 
         data = dict()
-        data["refresh"] = str(refresh)
-        data["access"] = str(refresh.access_token)
+        data["refresh_token"] = str(refresh)
+        data["access_token"] = str(refresh.access_token)
         if attrs.get("device"):
             self.user.connect_device(**attrs["device"])
 
@@ -87,6 +87,46 @@ class UserLogoutSerializer(serializers.Serializer):
             user.disconnect_device(validated_data["uid"])
 
         return {}
+
+
+class UserSwaggerLoginSerializer(serializers.Serializer):
+    username = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True)
+    access_token = serializers.CharField(read_only=True)
+    refresh_token = serializers.CharField(read_only=True)
+
+    @classmethod
+    def get_token(cls, user):
+        return RefreshToken.for_user(user)
+
+    def validate(self, attrs):
+        username_field = User.USERNAME_FIELD
+        filter_kwargs = {username_field: attrs["username"]}
+
+        self.user = authenticate(
+            request=self.context["request"],
+            password=attrs["password"],
+            **filter_kwargs,
+        )
+
+        if self.user:
+            refresh = self.get_token(self.user)
+        else:
+            raise ValidationError(
+                {
+                    username_field: ["인증정보가 일치하지 않습니다."],
+                    "password": ["인증정보가 일치하지 않습니다."],
+                }
+            )
+
+        data = dict()
+        data["refresh_token"] = str(refresh)
+        data["access_token"] = str(refresh.access_token)
+
+        return data
+
+    def create(self, validated_data):
+        return validated_data
 
 
 class UserSocialLoginSerializer(serializers.Serializer):
