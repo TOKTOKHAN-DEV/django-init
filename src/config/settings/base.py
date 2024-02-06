@@ -227,7 +227,7 @@ SPECTACULAR_SETTINGS = {
                 "type": "oauth2",
                 "flows": {
                     "password": {
-                        "tokenUrl": "/v1/user/swagger_login/",
+                        "tokenUrl": "/v1/user/login/",
                     },
                 },
             },
