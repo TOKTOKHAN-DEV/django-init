@@ -14,10 +14,10 @@ from app.user.v1.serializers import (
     UserLogoutSerializer,
     UserPasswordResetConfirmSerializer,
     UserPasswordResetSerializer,
+    UserRefreshSerializer,
     UserRegisterSerializer,
     UserSerializer,
     UserSocialLoginSerializer,
-    UserSwaggerLoginSerializer,
 )
 
 
@@ -26,7 +26,6 @@ from app.user.v1.serializers import (
     delete=extend_schema(summary="유저 삭제(탈퇴)"),
     login=extend_schema(summary="유저 로그인"),
     swagger_login=extend_schema(exclude=True),
-    social_login=extend_schema(summary="유저 소셜 로그인"),
     logout=extend_schema(summary="유저 로그아웃"),
     refresh=extend_schema(summary="유저 리프레시"),
     register=extend_schema(summary="유저 회원가입"),
@@ -56,16 +55,6 @@ class UserViewSet(
 
     @action(methods=["POST"], detail=False, serializer_class=UserLoginSerializer, permission_classes=[])
     def login(self, request, *args, **kwargs):
-        return self._create(request, *args, **kwargs)
-
-    @action(
-        methods=["POST"],
-        detail=False,
-        serializer_class=UserSwaggerLoginSerializer,
-        permission_classes=[],
-        renderer_classes=[JSONRenderer],
-    )
-    def swagger_login(self, request, *args, **kwargs):
         return self._create(request, *args, **kwargs)
 
     @action(methods=["POST"], detail=False, serializer_class=UserSocialLoginSerializer, permission_classes=[])
@@ -98,7 +87,7 @@ class UserViewSet(
         """
         return self._create(request, *args, **kwargs)
 
-    @action(methods=["POST"], detail=False, serializer_class=TokenRefreshSerializer, permission_classes=[])
+    @action(methods=["POST"], detail=False, serializer_class=UserRefreshSerializer, permission_classes=[])
     def refresh(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         try:

@@ -13,6 +13,7 @@ from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from app.email_log.models import EmailLog
@@ -51,13 +52,13 @@ class UserLoginSerializer(serializers.Serializer):
         return RefreshToken.for_user(user)
 
     def validate(self, attrs):
-        self.user = authenticate(
+        user = authenticate(
             request=self.context["request"],
             username=attrs["username"],
             password=attrs["password"],
         )
-        if self.user:
-            refresh = self.get_token(self.user)
+        if user:
+            refresh = self.get_token(user)
         else:
             raise ValidationError(
                 {
@@ -70,7 +71,7 @@ class UserLoginSerializer(serializers.Serializer):
         data["refresh_token"] = str(refresh)
         data["access_token"] = str(refresh.access_token)
         if attrs.get("device"):
-            self.user.connect_device(**attrs["device"])
+            user.connect_device(**attrs["device"])
 
         return data
 
@@ -89,46 +90,6 @@ class UserLogoutSerializer(serializers.Serializer):
         return {}
 
 
-class UserSwaggerLoginSerializer(serializers.Serializer):
-    username = serializers.CharField(write_only=True)
-    password = serializers.CharField(write_only=True)
-    access_token = serializers.CharField(read_only=True)
-    refresh_token = serializers.CharField(read_only=True)
-
-    @classmethod
-    def get_token(cls, user):
-        return RefreshToken.for_user(user)
-
-    def validate(self, attrs):
-        username_field = User.USERNAME_FIELD
-        filter_kwargs = {username_field: attrs["username"]}
-
-        self.user = authenticate(
-            request=self.context["request"],
-            password=attrs["password"],
-            **filter_kwargs,
-        )
-
-        if self.user:
-            refresh = self.get_token(self.user)
-        else:
-            raise ValidationError(
-                {
-                    username_field: ["인증정보가 일치하지 않습니다."],
-                    "password": ["인증정보가 일치하지 않습니다."],
-                }
-            )
-
-        data = dict()
-        data["refresh_token"] = str(refresh)
-        data["access_token"] = str(refresh.access_token)
-
-        return data
-
-    def create(self, validated_data):
-        return validated_data
-
-
 class UserSocialLoginSerializer(serializers.Serializer):
     code = serializers.CharField(write_only=True)
     state = serializers.ChoiceField(write_only=True, choices=SocialKindChoices.choices)
@@ -136,8 +97,8 @@ class UserSocialLoginSerializer(serializers.Serializer):
 
     is_register = serializers.BooleanField(read_only=True)
     social_token = serializers.CharField(read_only=True, required=False)
-    access = serializers.CharField(read_only=True, required=False)
-    refresh = serializers.CharField(read_only=True, required=False)
+    access_token = serializers.CharField(read_only=True, required=False)
+    refresh_token = serializers.CharField(read_only=True, required=False)
 
     def validate(self, attrs):
         attrs["social_user_id"] = self.get_social_user_id(attrs["code"], attrs["state"])
@@ -172,8 +133,8 @@ class UserSocialLoginSerializer(serializers.Serializer):
 
         refresh = RefreshToken.for_user(user)
         validated_data["is_register"] = True
-        validated_data["access"] = refresh.access_token
-        validated_data["refresh"] = refresh
+        validated_data["access_token"] = refresh.access_token
+        validated_data["refresh_token"] = refresh
 
         return validated_data
 
@@ -193,8 +154,8 @@ class UserRegisterSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, required=False)
     password_confirm = serializers.CharField(write_only=True, required=False)
 
-    access = serializers.CharField(read_only=True)
-    refresh = serializers.CharField(read_only=True)
+    access_token = serializers.CharField(read_only=True)
+    refresh_token = serializers.CharField(read_only=True)
 
     def get_fields(self):
         fields = super().get_fields()
@@ -283,9 +244,38 @@ class UserRegisterSerializer(serializers.Serializer):
         refresh = RefreshToken.for_user(user)
 
         return {
-            "access": refresh.access_token,
-            "refresh": refresh,
+            "access_token": refresh.access_token,
+            "refresh_token": refresh,
         }
+
+
+class UserRefreshSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField()
+    access_token = serializers.CharField(read_only=True)
+    token_class = RefreshToken
+
+    def validate(self, attrs):
+        refresh = self.token_class(attrs["refresh_token"])
+
+        data = {"access_token": str(refresh.access_token)}
+
+        if api_settings.ROTATE_REFRESH_TOKENS:
+            if api_settings.BLACKLIST_AFTER_ROTATION:
+                try:
+                    # Attempt to blacklist the given refresh token
+                    refresh.blacklist()
+                except AttributeError:
+                    # If blacklist app not installed, `blacklist` method will
+                    # not be present
+                    pass
+
+            refresh.set_jti()
+            refresh.set_exp()
+            refresh.set_iat()
+
+            data["refresh_token"] = str(refresh)
+
+        return data
 
 
 class UserPasswordResetSerializer(serializers.Serializer):

@@ -67,6 +67,7 @@ INSTALLED_APPS = LOCAL_APPS + THIRD_PARTY_APPS + DJANGO_APPS
 
 
 MIDDLEWARE = [
+    "config.middleware.SwaggerLoginMiddleware",
     "django_hosts.middleware.HostsRequestMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -227,7 +228,7 @@ SPECTACULAR_SETTINGS = {
                 "type": "oauth2",
                 "flows": {
                     "password": {
-                        "tokenUrl": "/v1/user/swagger_login/",
+                        "tokenUrl": "/v1/user/login/",
                     },
                 },
             },

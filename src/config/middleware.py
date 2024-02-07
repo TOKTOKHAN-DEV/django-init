@@ -1,7 +1,25 @@
 import json
 import logging
+import re
 
 logger = logging.getLogger("request")
+
+
+class SwaggerLoginMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        if (
+            request.content_type == "application/x-www-form-urlencoded"
+            and re.match(r"/v(\d)/user/login/", request.path)
+            and response.status_code == 201
+        ):
+            response.content = json.dumps(response.data, separators=(",", ":")).encode()
+            response["Content-Length"] = str(int(response["Content-Length"]) + 2)
+
+        return response
 
 
 class RequestLogMiddleware:
