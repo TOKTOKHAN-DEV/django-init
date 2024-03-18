@@ -144,9 +144,6 @@ APPEND_SLASH = False
 # AUTH_USER_MODEL
 AUTH_USER_MODEL = "user.User"
 
-# SOCIAL REGISTER
-SOCIAL_REGISTER = True
-
 # APPLICATION
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"

@@ -95,10 +95,8 @@ class UserSocialLoginSerializer(serializers.Serializer):
     state = serializers.ChoiceField(write_only=True, choices=SocialKindChoices.choices)
     redirect_uri = serializers.URLField(write_only=True)
 
-    is_register = serializers.BooleanField(read_only=True)
-    social_token = serializers.CharField(read_only=True, required=False)
-    access_token = serializers.CharField(read_only=True, required=False)
-    refresh_token = serializers.CharField(read_only=True, required=False)
+    access_token = serializers.CharField(read_only=True)
+    refresh_token = serializers.CharField(read_only=True)
 
     def validate(self, attrs):
         attrs["social_user_id"] = self.get_social_user_id(attrs["code"], attrs["state"])
@@ -111,8 +109,8 @@ class UserSocialLoginSerializer(serializers.Serializer):
 
         social_email = f"{social_user_id}@{state}.social"
 
-        # SOCIAL_REGISTER 가 필요한데 유저가 없는 경우
-        if settings.SOCIAL_REGISTER and not User.objects.filter(email=social_email).exists():
+        # 소셜 회원가입이 필요한 경우
+        if not User.objects.filter(email=social_email).exists():
             validated_data["is_register"] = False
             validated_data["social_token"] = jwt.encode(
                 payload={
@@ -132,7 +130,6 @@ class UserSocialLoginSerializer(serializers.Serializer):
             Social.objects.create(user=user, kind=state)
 
         refresh = RefreshToken.for_user(user)
-        validated_data["is_register"] = True
         validated_data["access_token"] = refresh.access_token
         validated_data["refresh_token"] = refresh
 

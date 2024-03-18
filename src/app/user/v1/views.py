@@ -1,5 +1,5 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
-from rest_framework import mixins, status
+from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
+from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -26,6 +26,18 @@ from app.user.v1.serializers import (
     delete=extend_schema(summary="유저 삭제(탈퇴)"),
     login=extend_schema(summary="유저 로그인"),
     swagger_login=extend_schema(exclude=True),
+    social_login=extend_schema(
+        summary="유저 소셜 로그인",
+        responses={
+            200: UserSocialLoginSerializer,
+            400: inline_serializer(
+                name="UserSocialLoginNotRegisteredError",
+                fields={
+                    "social_token": serializers.CharField(label="소셜 로그인 토큰"),
+                },
+            ),
+        },
+    ),
     logout=extend_schema(summary="유저 로그아웃"),
     refresh=extend_schema(summary="유저 리프레시"),
     register=extend_schema(summary="유저 회원가입"),
