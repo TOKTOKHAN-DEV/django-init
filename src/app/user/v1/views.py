@@ -31,7 +31,7 @@ from app.user.v1.serializers import (
         responses={
             200: UserSocialLoginSerializer,
             400: inline_serializer(
-                name="UserSocialLoginNotRegisteredError",
+                name="UserSocialLoginValidationError",
                 fields={
                     "social_token": serializers.CharField(label="소셜 로그인 토큰"),
                 },
