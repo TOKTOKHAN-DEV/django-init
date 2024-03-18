@@ -111,15 +111,14 @@ class UserSocialLoginSerializer(serializers.Serializer):
 
         # 소셜 회원가입이 필요한 경우
         if not User.objects.filter(email=social_email).exists():
-            validated_data["is_register"] = False
-            validated_data["social_token"] = jwt.encode(
+            social_token = jwt.encode(
                 payload={
-                    "social_email": social_email,
+                    "email": social_email,
                     "expired_at": timezone.now().timestamp() + 10 * 60,
                 },
                 key=settings.SECRET_KEY,
             )
-            return validated_data
+            raise ValidationError({"social_token": social_token})
 
         user, created = User.objects.get_or_create(
             email=social_email,
@@ -185,7 +184,7 @@ class UserRegisterSerializer(serializers.Serializer):
             payload = jwt.decode(social_token, key=settings.SECRET_KEY, algorithms=settings.SIMPLE_JWT_ALGORITHM)
             if payload["expired_at"] < timezone.now().timestamp():
                 raise ValidationError({"social_token": ["회원가입 토큰이 만료됐습니다."]})
-            attrs["email"] = payload["social_email"]
+            attrs["email"] = payload["email"]
 
             return attrs
 
