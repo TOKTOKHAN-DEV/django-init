@@ -19,11 +19,11 @@ class Command(BaseCommand):
         if settings_option != "config.settings.prod":
             raise CommandError("The --settings option can't be used not 'config.settings.prod'.")
 
-        instance_id = self.get_instance_id()
+        instance_id = self.get_bastion_host_instance_id()
         self.start_session(instance_id, port)
 
     @staticmethod
-    def get_instance_id():
+    def get_bastion_host_instance_id():
         ec2_client = boto3.client("ec2")
         response = ec2_client.describe_instances(
             Filters=[
