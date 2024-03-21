@@ -121,7 +121,7 @@ Resources:
           FromPort: -1
           ToPort: -1
           CidrIp: 0.0.0.0/0
-  SSMInstanceRole:
+  InstanceRole:
     Type: AWS::IAM::Role
     Condition: IsProd
     Properties:
@@ -134,6 +134,15 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: EC2ControlPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:StopInstances
+                Resource: "*"
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Condition: IsProd
@@ -145,7 +154,7 @@ Resources:
     Condition: IsProd
     Properties:
       InstanceType: t3.micro
-      ImageId: ami-01117fda37bb910d8
+      ImageId: ami-0ac9b8202b45eeb08
       IamInstanceProfile: !Ref InstanceProfile
       SubnetId: !Ref PrivateSubnet1
       SecurityGroupIds:
@@ -153,10 +162,8 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
-          sudo yum update -y
-          sudo amazon-linux-extras enable postgresql13
-          sudo yum clean metadata
-          sudo yum install -y postgresql
+          aws ec2 stop-instances --instance-ids $(curl http://169.254.169.254/latest/meta-data/instance-id) --region ${AWS::Region}
+
 
 Outputs:
   VPC:
