@@ -110,6 +110,53 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnet2
       RouteTableId: !Ref PrivateRouteTable
+  BastionHostSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: IsProd
+    Properties:
+      GroupDescription: !Sub '${ProjectName}-${ENV}-bastion-sg'
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+  SSMInstanceRole:
+    Type: AWS::IAM::Role
+    Condition: IsProd
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Condition: IsProd
+    Properties:
+      Roles:
+        - !Ref SSMInstanceRole
+  BastionHost:
+    Type: AWS::EC2::Instance
+    Condition: IsProd
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-01117fda37bb910d8
+      IamInstanceProfile: !Ref InstanceProfile
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroupIds:
+        - !Ref BastionHostSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo yum update -y
+          sudo amazon-linux-extras enable postgresql13
+          sudo yum clean metadata
+          sudo yum install -y postgresql
 
 Outputs:
   VPC:
