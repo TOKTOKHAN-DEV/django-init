@@ -1,7 +1,11 @@
 from django.utils.encoding import force_str
 from django_filters.rest_framework import DjangoFilterBackend
+from drf_spectacular.contrib.django_filters import DjangoFilterExtension
 from rest_framework.filters import OrderingFilter as DjangoOrderingFilter
 
+
+class CustomFilterBackendExtension(DjangoFilterExtension):
+    target_class = "config.filter_backends.FilterBackend"
 
 class FilterBackend(DjangoFilterBackend):
     def get_filterset_class(self, view, queryset=None):
