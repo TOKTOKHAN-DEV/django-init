@@ -7,6 +7,7 @@ from rest_framework.filters import OrderingFilter as DjangoOrderingFilter
 class CustomFilterBackendExtension(DjangoFilterExtension):
     target_class = "config.filter_backends.FilterBackend"
 
+
 class FilterBackend(DjangoFilterBackend):
     def get_filterset_class(self, view, queryset=None):
         filterset_class = None

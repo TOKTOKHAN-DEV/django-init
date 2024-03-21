@@ -20,12 +20,7 @@ class Command(BaseCommand):
             raise CommandError("The --settings option can't be used not 'config.settings.prod'.")
 
         instance_id = self.get_instance_id()
-        try:
-            self.control_instance(instance_id, "start")
-            self.start_session(instance_id, port)
-        except Exception:
-            # TODO
-            self.control_instance(instance_id, "stop")
+        self.start_session(instance_id, port)
 
     @staticmethod
     def get_instance_id():
@@ -34,7 +29,7 @@ class Command(BaseCommand):
             Filters=[
                 {
                     "Name": "tag:aws:cloudformation:stack-name",
-                    "Values": [f"{settings.PROJECT_NAME}-{settings.ENV}-vpc"],
+                    "Values": [f"{settings.PROJECT_NAME}-{settings.APP_ENV}-vpc"],
                 },
                 {"Name": "tag:aws:cloudformation:logical-id", "Values": ["BastionHost"]},
             ]
@@ -42,25 +37,26 @@ class Command(BaseCommand):
         instance_id = response["Reservations"][0]["Instances"][0]["InstanceId"]
         return instance_id
 
-    def control_instance(self, instance_id, action):
+    def start_instance(self, instance_id):
         ec2_client = boto3.client("ec2")
-        if action == "start":
-            print(f"Starting EC2 instance {instance_id}...")
-            try:
-                ec2_client.start_instances(InstanceIds=[instance_id])
-            except ClientError:
-                print("잠시후 다시 시도해주세요.")  # TODO
-            print("Waiting for the instance to be in 'running' state...")
-            waiter = ec2_client.get_waiter("instance_running")
-            try:
-                waiter.wait(InstanceIds=[instance_id], WaiterConfig={"Delay": 15, "MaxAttempts": 12})
-                print("Instance is now running.")
-            except Exception as e:
-                print("Waiting for instance to run failed: ", e)
-                raise
-        elif action == "stop":
-            print(f"Stopping EC2 instance {instance_id}...")
-            ec2_client.stop_instances(InstanceIds=[instance_id])
+        try:
+            print("인스턴스 시작.")
+            ec2_client.start_instances(InstanceIds=[instance_id])
+        except ClientError:
+            raise CommandError("인스턴스가 중지되는 중이라 시작할 수 없습니다. 잠시 후 다시 시도해주세요.")
+        print("인스턴스 활성화 기다리는 중...")
+        waiter = ec2_client.get_waiter("instance_running")
+        try:
+            waiter.wait(InstanceIds=[instance_id], WaiterConfig={"Delay": 5, "MaxAttempts": 20})
+        except Exception:
+            self.stop_instance(instance_id)
+            raise CommandError("100초 동안 기다려도 인스턴스가 실행되지 않았습니다.")
+
+    @staticmethod
+    def stop_instance(instance_id):
+        ec2_client = boto3.client("ec2")
+        print("인스턴스 중지.")
+        ec2_client.stop_instances(InstanceIds=[instance_id])
 
     def start_session(self, instance_id, port):
         parameters = {
@@ -75,8 +71,9 @@ class Command(BaseCommand):
             f"--parameters '{json.dumps(parameters)}'"
         )
         try:
-            print("Starting session. Press Ctrl+C to exit.")
+            self.start_instance(instance_id)
+            print("세션 시작. 종료하려면 'Conrtol+C'를 눌러주세요")
             subprocess.call(command, shell=True)
         except KeyboardInterrupt:
-            self.control_instance(instance_id, "stop")
-            print("Session terminated.")
+            print("세션 중지.")
+            self.stop_instance(instance_id)
