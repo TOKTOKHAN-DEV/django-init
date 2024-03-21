@@ -47,10 +47,10 @@ class Command(BaseCommand):
         print("인스턴스 활성화 기다리는 중...")
         waiter = ec2_client.get_waiter("instance_running")
         try:
-            waiter.wait(InstanceIds=[instance_id], WaiterConfig={"Delay": 5, "MaxAttempts": 20})
+            waiter.wait(InstanceIds=[instance_id], WaiterConfig={"Delay": 10, "MaxAttempts": 12})
         except Exception:
             self.stop_instance(instance_id)
-            raise CommandError("100초 동안 기다려도 인스턴스가 실행되지 않았습니다.")
+            raise CommandError("2분 동안 기다려도 인스턴스가 활성화되지 않았습니다. 인스턴스를 종료합니다.")
 
     @staticmethod
     def stop_instance(instance_id):
