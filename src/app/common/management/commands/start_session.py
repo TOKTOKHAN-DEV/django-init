@@ -1,5 +1,7 @@
 import json
+import os
 import subprocess
+import sys
 
 import boto3
 from botocore.exceptions import ClientError
@@ -15,10 +17,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         settings_option = options.get("settings")
-        port = options.get("port")
         if settings_option != "config.settings.prod":
             raise CommandError("The --settings option can't be used not 'config.settings.prod'.")
-
+        port = options.get("port")
         instance_id = self.get_bastion_host_instance_id()
         self.start_session(instance_id, port)
 
