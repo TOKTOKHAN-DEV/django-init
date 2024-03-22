@@ -148,7 +148,7 @@ Resources:
     Condition: IsProd
     Properties:
       Roles:
-        - !Ref SSMInstanceRole
+        - !Ref InstanceRole
   BastionHost:
     Type: AWS::EC2::Instance
     Condition: IsProd
