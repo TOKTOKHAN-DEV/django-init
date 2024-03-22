@@ -32,7 +32,7 @@ class AlarmTalkLog(BaseModel):
         verbose_name_plural = verbose_name
 
     def send(self):
-        sms_uri = f"/alarmtalk/v2/services/{settings.ALARMTALK_ID}/messages"
+        sms_uri = f"/alimtalk/v2/services/{settings.ALARMTALK_ID}/messages"
         url = f"https://sens.apigw.ntruss.com{sms_uri}"
         timestamp = str(int(timezone.now().timestamp() * 1000))
         hash_str = f"POST {sms_uri}\n{timestamp}\n{settings.ALARMTALK_CLIENT_ID}"
