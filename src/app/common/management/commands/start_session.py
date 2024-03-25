@@ -33,7 +33,7 @@ class Command(BaseCommand):
                 {"Name": "tag:aws:cloudformation:logical-id", "Values": ["BastionHost"]},
             ]
         )
-        instance_id = response["Reservations"][0]["Instances"][0]["InstanceId"]
+        instance_id = response["Reservations"][-1]["Instances"][0]["InstanceId"]
         return instance_id
 
     def start_instance(self, instance_id):
