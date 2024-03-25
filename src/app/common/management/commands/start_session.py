@@ -1,7 +1,5 @@
 import json
-import os
 import subprocess
-import sys
 
 import boto3
 from botocore.exceptions import ClientError
@@ -76,5 +74,8 @@ class Command(BaseCommand):
             print("세션 시작. 종료하려면 'Conrtol+C'를 눌러주세요")
             subprocess.call(command, shell=True)
         except KeyboardInterrupt:
+            ec2_client = boto3.client("ec2")
+            waiter = ec2_client.get_waiter("instance_running")
+            waiter.wait(InstanceIds=[instance_id], WaiterConfig={"Delay": 10, "MaxAttempts": 12})
             print("세션 중지.")
             self.stop_instance(instance_id)

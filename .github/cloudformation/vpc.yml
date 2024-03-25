@@ -134,15 +134,6 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-      Policies:
-        - PolicyName: EC2ControlPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - ec2:StopInstances
-                Resource: "*"
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Condition: IsProd
@@ -162,6 +153,10 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
+          sudo yum install -y at
+          sudo systemctl start atd
+          sudo systemctl enable atd
+          (crontab -l 2>/dev/null; echo "@reboot echo \"sudo shutdown -h now\" | at now + 2 hours") | crontab -
           sudo shutdown -h now
 
 
