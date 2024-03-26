@@ -23,7 +23,6 @@ class Command(BaseCommand):
     help = "AWS CloudWatch 로그를 확인합니다."
 
     def handle(self, *args, **options):
-
         cloudwatch_client = boto3.client("logs")
 
         log_groups_response = cloudwatch_client.describe_log_groups(logGroupNamePrefix=settings.PROJECT_NAME)
