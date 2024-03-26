@@ -6,7 +6,7 @@ from config.secrets import get_secret
 from config.settings.base import *
 
 APP_ENV = "dev"
-DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/django/dev")
+DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/django")
 SECRET_KEY = DJANGO_SECRET["key"]
 
 DEBUG = True
@@ -15,7 +15,7 @@ CSRF_TRUSTED_ORIGINS = [f"https://admin.dev.{DOMAIN}"]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-DATABASE_SECRET = get_secret(f"{PROJECT_NAME}/db/dev")
+DATABASE_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/db")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",

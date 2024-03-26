@@ -29,7 +29,7 @@ Resources:
   RDSSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: !Sub '${ProjectName}/db/${ENV}'
+      Name: !Sub '${ProjectName}/${ENV}/db'
       GenerateSecretString:
         RequireEachIncludedType: True
         SecretStringTemplate: !Sub '{"username": "${ProjectName}"}'

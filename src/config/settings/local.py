@@ -26,7 +26,7 @@ DATABASES = {
 }
 
 # remote database
-# DATABASE_SECRET = get_secret(f'{PROJECT_NAME}/db/dev')
+# DATABASE_SECRET = get_secret(f'{PROJECT_NAME}/dev/db')
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',

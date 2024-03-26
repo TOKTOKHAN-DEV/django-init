@@ -32,7 +32,7 @@ def handler(event, context):
     )
     if access:
         response = secretmanager.get_secret_value(
-            SecretId=f"{project_name}/django/{env}"
+            SecretId=f"{project_name}/{env}/django"
         )
         secret = json.loads(response["SecretString"])
         payload = jwt_decode(access, secret["key"])

@@ -32,7 +32,7 @@ Resources:
   Secret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: !Sub '${ProjectName}/django/${ENV}'
+      Name: !Sub '${ProjectName}/${ENV}/django'
       GenerateSecretString:
         SecretStringTemplate: !Sub '{}'
         GenerateStringKey: 'key'
