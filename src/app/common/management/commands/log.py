@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 import boto3
@@ -21,24 +22,45 @@ class ConsoleColors:
 class Command(BaseCommand):
     help = "AWS CloudWatch 로그를 확인합니다."
 
-    def add_arguments(self, parser):
-        parser.add_argument("env", type=str, choices=["dev", "prod"], help="env")
-        parser.add_argument("log_level", type=str, choices=["info", "error"], help="loglevel")
-
     def handle(self, *args, **options):
-        env = options.get("env")
-        log_level = options.get("log_level")
-        self.get_log_tail(env, log_level)
 
-    def get_log_tail(self, env, log_level):
-        logs_client = boto3.client("logs")
-        response = logs_client.describe_log_groups(logGroupNamePrefix=f"{settings.PROJECT_NAME}/{env}/{log_level}")
-        response = logs_client.start_live_tail(logGroupIdentifiers=[response["logGroups"][0]["arn"][:-2]])
+        cloudwatch_client = boto3.client("logs")
+
+        log_groups_response = cloudwatch_client.describe_log_groups(logGroupNamePrefix=settings.PROJECT_NAME)
+        log_groups = log_groups_response["logGroups"]
+        for i, group in enumerate(log_groups):
+            print(self.get_log_color(ConsoleColors.RED, f"{i}: {group['logGroupName']}"))
+        group_index = int(input(self.get_log_color(ConsoleColors.RED, "로그 그룹 번호를 선택하세요: ")))
+        log_group_arn = log_groups[group_index]["arn"][:-1]
+        self.get_last_log(log_group_arn)
+        self.get_tail_log(log_group_arn)
+
+    def get_last_log(self, log_group_arn):
+        cloudwatch_client = boto3.client("logs")
+        log_streams_response = cloudwatch_client.describe_log_streams(logGroupIdentifier=log_group_arn)
+        log_stream_name = log_streams_response["logStreams"][-1]["logStreamName"]
+        response = cloudwatch_client.get_log_events(
+            logGroupIdentifier=log_group_arn,
+            logStreamName=log_stream_name,
+            limit=100,
+        )
+        for log_event in response["events"]:
+            print(
+                "{date} {log}".format(
+                    date=self.get_log_color(
+                        ConsoleColors.CYAN, f"[{datetime.fromtimestamp(log_event['timestamp'] / 1000)}]"
+                    ),
+                    log=self.get_log_color(ConsoleColors.WHITE, log_event["message"]),
+                )
+            )
+
+    def get_tail_log(self, log_group_arn):
+        cloudwatch_client = boto3.client("logs")
+        response = cloudwatch_client.start_live_tail(logGroupIdentifiers=[log_group_arn])
         try:
             for event in response["responseStream"]:
                 if "sessionStart" in event:
-                    session_start_event = event["sessionStart"]
-                    print(session_start_event)
+                    pass
                 elif "sessionUpdate" in event:
                     log_events = event["sessionUpdate"]["sessionResults"]
                     for log_event in log_events:
@@ -47,13 +69,13 @@ class Command(BaseCommand):
                                 date=self.get_log_color(
                                     ConsoleColors.CYAN, f"[{datetime.fromtimestamp(log_event['timestamp'] / 1000)}]"
                                 ),
-                                log=self.get_log_color(ConsoleColors.RED, log_event["message"]),
+                                log=self.get_log_color(ConsoleColors.WHITE, log_event["message"]),
                             )
                         )
                 else:
                     raise RuntimeError(str(event))
         except KeyboardInterrupt:
-            print("로그 스트림을 종료합니다.")
+            print(self.get_log_color(ConsoleColors.RED, "로그 스트림을 종료합니다."))
 
     @staticmethod
     def get_log_color(color, text):
