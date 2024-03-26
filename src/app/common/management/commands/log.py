@@ -43,9 +43,9 @@ class Command(BaseCommand):
                     log_events = event["sessionUpdate"]["sessionResults"]
                     for log_event in log_events:
                         print(
-                            "[{date}] {log}".format(
+                            "{date} {log}".format(
                                 date=self.get_log_color(
-                                    ConsoleColors.CYAN, datetime.fromtimestamp(log_event["timestamp"] / 1000)
+                                    ConsoleColors.CYAN, f"{datetime.fromtimestamp(log_event['timestamp'] / 1000)}"
                                 ),
                                 log=self.get_log_color(ConsoleColors.RED, log_event["message"]),
                             )
