@@ -42,12 +42,6 @@ class Command(BaseCommand):
                 elif "sessionUpdate" in event:
                     log_events = event["sessionUpdate"]["sessionResults"]
                     for log_event in log_events:
-                        # print(
-                        #     "[{date}] {log}".format(
-                        #         date="\033[32m" + datetime.fromtimestamp(log_event["timestamp"] / 1000),
-                        #         log="\033[32m" + log_event["message"] + "\033[0m",
-                        #     )
-                        # )
                         print(
                             "[{date}] {log}".format(
                                 date=self.get_log_color(
