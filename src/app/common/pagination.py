@@ -10,7 +10,6 @@ class LimitOffsetPagination(pagination.LimitOffsetPagination):
     default_limit = 20
     max_limit = 100
 
-
     def get_paginated_response(self, data):
         return Response(
             OrderedDict(
