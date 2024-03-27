@@ -41,19 +41,9 @@
 - [requirements.txt](src/requirements.txt)
 
 
-## Set Environments
+## Set AWS Environments
 1. `.env.temp` -> `.env` 복사
 2. `.env`에 AWS 키 등록
-3. 
-   - 파이참 사용 시 (`terminal`, `django console`, `python console` 모두 환경변수 등록 됨)
-     ```
-     # __PROJECT_ROOT__
-     cp .idea/workspace.temp.xml .idea/workspace.xml
-     ```
-   - 그 외 IDE
-     ```
-     DJANGO_SETTINGS_MODULE=config.settings.local
-     ```
 
 
 ## Install Virtual Environment & Dependency
