@@ -28,7 +28,7 @@ class Command(BaseCommand):
         log_groups_response = cloudwatch_client.describe_log_groups(logGroupNamePrefix=settings.PROJECT_NAME)
         log_groups = log_groups_response["logGroups"]
         for i, group in enumerate(log_groups):
-            print(self.get_log_color(ConsoleColors.GREEN, f"{i}: {group['logGroupName']}"))
+            print(self.get_log_color(ConsoleColors.BLUE, f"{i}: {group['logGroupName']}"))
         group_index = int(input(self.get_log_color(ConsoleColors.RED, "로그 그룹 번호를 선택하세요: ")))
         log_group_arn = log_groups[group_index]["arn"][:-1]
         self.get_last_log(log_group_arn)
