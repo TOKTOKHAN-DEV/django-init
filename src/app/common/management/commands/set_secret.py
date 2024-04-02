@@ -16,7 +16,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         secret_id = options.get("secret_id")
         key = options.get("key")
-        value = options.get("value")
+        value = options.get("value").replace("\\n", "\n")
 
         self.update_secret_value(secret_id, key, value)
 
