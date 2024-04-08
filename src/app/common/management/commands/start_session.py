@@ -1,5 +1,6 @@
 import json
 import subprocess
+import time
 
 import boto3
 from botocore.exceptions import ClientError
@@ -47,7 +48,7 @@ class Command(BaseCommand):
         waiter = ec2_client.get_waiter("instance_running")
         try:
             waiter.wait(InstanceIds=[instance_id], WaiterConfig={"Delay": 10, "MaxAttempts": 12})
-            time.sleep(5)
+            # time.sleep(10)
         except Exception:
             self.stop_instance(instance_id)
             raise CommandError("2분 동안 기다려도 인스턴스가 활성화되지 않았습니다. 인스턴스를 종료합니다.")
@@ -73,10 +74,20 @@ class Command(BaseCommand):
         try:
             self.start_instance(instance_id)
             print("세션 시작. 종료하려면 'Conrtol+C'를 눌러주세요")
-            subprocess.call(command, shell=True)
+            self.recursion_start_session(command)
         except KeyboardInterrupt:
             ec2_client = boto3.client("ec2")
             waiter = ec2_client.get_waiter("instance_running")
             waiter.wait(InstanceIds=[instance_id], WaiterConfig={"Delay": 10, "MaxAttempts": 12})
             print("세션 중지.")
             self.stop_instance(instance_id)
+
+    def recursion_start_session(self, command, retry=0):
+        response = subprocess.call(command, shell=True)
+        if response == 254:
+            if retry > 5:
+                raise KeyboardInterrupt()
+            retry += 1
+            print(f"{retry}회 재시도 중...(최대 5회)")
+            time.sleep(2)
+            self.recursion_start_session(command, retry)
