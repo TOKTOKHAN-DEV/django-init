@@ -85,9 +85,9 @@ class Command(BaseCommand):
     def recursion_start_session(self, command, retry=0):
         response = subprocess.call(command, shell=True)
         if response == 254:
-            if retry > 5:
+            if retry > 10:
                 raise KeyboardInterrupt()
             retry += 1
-            print(f"{retry}회 재시도 중...(최대 5회)")
+            print(f"인스턴스 완전 활성화까지 재시도 중...")
             time.sleep(2)
             self.recursion_start_session(command, retry)
