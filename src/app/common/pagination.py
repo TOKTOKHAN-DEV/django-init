@@ -1,3 +1,4 @@
+from base64 import b64encode
 from collections import OrderedDict
 from urllib import parse
 
@@ -45,11 +46,16 @@ class CursorPagination(pagination.CursorPagination):
         return ordering + ("pk",)
 
     def encode_cursor(self, cursor):
-        url = super().encode_cursor(cursor)
-        query = parse.urlsplit(force_str(url)).query
-        query_dict = dict(parse.parse_qsl(query, keep_blank_values=True))
-
-        return query_dict.get(self.cursor_query_param)
+        tokens = {}
+        if cursor.offset != 0:
+            tokens["o"] = str(cursor.offset)
+        if cursor.reverse:
+            tokens["r"] = "1"
+        if cursor.position is not None:
+            tokens["p"] = cursor.position
+        querystring = parse.urlencode(tokens, doseq=True)
+        encoded = b64encode(querystring.encode("ascii")).decode("ascii")
+        return encoded
 
     def get_paginated_response(self, data):
         return Response(
