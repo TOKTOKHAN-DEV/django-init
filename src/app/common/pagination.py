@@ -41,6 +41,10 @@ class CursorPagination(pagination.CursorPagination):
     page_size_query_param = "page_size"
     ordering = None
 
+    def paginate_queryset(self, queryset, request, view=None):
+        self.count = queryset.count()
+        return super().paginate_queryset(queryset, request, view)
+
     def get_ordering(self, request, queryset, view):
         ordering = super().get_ordering(request, queryset, view)
         return ordering + ("pk",)
@@ -61,6 +65,7 @@ class CursorPagination(pagination.CursorPagination):
         return Response(
             OrderedDict(
                 [
+                    ("count", self.count),
                     ("cursor", self.get_next_link()),
                     ("results", data),
                 ]
@@ -71,6 +76,9 @@ class CursorPagination(pagination.CursorPagination):
         return {
             "type": "object",
             "properties": {
+                "count": {
+                    "type": "integer",
+                },
                 "cursor": {
                     "type": "string",
                     "nullable": True,
