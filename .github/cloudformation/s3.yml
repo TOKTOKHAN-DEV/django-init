@@ -39,13 +39,13 @@ Resources:
         RestrictPublicBuckets: false
       LifecycleConfiguration:
         Rules:
-          - Id: ManageTemporaryFiles
+          - Id: !Sub '${ProjectName}-${ENV}-ManageTemporaryFiles'
             Status: Enabled
             TagFilters:
               - Key: status
                 Value: editing
             ExpirationInDays: 1
-          - Id: ManageDeletedFiles
+          - Id: !Sub '${ProjectName}-${ENV}-ManageDeletedFiles'
             Status: Enabled
             TagFilters:
               - Key: status
@@ -65,64 +65,6 @@ Resources:
             Principal: '*'
             Action: 's3:GetObject'
             Resource: !Sub 'arn:aws:s3:::${S3Bucket}/*'
-#  LambdaExecutionRole:
-#    Type: AWS::IAM::Role
-#    Properties:
-#      AssumeRolePolicyDocument:
-#        Version: "2012-10-17"
-#        Statement:
-#          - Effect: Allow
-#            Principal:
-#              Service: lambda.amazonaws.com
-#            Action: sts:AssumeRole
-#      Policies:
-#        - PolicyName: S3BucketAccessPolicy
-#          PolicyDocument:
-#            Version: "2012-10-17"
-#            Statement:
-#              - Effect: Allow
-#                Action:
-#                  - s3:GetObject
-#                  - s3:PutObject
-#                  - s3:DeleteObject
-#                Resource: !Join ["", [!GetAtt S3Bucket.Arn, "/*"]]
-#  ObjectDeleteFunction:
-#    Type: AWS::Lambda::Function
-#    Properties:
-#      FunctionName: !Sub '${ProjectName}-${ENV}-object-delete-function'
-#      Role: !GetAtt LambdaExecutionRole.Arn
-#      Runtime: python3.9
-#      Handler: index.handler
-#      Code:
-#        ZipFile: |
-#          import boto3
-#
-#          def lambda_handler(event, context):
-#              s3 = boto3.client("s3")
-#              bucket_name = os.getenv("BUCKET_NAME")
-#
-#              response = s3.list_objects_v2(Bucket=bucket_name, Tagging="status=editing")
-#
-#              if "Contents" in response:
-#                  for obj in response["Contents"]:
-#                      object_key = obj["Key"]
-#                      s3.delete_object(Bucket=bucket_name, Key=object_key)
-#
-#              return {
-#                  "statusCode": 200,
-#                  "body": "Objects with "editing" tag deleted successfully"
-#              }
-#      Environment:
-#        Variables:
-#          BUCKET_NAME: !Ref S3Bucket
-#  MyCloudWatchEventRule:
-#    Type: AWS::Events::Rule
-#    Properties:
-#      ScheduleExpression: rate(1 day)
-#      State: ENABLED
-#      Targets:
-#        - Arn: !GetAtt ObjectDeleteFunction.Arn
-#          Id: TargetFunctionV1
 
 Outputs:
   S3BucketHost:
