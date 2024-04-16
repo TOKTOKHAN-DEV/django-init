@@ -48,7 +48,7 @@ class RequestLogMiddleware:
             return logger.error
 
     def _get_log_data(self, request, request_body, response):
-        return "HTTP {method} {status_code} {path} [{remote}] [{user}] {body}".format(
+        message = "HTTP {method} {status_code} {path} [{remote}] [{user}] {body}".format(
             method=request.method,
             status_code=response.status_code,
             path=request.get_full_path(),
@@ -56,6 +56,7 @@ class RequestLogMiddleware:
             remote=self._get_remote(request.META),
             body=self._restore_request_body(request.content_type, request_body),
         )[:1000]
+        return message
 
     @staticmethod
     def _get_remote(meta):
