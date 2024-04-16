@@ -33,7 +33,10 @@ from app.user.v1.serializers import (
             400: inline_serializer(
                 name="UserSocialLoginValidationError",
                 fields={
-                    "social_token": serializers.CharField(label="소셜 로그인 토큰"),
+                    "social_token": serializers.CharField(required=False, label="소셜 로그인 토큰"),
+                    "non_field": serializers.ListField(required=False, child=serializers.CharField()),
+                    "code": serializers.ListField(required=False, child=serializers.CharField()),
+                    "state": serializers.ListField(required=False, child=serializers.CharField()),
                 },
             ),
         },

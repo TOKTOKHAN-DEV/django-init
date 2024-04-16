@@ -22,6 +22,7 @@ from app.user.social_adapters import SocialAdapter
 from app.user.v1.examples import login_examples
 from app.user.validators import validate_password
 from app.verifier.models import EmailVerifier, PhoneVerifier
+from config.exception_handler import SocialAccountNotFoundError
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -93,24 +94,16 @@ class UserLogoutSerializer(serializers.Serializer):
 class UserSocialLoginSerializer(serializers.Serializer):
     code = serializers.CharField(write_only=True)
     state = serializers.ChoiceField(write_only=True, choices=SocialKindChoices.choices)
-    redirect_uri = serializers.URLField(write_only=True)
 
     access_token = serializers.CharField(read_only=True)
     refresh_token = serializers.CharField(read_only=True)
 
     def validate(self, attrs):
-        attrs["social_user_id"] = self.get_social_user_id(attrs["code"], attrs["state"])
-        return attrs
-
-    @transaction.atomic
-    def create(self, validated_data):
-        social_user_id = validated_data["social_user_id"]
-        state = validated_data["state"]
-
-        social_email = f"{social_user_id}@{state}.social"
-
-        # 소셜 회원가입이 필요한 경우
-        if not User.objects.filter(email=social_email).exists():
+        social_user_id = self.get_social_user_id(attrs["code"], attrs["state"])
+        social_email = f"{social_user_id}@{attrs['state']}.social"
+        try:
+            attrs["user"] = User.objects.get(email=social_email, password=make_password(None))
+        except User.DoesNotExist:
             social_token = jwt.encode(
                 payload={
                     "email": social_email,
@@ -118,20 +111,15 @@ class UserSocialLoginSerializer(serializers.Serializer):
                 },
                 key=settings.SECRET_KEY,
             )
-            raise ValidationError({"social_token": social_token})
+            raise SocialAccountNotFoundError(social_token)
 
-        user, created = User.objects.get_or_create(
-            email=social_email,
-            defaults={"password": make_password(None)},
-        )
+        return attrs
 
-        if created:
-            Social.objects.create(user=user, kind=state)
-
-        refresh = RefreshToken.for_user(user)
+    @transaction.atomic
+    def create(self, validated_data):
+        refresh = RefreshToken.for_user(validated_data["user"])
         validated_data["access_token"] = refresh.access_token
         validated_data["refresh_token"] = refresh
-
         return validated_data
 
     def get_social_user_id(self, code, state):
