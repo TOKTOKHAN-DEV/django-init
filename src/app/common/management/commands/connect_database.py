@@ -60,11 +60,3 @@ class Command(BaseCommand):
         file_path = settings.BASE_DIR.parent / ".idea" / "dataSources.local.xml"
         with open(file_path, "w") as f:
             f.write(formated_local_xml_data)
-
-        self.set_clipboard_text(database["PASSWORD"])
-
-    @staticmethod
-    def set_clipboard_text(text):
-        process = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
-        process.communicate(text.encode("utf-8"))
-        print("\033[35m" + "password가 클립보드에 복사되었습니다." + "\033[0m")
