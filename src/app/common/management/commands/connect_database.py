@@ -13,8 +13,8 @@ class Command(BaseCommand):
         uuid = str(uuid4())
         dir_path = settings.BASE_DIR.parent / ".idea"
 
-        self.create_xml_data("dataSources.xml", database, uuid)
-        self.create_local_xml_data("dataSources.local.xml", database, uuid)
+        self.create_xml_data(dir_path / "dataSources.xml", database, uuid)
+        self.create_local_xml_data(dir_path / "dataSources.local.xml", database, uuid)
 
     def create_xml_data(self, file_path, database, uuid):
         tree, created = self.get_or_create_xml(file_path)
