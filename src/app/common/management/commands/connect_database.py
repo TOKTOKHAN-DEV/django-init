@@ -1,10 +1,9 @@
-import subprocess
 from uuid import uuid4
 
 from django.conf import settings
 from django.core.management import BaseCommand
 
-xml_data = """<?xml version="1.0" encoding="UTF-8"?>
+xml_template = """<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
     <data-source source="LOCAL" name="{NAME}@{HOST}" uuid="{UUID}">
@@ -18,7 +17,7 @@ xml_data = """<?xml version="1.0" encoding="UTF-8"?>
 </project>
 """
 
-local_xml_data = """<?xml version="1.0" encoding="UTF-8"?>
+local_xml_template = """<?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="dataSourceStorageLocal" created-in="">
     <data-source name="{NAME}@{HOST}" uuid="{UUID}">
@@ -38,7 +37,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         uuid = uuid4()
         database = settings.DATABASES["default"]
-        formated_xml_data = xml_data.format(
+        dir_path = settings.BASE_DIR.parent / ".idea"
+        self.write_xml(xml_template, dir_path / "dataSources.xml", database, uuid)
+        self.write_xml(local_xml_template, dir_path / "dataSources.local.xml", database, uuid)
+
+    @staticmethod
+    def write_xml(template, file_path, database, uuid):
+        formated_xml_data = template.format(
             NAME=database["NAME"],
             USER=database["USER"],
             PASSWORD=database["PASSWORD"],
@@ -46,17 +51,5 @@ class Command(BaseCommand):
             PORT=database["PORT"],
             UUID=uuid,
         )
-        file_path = settings.BASE_DIR.parent / ".idea" / "dataSources.xml"
         with open(file_path, "w") as f:
             f.write(formated_xml_data)
-
-        formated_local_xml_data = local_xml_data.format(
-            NAME=database["NAME"],
-            USER=database["USER"],
-            HOST=database["HOST"],
-            PORT=database["PORT"],
-            UUID=uuid,
-        )
-        file_path = settings.BASE_DIR.parent / ".idea" / "dataSources.local.xml"
-        with open(file_path, "w") as f:
-            f.write(formated_local_xml_data)
