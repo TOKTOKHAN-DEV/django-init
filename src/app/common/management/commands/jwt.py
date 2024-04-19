@@ -1,4 +1,6 @@
+import ctypes
 import json
+import subprocess
 
 from django.core.management import BaseCommand, CommandError
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -21,3 +23,10 @@ class Command(BaseCommand):
         refresh = RefreshToken.for_user(user)
         response = {"access_token": str(refresh.access_token), "refresh_token": str(refresh)}
         print("\033[32m" + json.dumps(response) + "\033[0m")
+        self.set_clipboard_text(response["access_token"])
+        print("\033[35m" + "access token이 클립보드에 복사되었습니다." + "\033[0m")
+
+    @staticmethod
+    def set_clipboard_text(text):
+        process = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
+        process.communicate(text.encode("utf-8"))
