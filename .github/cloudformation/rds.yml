@@ -35,7 +35,7 @@ Resources:
         SecretStringTemplate: !Sub '{"username": "${ProjectName}"}'
         GenerateStringKey: 'password'
         PasswordLength: 30
-        ExcludeCharacters: '"@/\'
+        ExcludeCharacters: '"@/\&;'
   RDSSecretAttachment:
     Type: AWS::SecretsManager::SecretTargetAttachment
     DependsOn: RDSCluster
