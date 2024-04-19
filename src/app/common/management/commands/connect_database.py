@@ -38,18 +38,11 @@ class Command(BaseCommand):
         uuid = uuid4()
         database = settings.DATABASES["default"]
         dir_path = settings.BASE_DIR.parent / ".idea"
-        self.write_xml(xml_template, dir_path / "dataSources.xml", database, uuid)
-        self.write_xml(local_xml_template, dir_path / "dataSources.local.xml", database, uuid)
+        self.write_xml(xml_template, dir_path / "dataSources.xml", UUID=uuid, **database)
+        self.write_xml(local_xml_template, dir_path / "dataSources.local.xml", UUID=uuid, **database)
 
     @staticmethod
-    def write_xml(template, file_path, database, uuid):
-        formated_xml_data = template.format(
-            NAME=database["NAME"],
-            USER=database["USER"],
-            PASSWORD=database["PASSWORD"],
-            HOST=database["HOST"],
-            PORT=database["PORT"],
-            UUID=uuid,
-        )
+    def write_xml(template, file_path, **kwargs):
+        formated_xml_data = template.format(**kwargs)
         with open(file_path, "w") as f:
             f.write(formated_xml_data)
