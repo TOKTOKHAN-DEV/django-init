@@ -1,3 +1,4 @@
+import subprocess
 from uuid import uuid4
 from xml.etree import ElementTree
 
@@ -15,6 +16,7 @@ class Command(BaseCommand):
 
         self.create_xml_data(dir_path / "dataSources.xml", database, uuid)
         self.create_local_xml_data(dir_path / "dataSources.local.xml", database, uuid)
+        self.set_clipboard_text(database["PASSWORD"])
 
     def create_xml_data(self, file_path, database, uuid):
         tree, created = self.get_or_create_xml(file_path)
@@ -48,7 +50,7 @@ class Command(BaseCommand):
         jdbc_driver.text = "org.postgresql.Driver"
 
         jdbc_url = ElementTree.SubElement(data_source, "jdbc-url")
-        jdbc_url.text = f"jdbc:postgresql://{database['HOST']}:{database['PORT']}/{database['NAME']}?password={database['PASSWORD']}"
+        jdbc_url.text = f"jdbc:postgresql://{database['HOST']}:{database['PORT']}/{database['NAME']}"
 
         working_dir = ElementTree.SubElement(data_source, "working-dir")
         working_dir.text = "$ProjectFileDir$"
@@ -98,3 +100,9 @@ class Command(BaseCommand):
             tree = ElementTree.ElementTree(project)
             created = True
         return tree, created
+
+    @staticmethod
+    def set_clipboard_text(text):
+        process = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
+        process.communicate(text.encode("utf-8"))
+        print("\033[35m" + "password가 클립보드에 복사되었습니다." + "\033[0m")
