@@ -7,7 +7,7 @@ from django.core.management import BaseCommand
 
 
 class Command(BaseCommand):
-    help = "파이참에 데이터베이스를 연결합니다."
+    help = "파이참 데이터베이스를 연결합니다."
 
     def handle(self, *args, **options):
         database = settings.DATABASES["default"]
