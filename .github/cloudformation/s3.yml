@@ -37,20 +37,20 @@ Resources:
         BlockPublicPolicy: false
         IgnorePublicAcls: false
         RestrictPublicBuckets: false
-      LifecycleConfiguration:
-        Rules:
-          - Id: !Sub '${ProjectName}-${ENV}-ManageTemporaryFiles'
-            Status: Enabled
-            TagFilters:
-              - Key: status
-                Value: editing
-            ExpirationInDays: 1
-          - Id: !Sub '${ProjectName}-${ENV}-ManageDeletedFiles'
-            Status: Enabled
-            TagFilters:
-              - Key: status
-                Value: deleted
-            ExpirationInDays: 30
+#      LifecycleConfiguration:
+#        Rules:
+#          - Id: !Sub '${ProjectName}-${ENV}-ManageTemporaryFiles'
+#            Status: Enabled
+#            TagFilters:
+#              - Key: status
+#                Value: editing
+#            ExpirationInDays: 1
+#          - Id: !Sub '${ProjectName}-${ENV}-ManageDeletedFiles'
+#            Status: Enabled
+#            TagFilters:
+#              - Key: status
+#                Value: deleted
+#            ExpirationInDays: 30
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy

@@ -3,7 +3,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
 
-from app.presigned_url.v1.serializers import PresignedUrlSerializer
+from app.presigned_url.v1.serializers import PresignedSerializer
 
 
 @extend_schema(
@@ -20,5 +20,5 @@ from app.presigned_url.v1.serializers import PresignedUrlSerializer
 """,
 )
 class PresignedUrlCreateView(CreateAPIView):
-    serializer_class = PresignedUrlSerializer
+    serializer_class = PresignedSerializer
     permission_classes = [IsAuthenticated]
