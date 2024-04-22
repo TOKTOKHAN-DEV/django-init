@@ -233,12 +233,27 @@ SPECTACULAR_SETTINGS = {
                     },
                 },
             },
+            "kakaoOAuth2": {
+                "type": "oauth2",
+                "flows": {
+                    "authorizationCode": {
+                        "authorizationUrl": "http://localhost:8000/v1/auth/kakao/authorize/",
+                        "tokenUrl": "http://localhost:8000/v1/auth/kakao/token/",
+                        "scopes": {
+                            "profile": "Access your profile information",
+                        },
+                    }
+                },
+            },
         },
     },
     "SECURITY": [
         {
             "Bearer": [],
-        }
+            "kakaoOAuth2": [
+                "profile",
+            ],
+        },
     ],
     "PREPROCESSING_HOOKS": [
         "config.spectacular_hooks.api_ordering",
@@ -287,9 +302,10 @@ CELERY_TASK_IGNORE_RESULT = True
 
 
 # KAKAO
-KAKAO_CLIENT_ID = "**"
-KAKAO_CLIENT_SECRET = "**"
-KAKAO_LOGIN_URL = "https://kauth.kakao.com/oauth/authorize?response_type=code&client_id={kakao_client_id}&redirect_uri={SOCIAL_REDIRECT_URL}&state=kakao"
+KAKAO_CLIENT_ID = "a6225b93b3780359ed73426477abef50"
+KAKAO_CLIENT_SECRET = "KELucYxR4wve4k0EsqofE8vXxHlAD3bT"
+KAKAO_REDIRECT_URI = "http://localhost:8000/v1/auth/kakao/token/"
+KAKAO_LOGIN_URL = f"https://kauth.kakao.com/oauth/authorize?response_type=code&client_id={KAKAO_CLIENT_ID}&redirect_uri={KAKAO_REDIRECT_URI}&state=kakao"
 
 # NAVER
 NAVER_CLIENT_ID = "**"

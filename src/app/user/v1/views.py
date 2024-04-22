@@ -1,12 +1,18 @@
+import requests
+from django.conf import settings
+from django.http import JsonResponse
+from django.shortcuts import redirect
 from drf_spectacular.utils import extend_schema, extend_schema_view, inline_serializer
 from rest_framework import mixins, serializers, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from app.user.models import User
 from app.user.v1.serializers import (
@@ -131,3 +137,41 @@ class UserViewSet(
         유저 비밀번호 초기화 메일 발송 API를 통해 발급 받은 link를 통해 비밀번호를 재설정합니다.
         """
         return self._create(request, *args, **kwargs)
+
+
+@extend_schema(exclude=True)
+@api_view(["GET"])
+def kakao_authorize(request):
+    return redirect(settings.KAKAO_LOGIN_URL)
+
+
+@extend_schema(exclude=True)
+@api_view(["GET"])
+def kakao_token(request):
+    code = request.GET.get("code")
+    response = requests.post(
+        "https://kauth.kakao.com/oauth/token",
+        data={
+            "code": code,
+            "client_id": settings.KAKAO_CLIENT_ID,
+            "client_secret": settings.KAKAO_CLIENT_SECRET,
+            "redirect_uri": "http://localhost:8000/v1/auth/kakao/token/",
+            "grant_type": "authorization_code",
+        },
+    )
+    if not response.ok:
+        raise ValidationError("KAKAO GET TOKEN API ERROR")
+    data = response.json()
+
+    url = "https://kapi.kakao.com/v2/user/me"
+    headers = {"Authorization": f'Bearer {data["access_token"]}'}
+    response = requests.get(url=url, headers=headers)
+    if not response.ok:
+        raise ValidationError("KAKAO ME API ERROR")
+    data = response.json()
+    social_email = f"{data['id']}@social.social"
+    user = User.objects.get(email=social_email)
+    refresh = RefreshToken.for_user(user)
+    response = {"access_token": str(refresh.access_token), "refresh_token": str(refresh)}
+
+    return Response(response, status=status.HTTP_201_CREATED)
