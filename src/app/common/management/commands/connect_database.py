@@ -8,8 +8,19 @@ from django.core.management import BaseCommand
 class Command(BaseCommand):
     help = "파이참 데이터베이스를 연결합니다."
 
+    def add_arguments(self, parser):
+        parser.add_argument("--host", default=str(settings.DATABASES["default"]["HOST"]), type=str, help="호스트")
+        parser.add_argument("--port", "-p", default=str(settings.DATABASES["default"]["PORT"]), type=str, help="포트")
+
     def handle(self, *args, **options):
         database = settings.DATABASES["default"]
+        host = options.get("host")
+        port = options.get("port")
+        if host:
+            database["HOST"] = host
+        if port:
+            database["PORT"] = port
+
         uuid = str(uuid4())
         dir_path = settings.BASE_DIR.parent / ".idea"
 
