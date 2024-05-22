@@ -20,6 +20,7 @@ cryptography==42.0.7
 Django==4.2.3
 django-ckeditor==6.4.2
 django-cors-headers==3.10.0
+django-extensions==3.2.3
 django-filter==21.1
 django-hosts==5.1
 django-js-asset==2.2.0
