@@ -49,7 +49,8 @@ class Message(BaseModel):
                         }
                     ),
                 )
-            except Exception:
+            except Exception as e:
+                print(e)
                 db.delete_item(
                     TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection",
                     Key={"connection_id": {"S": item["connection_id"]["S"]}},

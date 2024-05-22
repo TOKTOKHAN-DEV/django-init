@@ -46,7 +46,6 @@ LOCAL_APPS = [
 
 THIRD_PARTY_APPS = [
     "rest_framework",
-    "channels",
     "corsheaders",
     "django_filters",
     "django_hosts",
@@ -55,7 +54,6 @@ THIRD_PARTY_APPS = [
     "ckeditor",
     "ckeditor_uploader",
     "safedelete",
-    "django_seed",
 ]
 
 DJANGO_APPS = [
