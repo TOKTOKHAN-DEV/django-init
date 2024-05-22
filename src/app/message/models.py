@@ -37,14 +37,20 @@ class Message(BaseModel):
             endpoint_url=f"https://ws.{settings.DOMAIN}",
         )
         for item in response["Items"]:
-            apigw.post_to_connection(
-                ConnectionId=item["connection_id"]["S"],
-                Data=json.dumps(
-                    {
-                        "chat_id": self.chat_id,
-                        "user_id": self.user_id,
-                        "text": self.text,
-                        "image": self.image,
-                    }
-                ),
-            )
+            try:
+                apigw.post_to_connection(
+                    ConnectionId=item["connection_id"]["S"],
+                    Data=json.dumps(
+                        {
+                            "chat_id": self.chat_id,
+                            "user_id": self.user_id,
+                            "text": self.text,
+                            "image": self.image,
+                        }
+                    ),
+                )
+            except Exception:
+                db.delete_item(
+                    TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection",
+                    Key={"connection_id": {"S": item["connection_id"]["S"]}},
+                )
