@@ -1,6 +1,7 @@
 import json
 
 import boto3
+import botocore
 from django.conf import settings
 from django.db import models
 
@@ -49,9 +50,9 @@ class Message(BaseModel):
                         }
                     ),
                 )
-            except Exception as e:
-                print(e)
-                db.delete_item(
-                    TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection",
-                    Key={"connection_id": {"S": item["connection_id"]["S"]}},
-                )
+            except botocore.exceptions.ClientError as e:
+                if e.response["Error"]["Code"] == "BadRequestException":
+                    db.delete_item(
+                        TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection",
+                        Key={"connection_id": {"S": item["connection_id"]["S"]}},
+                    )
