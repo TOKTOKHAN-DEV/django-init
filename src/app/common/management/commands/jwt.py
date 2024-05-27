@@ -11,18 +11,23 @@ class Command(BaseCommand):
     help = "유저의 JWT를 가져옵니다. (settings 설정에 주의하세요.)"
 
     def add_arguments(self, parser):
-        parser.add_argument("user_id", type=int, help="User ID")
+        parser.add_argument("--id", "-i", type=int, help="User ID", required=False)
+        parser.add_argument("--username", "-u", type=str, help="Username", required=False)
 
     def handle(self, *args, **options):
-        user_id = options.get("user_id")
+        id = options.get("id")
+        username = options.get("username")
         try:
-            user = User.objects.get(id=user_id)
+            if id:
+                user = User.objects.get(id=id)
+            if username:
+                user = User.objects.get(**{User.USERNAME_FIELD: username})
         except User.DoesNotExist as e:
             raise CommandError(e)
         refresh = RefreshToken.for_user(user)
-        response = {"access_token": str(refresh.access_token), "refresh_token": str(refresh)}
+        response = {"accessToken": str(refresh.access_token), "refreshToken": str(refresh)}
         print("\033[32m" + json.dumps(response) + "\033[0m")
-        self.set_clipboard_text(response["access_token"])
+        self.set_clipboard_text(response["accessToken"])
 
     @staticmethod
     def set_clipboard_text(text):
