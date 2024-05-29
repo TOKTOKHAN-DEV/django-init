@@ -131,9 +131,3 @@ Resources:
         TargetValue: 80
         ScaleInCooldown: 60
         ScaleOutCooldown: 120
-
-Outputs:
-  WriterHost:
-    Value: !GetAtt RDSCluster.Endpoint.Address
-  ReaderHost:
-    Value: !GetAtt RDSCluster.ReadEndpoint.Address

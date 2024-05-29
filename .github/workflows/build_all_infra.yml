@@ -1,4 +1,4 @@
-name: Build Infra
+name: Build All Infra
 on:
   workflow_dispatch:
     inputs:
