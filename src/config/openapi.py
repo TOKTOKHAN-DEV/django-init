@@ -69,7 +69,7 @@ class CustomAutoSchema(AutoSchema):
             map_serializer_field.update(
                 {
                     "enum": sorted_enum,
-                    "x-enumNames": [field.choices.get(enum) if enum else enum for enum in sorted_enum],
+                    "x-enumNames": [field.choices.get(enum) for enum in sorted_enum if enum],
                 },
             )
         return map_serializer_field
