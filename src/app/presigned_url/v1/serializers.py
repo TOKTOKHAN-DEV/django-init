@@ -71,7 +71,7 @@ class PresignedSerializer(serializers.Serializer):
                 Bucket=settings.AWS_STORAGE_BUCKET_NAME,
                 Key=object_key,
             )
-            name, ext = file_name.split(".")
+            name, ext = file_name.rsplit(".", 1)
             characters = string.ascii_lowercase + string.digits
             random_string = "".join(random.choices(characters, k=7))
             file_name = ".".join([f"{name}_{random_string}", ext])
