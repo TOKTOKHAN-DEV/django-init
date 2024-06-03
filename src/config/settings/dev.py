@@ -25,14 +25,6 @@ DATABASES = {
         "HOST": DATABASE_SECRET["host"],
         "PORT": DATABASE_SECRET["port"],
     },
-    "reader": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": DATABASE_SECRET["dbname"],
-        "USER": DATABASE_SECRET["username"],
-        "PASSWORD": DATABASE_SECRET["password"],
-        "HOST": DATABASE_SECRET["host"].replace(".cluster-", ".cluster-ro-"),
-        "PORT": DATABASE_SECRET["port"],
-    },
 }
 
 

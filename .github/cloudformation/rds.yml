@@ -13,6 +13,7 @@ Parameters:
       - prod
 
 Conditions:
+  IsDev: !Equals [!Ref ENV, 'dev']
   IsProd: !Equals [!Ref ENV, 'prod']
 
 Resources:
@@ -26,8 +27,11 @@ Resources:
           FromPort: 5432
           ToPort: 5432
           CidrIp: 0.0.0.0/0
-  RDSSecret:
+
+  # DEV
+  RDSSecretDev:
     Type: AWS::SecretsManager::Secret
+    Condition: IsDev
     Properties:
       Name: !Sub '${ProjectName}/${ENV}/db'
       GenerateSecretString:
@@ -35,9 +39,61 @@ Resources:
         SecretStringTemplate: !Sub '{"username": "${ProjectName}"}'
         GenerateStringKey: 'password'
         PasswordLength: 30
-        ExcludeCharacters: '"@/\&;'
+        ExcludeCharacters: '"@/\&;='
+  RDSSecretAttachmentDev:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Condition: IsDev
+    DependsOn: RDSDBInstanceDev
+    Properties:
+      SecretId: !Ref RDSSecretDev
+      TargetId: !Ref RDSDBInstanceDev
+      TargetType: AWS::RDS::DBInstance
+  RDSSubnetGroupDev:
+    Type: AWS::RDS::DBSubnetGroup
+    Condition: IsDev
+    Properties:
+      DBSubnetGroupName: !Sub '${ProjectName}-${ENV}-db-subnet-group'
+      DBSubnetGroupDescription: !Sub '${ProjectName}-${ENV}-db-subnet-group'
+      SubnetIds:
+        - { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' }
+        - { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' }
+  RDSDBInstanceDev:
+    Type: AWS::RDS::DBInstance
+    Condition: IsDev
+    DeletionPolicy: Snapshot
+    DependsOn: RDSSecretDev
+    Properties:
+      DBInstanceIdentifier: !Sub '${ProjectName}-${ENV}-db-instance'
+      AllocatedStorage: 50
+      DBSubnetGroupName: !Ref RDSSubnetGroupDev
+      Engine: postgres
+      PubliclyAccessible: true
+      DBInstanceClass: db.t4g.small
+      EngineVersion: 15.4
+      DBParameterGroupName: default.postgres15
+      Port: 5432
+      DBName: !Ref ProjectName
+      MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref RDSSecretDev, ':SecretString:username}}' ] ]
+      MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref RDSSecretDev, ':SecretString:password}}' ] ]
+      VPCSecurityGroups: [ !GetAtt SecurityGroup.GroupId ]
+      EnableCloudwatchLogsExports:
+        - postgresql
+
+  # PROD
+  RDSSecret:
+    Type: AWS::SecretsManager::Secret
+    Condition: IsProd
+    Properties:
+      Name: !Sub '${ProjectName}/${ENV}/db'
+      GenerateSecretString:
+        RequireEachIncludedType: True
+        SecretStringTemplate: !Sub '{"username": "${ProjectName}"}'
+        GenerateStringKey: 'password'
+        PasswordLength: 30
+        ExcludeCharacters: '"@/\&;='
   RDSSecretAttachment:
     Type: AWS::SecretsManager::SecretTargetAttachment
+    Condition: IsProd
     DependsOn: RDSCluster
     Properties:
       SecretId: !Ref RDSSecret
@@ -45,14 +101,16 @@ Resources:
       TargetType: AWS::RDS::DBCluster
   RDSSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
+    Condition: IsProd
     Properties:
       DBSubnetGroupName: !Sub '${ProjectName}-${ENV}-db-subnet-group'
       DBSubnetGroupDescription: !Sub '${ProjectName}-${ENV}-db-subnet-group'
       SubnetIds:
-        - !If [ IsProd, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1'}, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1'} ]
-        - !If [ IsProd, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2'}, {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2'} ]
+        - {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1'}
+        - {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2'}
   RDSCluster:
     Type: AWS::RDS::DBCluster
+    Condition: IsProd
     DeletionPolicy: Snapshot
     DependsOn: RDSSecret
     Properties:
@@ -70,12 +128,13 @@ Resources:
         - postgresql
   RDSDBInstance:
     Type: AWS::RDS::DBInstance
+    Condition: IsProd
     Properties:
       DBInstanceIdentifier: !Sub '${ProjectName}-${ENV}-db-instance'
       DBSubnetGroupName: !Ref RDSSubnetGroup
       Engine: aurora-postgresql
       DBClusterIdentifier: !Ref RDSCluster
-      PubliclyAccessible: !If [IsProd, false, true]
+      PubliclyAccessible: false
       DBInstanceClass: db.t4g.medium
   RDSAutoscalingRole:
     Type: AWS::IAM::Role
