@@ -1,22 +1,10 @@
-import time
 from datetime import datetime
 
 import boto3
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-
-class ConsoleColors:
-    RESET = "\033[0m"
-    BOLD = "\033[1m"
-    UNDERLINE = "\033[4m"
-    RED = "\033[31m"
-    GREEN = "\033[32m"
-    YELLOW = "\033[33m"
-    BLUE = "\033[34m"
-    MAGENTA = "\033[35m"
-    CYAN = "\033[36m"
-    WHITE = "\033[37m"
+from app.common.management.utils import color_string
 
 
 class Command(BaseCommand):
@@ -28,8 +16,8 @@ class Command(BaseCommand):
         log_groups_response = cloudwatch_client.describe_log_groups(logGroupNamePrefix=settings.PROJECT_NAME)
         log_groups = log_groups_response["logGroups"]
         for i, group in enumerate(log_groups):
-            print(self.get_log_color(ConsoleColors.BLUE, f"{i}: {group['logGroupName']}"))
-        group_index = int(input(self.get_log_color(ConsoleColors.RED, "로그 그룹 번호를 선택하세요: ")))
+            print(color_string("blue", f"{i}: {group['logGroupName']}"))
+        group_index = int(input(color_string("red", "로그 그룹 번호를 선택하세요: ")))
         log_group_arn = log_groups[group_index]["arn"][:-1]
         self.get_last_log(log_group_arn)
         self.get_tail_log(log_group_arn)
@@ -46,10 +34,8 @@ class Command(BaseCommand):
         for log_event in response["events"]:
             print(
                 "{date} {log}".format(
-                    date=self.get_log_color(
-                        ConsoleColors.CYAN, f"[{datetime.fromtimestamp(log_event['timestamp'] / 1000)}]"
-                    ),
-                    log=self.get_log_color(ConsoleColors.WHITE, log_event["message"]),
+                    date=color_string("cyan", f"[{datetime.fromtimestamp(log_event['timestamp'] / 1000)}]"),
+                    log=color_string("white", log_event["message"]),
                 )
             )
 
@@ -65,17 +51,11 @@ class Command(BaseCommand):
                     for log_event in log_events:
                         print(
                             "{date} {log}".format(
-                                date=self.get_log_color(
-                                    ConsoleColors.CYAN, f"[{datetime.fromtimestamp(log_event['timestamp'] / 1000)}]"
-                                ),
-                                log=self.get_log_color(ConsoleColors.WHITE, log_event["message"]),
+                                date=color_string("cyan", f"[{datetime.fromtimestamp(log_event['timestamp'] / 1000)}]"),
+                                log=color_string("white", log_event["message"]),
                             )
                         )
                 else:
                     raise RuntimeError(str(event))
         except KeyboardInterrupt:
-            print(self.get_log_color(ConsoleColors.RED, "로그 스트림을 종료합니다."))
-
-    @staticmethod
-    def get_log_color(color, text):
-        return color + str(text) + ConsoleColors.RESET
+            print(color_string("red", "로그 스트림을 종료합니다."))
