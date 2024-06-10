@@ -27,7 +27,6 @@ SECRET_KEY = "pj%2ze09(g)i^joilp-f8gvs)6ou_m036u3ejs^ky&9nse5k92"
 ALLOWED_HOSTS = []
 
 LOCAL_APPS = [
-    "admin.apps.AdminConfig",
     "app.staticfile",
     "app.common.apps.CommonConfig",
     "app.chat.apps.ChatConfig",
@@ -57,6 +56,7 @@ THIRD_PARTY_APPS = [
 ]
 
 DJANGO_APPS = [
+    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
