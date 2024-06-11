@@ -1,7 +1,8 @@
 import json
 
 import boto3
-import botocore
+from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
 from django.conf import settings
 from django.db import models
 
@@ -24,15 +25,10 @@ class Message(BaseModel):
         return self.text
 
     def send(self, receiver_user_id):
-        db = boto3.client("dynamodb")
-        response = db.query(
-            TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection",
-            IndexName="UserIdIndex",
-            KeyConditionExpression="user_id = :user_id",
-            ExpressionAttributeValues={
-                ":user_id": {"N": str(receiver_user_id)},
-            },
-        )
+        dynamodb = boto3.resource("dynamodb")
+        table_name = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection"
+        table = dynamodb.Table(table_name)
+        response = table.query(IndexName="UserIdIndex", KeyConditionExpression=Key("user_id").eq(receiver_user_id))
         apigw = boto3.client(
             "apigatewaymanagementapi",
             endpoint_url=f"https://ws.{settings.DOMAIN}",
@@ -40,7 +36,7 @@ class Message(BaseModel):
         for item in response["Items"]:
             try:
                 apigw.post_to_connection(
-                    ConnectionId=item["connection_id"]["S"],
+                    ConnectionId=item["connection_id"],
                     Data=json.dumps(
                         {
                             "chat_id": self.chat_id,
@@ -50,9 +46,6 @@ class Message(BaseModel):
                         }
                     ),
                 )
-            except botocore.exceptions.ClientError as e:
+            except ClientError as e:
                 if e.response["Error"]["Code"] == "BadRequestException":
-                    db.delete_item(
-                        TableName=f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection",
-                        Key={"connection_id": {"S": item["connection_id"]["S"]}},
-                    )
+                    table.delete_item(Key={"connection_id": item["connection_id"]})
