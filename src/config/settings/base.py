@@ -242,7 +242,6 @@ SPECTACULAR_SETTINGS = {
         "config.spectacular_hooks.api_ordering",
     ],
     "POSTPROCESSING_HOOKS": [
-        "drf_spectacular.hooks.postprocess_schema_enums",
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",
     ],
     "COMPONENT_SPLIT_REQUEST": True,
