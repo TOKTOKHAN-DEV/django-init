@@ -19,12 +19,14 @@ def handler(event, context):
     global secretmanager
 
     if not ddb:
-        ddb = boto3.client("dynamodb")
+        ddb = boto3.resource("dynamodb")
     if not secretmanager:
         secretmanager = boto3.client(
             service_name="secretsmanager",
             region_name="ap-northeast-2",
         )
+    table_name = os.getenv("TABLE_NAME")
+    table = ddb.Table(table_name)
 
     user_id = 0
     access = event.get("queryStringParameters") and event["queryStringParameters"].get(
@@ -39,11 +41,10 @@ def handler(event, context):
         user_id = payload["user_id"]
         if time.time() > payload["exp"]:
             raise Exception("expired access token.")
-    ddb.put_item(
-        TableName=os.getenv("TABLE_NAME"),
+    table.put_item(
         Item={
-            "connection_id": {"S": event["requestContext"]["connectionId"]},
-            "user_id": {"N": str(user_id)},
+            "connection_id": event["requestContext"]["connectionId"],
+            "user_id": str(user_id),
         },
     )
 

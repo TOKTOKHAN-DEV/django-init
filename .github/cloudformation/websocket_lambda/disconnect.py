@@ -9,11 +9,9 @@ def handler(event, context):
     global ddb
 
     if not ddb:
-        ddb = boto3.client("dynamodb")
-
-    ddb.delete_item(
-        TableName=os.getenv("TABLE_NAME"),
-        Key={"connection_id": {"S": event["requestContext"]["connectionId"]}},
-    )
+        ddb = boto3.resource("dynamodb")
+    table_name = os.getenv("TABLE_NAME")
+    table = ddb.Table(table_name)
+    table.delete_item(Key={"connection_id": event["requestContext"]["connectionId"]})
 
     return {}
