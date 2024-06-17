@@ -44,7 +44,7 @@ def handler(event, context):
     table.put_item(
         Item={
             "connection_id": event["requestContext"]["connectionId"],
-            "user_id": str(user_id),
+            "user_id": user_id,
         },
     )
 

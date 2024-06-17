@@ -17,6 +17,8 @@ ALLOWED_HOSTS += ["*"]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+WEBSOCKET_URL = f"https://ws.dev.{DOMAIN}"
+
 # local database
 DATABASES = {
     "default": {

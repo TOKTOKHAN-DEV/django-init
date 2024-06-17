@@ -13,7 +13,7 @@ def send(user_id, event, data):
     response = table.query(IndexName="UserIdIndex", KeyConditionExpression=Key("user_id").eq(user_id))
     apigw = boto3.client(
         "apigatewaymanagementapi",
-        endpoint_url=f"https://ws.{settings.DOMAIN}",
+        endpoint_url=settings.WEBSOCKET_URL,
     )
     for item in response["Items"]:
         try:
