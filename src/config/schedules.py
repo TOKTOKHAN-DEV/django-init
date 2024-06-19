@@ -5,6 +5,6 @@
 SCHEDULES = dict(
     schedule_name={
         "path": "/cron/test/",
-        "cron": "cron(* * * * ? *)",
+        "cron": "* * * * ? *",
     },
 )

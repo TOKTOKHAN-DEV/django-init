@@ -28,7 +28,7 @@ class Command(BaseCommand):
                 )
                 event_client.delete_rule(Name=rule["Name"])
 
-    def _update_or_create_rule(self, name, path, schedule_expression):
+    def _update_or_create_rule(self, name, path, cron_expression):
         iam_client = boto3.client("iam", region_name="ap-northeast-2")
         event_client = boto3.client("events", region_name="ap-northeast-2")
         prefix = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-"
@@ -41,7 +41,7 @@ class Command(BaseCommand):
 
         rule = event_client.put_rule(
             Name=rule_name,
-            ScheduleExpression=schedule_expression,
+            ScheduleExpression=f"cron({cron_expression})",
             State="ENABLED",
         )
 
@@ -63,4 +63,4 @@ class Command(BaseCommand):
                 }
             ],
         )
-        print(color_string("green", f"'{name}' 스케줄이 등록됐습니다. {schedule_expression}"))
+        print(color_string("green", f"'{name}' 스케줄이 등록됐습니다. {cron_expression}"))
