@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         project_name = settings.PROJECT_NAME
         app_env = settings.APP_ENV
-        enumerator = EndpointEnumerator(urlconf="config.urls.api")
+        enumerator = EndpointEnumerator(urlconf="config.urls.cron")
         api_endpoints = [
             api_endpoint[0] for api_endpoint in enumerator.get_api_endpoints() if api_endpoint[2] == "POST"
         ]
