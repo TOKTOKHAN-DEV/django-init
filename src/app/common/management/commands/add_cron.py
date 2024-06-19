@@ -21,12 +21,12 @@ class Command(BaseCommand):
         endpoint_index = int(input(color_string("red", "엔드포인트를 선택하세요: ")))
         endpoint = api_endpoints[endpoint_index]
 
-        minute = input(color_string("red", "분(0-59, default: *)")) or "*"
-        hour = input(color_string("red", "시(0-24, default: *)")) or "*"
-        day = input(color_string("red", "일(0-31, default: *)")) or "*"
-        month = input(color_string("red", "월(1-12, default: *)")) or "*"
+        minute = input(color_string("red", "분(0-59, default: *): ")) or "*"
+        hour = input(color_string("red", "시(0-24, default: *): ")) or "*"
+        day = input(color_string("red", "일(0-31, default: *): ")) or "*"
+        month = input(color_string("red", "월(1-12, default: *): ")) or "*"
         weekday = "?"
-        year = input(color_string("red", "년(yyyy, default: *)")) or "*"
+        year = input(color_string("red", "년(yyyy, default: *): ")) or "*"
 
         schedule_expression = f"cron({minute} {hour} {day} {month} {weekday} {year})"
 
@@ -63,3 +63,5 @@ class Command(BaseCommand):
                 }
             ],
         )
+        print(color_string("green", "크론이 정상 등록됐습니다."))
+        print(color_string("green", f"{endpoint} ({schedule_expression})"))
