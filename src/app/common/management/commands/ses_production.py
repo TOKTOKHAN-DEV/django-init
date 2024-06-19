@@ -3,7 +3,7 @@ import re
 import boto3
 from django.core.management import BaseCommand
 
-from app.common.management.utils import color_string
+from app.common.utils import color_string
 
 
 class Command(BaseCommand):

@@ -4,7 +4,7 @@ import boto3
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from app.common.management.utils import color_string
+from app.common.utils import color_string
 
 
 class Command(BaseCommand):
