@@ -14,11 +14,11 @@ on:
         type: boolean
         default: false
         required: false
-      celerybeat:
-        description: Celerybeat
-        type: boolean
-        default: false
-        required: false
+#      celerybeat:
+#        description: Celerybeat
+#        type: boolean
+#        default: false
+#        required: false
 
 jobs:
   set_environment:
@@ -106,4 +106,4 @@ jobs:
             ProjectName=${{ needs.set_environment.outputs.project_name }},
             ENV=${{ inputs.env }},
             Celery=${{ inputs.celery }},
-            Celerybeat=${{ inputs.celerybeat }}
+#            Celerybeat=${{ inputs.celerybeat }}

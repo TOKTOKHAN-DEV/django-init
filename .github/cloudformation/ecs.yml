@@ -373,53 +373,53 @@ Resources:
         TargetValue: 75
         ScaleInCooldown: 30
         ScaleOutCooldown: 30
-  # Celerybeat
-  TaskDefinitionCelerybeat:
-    Type: AWS::ECS::TaskDefinition
-    Condition: IsCelerybeat
-    Properties:
-      Family: !Sub '${ProjectName}-${ENV}-celerybeat-family'
-      TaskRoleArn: !GetAtt TaskRole.Arn
-      ExecutionRoleArn: !Ref ExecutionRole
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      Cpu: .25 vCPU
-      Memory: 0.5GB
-      ContainerDefinitions:
-        - Name: celerybeat
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
-          Essential: true
-          Environment:
-            - Name: DJANGO_SETTINGS_MODULE
-              Value: !Join ['.', ['config.settings', !Ref ENV]]
-            - Name: ECS_IMAGE_PULL_BEHAVIOR
-              Value: prefer-cached
-          EntryPoint: [sh, -c]
-          Command:
-            - /bin/bash -c "celery -A config.tasks beat"
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref TaskDefinitionLogGroup
-              awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: /ecs
-  ServiceCelerybeat:
-    Type: AWS::ECS::Service
-    Condition: IsCelerybeat
-    Properties:
-      Cluster: !Ref Cluster
-      LaunchType: FARGATE
-      ServiceName: celerybeat
-      TaskDefinition: !Ref TaskDefinitionCelerybeat
-      DesiredCount: 1
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets:
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
-          SecurityGroups: [ !Ref SecurityGroup ]
+#  # Celerybeat
+#  TaskDefinitionCelerybeat:
+#    Type: AWS::ECS::TaskDefinition
+#    Condition: IsCelerybeat
+#    Properties:
+#      Family: !Sub '${ProjectName}-${ENV}-celerybeat-family'
+#      TaskRoleArn: !GetAtt TaskRole.Arn
+#      ExecutionRoleArn: !Ref ExecutionRole
+#      NetworkMode: awsvpc
+#      RequiresCompatibilities:
+#        - FARGATE
+#      Cpu: .25 vCPU
+#      Memory: 0.5GB
+#      ContainerDefinitions:
+#        - Name: celerybeat
+#          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
+#          Essential: true
+#          Environment:
+#            - Name: DJANGO_SETTINGS_MODULE
+#              Value: !Join ['.', ['config.settings', !Ref ENV]]
+#            - Name: ECS_IMAGE_PULL_BEHAVIOR
+#              Value: prefer-cached
+#          EntryPoint: [sh, -c]
+#          Command:
+#            - /bin/bash -c "celery -A config.tasks beat"
+#          LogConfiguration:
+#            LogDriver: awslogs
+#            Options:
+#              awslogs-group: !Ref TaskDefinitionLogGroup
+#              awslogs-region: !Ref 'AWS::Region'
+#              awslogs-stream-prefix: /ecs
+#  ServiceCelerybeat:
+#    Type: AWS::ECS::Service
+#    Condition: IsCelerybeat
+#    Properties:
+#      Cluster: !Ref Cluster
+#      LaunchType: FARGATE
+#      ServiceName: celerybeat
+#      TaskDefinition: !Ref TaskDefinitionCelerybeat
+#      DesiredCount: 1
+#      NetworkConfiguration:
+#        AwsvpcConfiguration:
+#          AssignPublicIp: ENABLED
+#          Subnets:
+#            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
+#            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
+#          SecurityGroups: [ !Ref SecurityGroup ]
 
 
   InvokeApiDestinationRole:
