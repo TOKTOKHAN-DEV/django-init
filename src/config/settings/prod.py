@@ -28,6 +28,7 @@ CORS_ALLOWED_ORIGINS = [
     f"https://www.{DOMAIN}",
 ]
 
+API_URL = f"https://api.{DOMAIN}"
 WEBSOCKET_URL = f"https://ws.{DOMAIN}"
 
 DATABASE_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/db")

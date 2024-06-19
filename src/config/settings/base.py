@@ -138,7 +138,6 @@ USE_TZ = True
 SITE_NAME = "#{PROJECT_NAME}"
 SITE_LOGO = "img/logo.png"  # app/staticfiles/static/img/logo.png 변경
 DOMAIN = "domain.com"
-FRONTEND_URL = f"https://{DOMAIN}"
 
 # APPEND_SLASH
 APPEND_SLASH = False

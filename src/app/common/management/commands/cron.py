@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
         event_client.update_api_destination(
             Name=api_destination_name,
-            InvocationEndpoint=f"https://api.{settings.DOMAIN}/*",
+            InvocationEndpoint=f"{settings.API_URL}/*",
         )
 
         event_client.put_targets(

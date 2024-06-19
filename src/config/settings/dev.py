@@ -15,6 +15,7 @@ CSRF_TRUSTED_ORIGINS = [f"https://admin.dev.{DOMAIN}"]
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+API_URL = f"https://api.dev.{DOMAIN}"
 WEBSOCKET_URL = f"https://ws.dev.{DOMAIN}"
 
 DATABASE_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/db")
