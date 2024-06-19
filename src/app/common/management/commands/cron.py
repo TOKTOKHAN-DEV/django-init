@@ -21,7 +21,7 @@ class Command(BaseCommand):
         for rule in rules:
             name = rule["Name"].replace(prefix, "")
             if name not in names:
-                print(color_string("green", f"'{name}' 스케줄이 제거됐습니다."))
+                print(color_string("red", f"'{name}' 스케줄이 제거됐습니다."))
                 event_client.remove_targets(
                     Rule=rule["Arn"].split("/", 1)[-1],
                     Ids=[rule["Name"]],
@@ -63,4 +63,4 @@ class Command(BaseCommand):
                 }
             ],
         )
-        print(color_string("green", f"{schedule_expression} '{name}' 스케줄이 등록됐습니다."))
+        print(color_string("green", f"'{name}' 스케줄이 등록됐습니다. {schedule_expression}"))
