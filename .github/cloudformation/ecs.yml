@@ -420,3 +420,45 @@ Resources:
             - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
             - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
           SecurityGroups: [ !Ref SecurityGroup ]
+
+
+  InvokeApiDestinationRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub '${ProjectName}-${ENV}-InvokeApiDestinationRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'events.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub '${ProjectName}-${ENV}-InvokeApiDestinationPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'events:InvokeApiDestination'
+                Resource: '*'
+  RuleConnection:
+    Type: AWS::Events::Connection
+    DependsOn: ALB
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-connection'
+      AuthorizationType: API_KEY
+      AuthParameters:
+        ApiKeyAuthParameters:
+          ApiKeyName: x-api-key
+          ApiKeyValue: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secret, ':SecretString:key}}' ] ]
+  RuleApiDestination:
+    Type: AWS::Events::ApiDestination
+    DependsOn: RuleConnection
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-api-destination'
+      ConnectionArn: !GetAtt RuleConnection.Arn
+      HttpMethod: POST
+      InvocationEndpoint: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
+      InvocationRateLimitPerSecond: 300
