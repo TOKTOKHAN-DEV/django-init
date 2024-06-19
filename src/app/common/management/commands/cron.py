@@ -12,7 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self._delete_rule(SCHEDULES.keys())
         for name, value in SCHEDULES.items():
-            self._update_or_create_rule(name, value["path"], value["cron"])
+            self._update_or_create_rule(name, str(value["path"].pattern), value["cron"])
 
     def _delete_rule(self, names):
         event_client = boto3.client("events", region_name="ap-northeast-2")
@@ -58,7 +58,7 @@ class Command(BaseCommand):
                     "Arn": api_destination_arn,
                     "RoleArn": role["Arn"],
                     "HttpParameters": {
-                        "PathParameterValues": [path[1:]],
+                        "PathParameterValues": [path],
                     },
                 }
             ],
