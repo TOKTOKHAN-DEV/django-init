@@ -34,20 +34,21 @@ class Command(BaseCommand):
         prefix = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-"
         rule_name = prefix + name
 
+        api_destination_name = f"{prefix}api-destination"
+        api_destination_arn = event_client.describe_api_destination(Name=api_destination_name)["ApiDestinationArn"]
+
+        role = iam_client.get_role(RoleName=f"{prefix}InvokeApiDestinationRole")["Role"]
+
         rule = event_client.put_rule(
             Name=rule_name,
             ScheduleExpression=schedule_expression,
             State="ENABLED",
         )
 
-        api_destination_name = f"{prefix}api-destination"
-        api_destination_arn = event_client.describe_api_destination(Name=api_destination_name)["ApiDestinationArn"]
         event_client.update_api_destination(
             Name=api_destination_name,
             InvocationEndpoint=f"https://api.{settings.DOMAIN}/*",
         )
-
-        role = iam_client.get_role(RoleName=f"{prefix}InvokeApiDestinationRole")["Role"]
 
         event_client.put_targets(
             Rule=rule["RuleArn"].split("/", 1)[-1],
