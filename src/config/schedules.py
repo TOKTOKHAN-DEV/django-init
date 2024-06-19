@@ -1,8 +1,7 @@
-from celery.schedules import crontab
-
-CELERY_BEAT_SCHEDULE = dict(
-    task_delete_withdrawal_user={
-        "task": "app.withdrawal_user.tasks.task_delete_withdrawal_user",
-        "schedule": crontab(hour="0"),
+# only POST method
+SCHEDULE = dict(
+    schedule_name={
+        "path": "/cron/test/",
+        "cron": "* * * * ? *",  # 분 시 일 월 요일 년
     },
 )
