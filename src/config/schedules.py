@@ -5,7 +5,7 @@ from django.urls import path
 
 SCHEDULES = dict(
     # schedule_name={
-    #     "path": path("/cron/test/", TestCron.as_view()),
+    #     "path": path("cron/test/", TestCron.as_view()),
     #     "cron": "* * * * ? *",
     # },
 )
