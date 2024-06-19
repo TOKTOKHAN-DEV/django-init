@@ -148,34 +148,34 @@ jobs:
           cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
           service: celery
 
-      - name: Changed Celerybeat
-        uses: tj-actions/changed-files@v35
-        id: changed-celerybeat
-        with:
-          files: |
-            src/config/schedules.py
-            src/config/tasks.py
-            src/config/settings/*.py
-
-      - name: Download CeleryBeat TaskDefinition
-        id: tf-celerybeat-download
-        if: steps.changed-celerybeat.outputs.any_changed == 'true'
-        continue-on-error: true
-        run: aws ecs describe-task-definition --task-definition ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-celerybeat-family --query taskDefinition > celerybeat.tf.json
-
-      - name: Render CeleryBeat TaskDefinition
-        id: tf-celerybeat-render
-        if: steps.tf-celerybeat-download.outcome == 'success'
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: celerybeat.tf.json
-          container-name: celerybeat
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend:${{ github.sha }}
-
-      - name: Deploy Celerybeat Service
-        if: steps.tf-celerybeat-download.outcome == 'success'
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.tf-celerybeat-render.outputs.task-definition }}
-          cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
-          service: celerybeat
+#      - name: Changed Celerybeat
+#        uses: tj-actions/changed-files@v35
+#        id: changed-celerybeat
+#        with:
+#          files: |
+#            src/config/schedules.py
+#            src/config/tasks.py
+#            src/config/settings/*.py
+#
+#      - name: Download CeleryBeat TaskDefinition
+#        id: tf-celerybeat-download
+#        if: steps.changed-celerybeat.outputs.any_changed == 'true'
+#        continue-on-error: true
+#        run: aws ecs describe-task-definition --task-definition ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-celerybeat-family --query taskDefinition > celerybeat.tf.json
+#
+#      - name: Render CeleryBeat TaskDefinition
+#        id: tf-celerybeat-render
+#        if: steps.tf-celerybeat-download.outcome == 'success'
+#        uses: aws-actions/amazon-ecs-render-task-definition@v1
+#        with:
+#          task-definition: celerybeat.tf.json
+#          container-name: celerybeat
+#          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.PROJECT_NAME }}-backend:${{ github.sha }}
+#
+#      - name: Deploy Celerybeat Service
+#        if: steps.tf-celerybeat-download.outcome == 'success'
+#        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#        with:
+#          task-definition: ${{ steps.tf-celerybeat-render.outputs.task-definition }}
+#          cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
+#          service: celerybeat
