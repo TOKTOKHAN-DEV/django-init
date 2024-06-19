@@ -1,5 +1,7 @@
-# only POST method
-# UTC time
+# required
+# method: POST
+# timezone: UTC
+# cron expressions document
 # https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-cron-expressions.html
 from django.urls import path
 
