@@ -3,15 +3,15 @@ from django.conf import settings
 from django.core.management import BaseCommand
 
 from app.common.utils import color_string
-from config.schedules import SCHEDULE
+from config.schedules import SCHEDULES
 
 
 class Command(BaseCommand):
     help = "cron을 등록합니다."
 
     def handle(self, *args, **options):
-        self._delete_rule(SCHEDULE.keys())
-        for name, value in SCHEDULE.items():
+        self._delete_rule(SCHEDULES.keys())
+        for name, value in SCHEDULES.items():
             self._update_or_create_rule(name, value["path"], value["cron"])
 
     def _delete_rule(self, names):
