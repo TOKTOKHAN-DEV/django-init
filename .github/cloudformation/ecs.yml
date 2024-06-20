@@ -16,16 +16,10 @@ Parameters:
     AllowedValues:
       - true
       - false
-  Celerybeat:
-    Type: String
-    AllowedValues:
-      - true
-      - false
 
 Conditions:
   IsProd: !Equals [!Ref ENV, 'prod']
   IsCelery: !Equals [!Ref Celery, 'true']
-  IsCelerybeat: !Equals [!Ref Celerybeat, 'true']
 
 Resources:
   # Secret Manager
@@ -265,7 +259,7 @@ Resources:
       LaunchType: FARGATE
       ServiceName: web
       TaskDefinition: !Ref TaskDefinitionWeb
-      DesiredCount: 2
+      DesiredCount: 1
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -281,8 +275,8 @@ Resources:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: ServiceWeb
     Properties:
-      MinCapacity: 2
-      MaxCapacity: 10
+      MinCapacity: 1
+      MaxCapacity: 5
       ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt ServiceWeb.Name]]
       RoleARN: !GetAtt ServiceAutoscalingRole.Arn
       ScalableDimension: ecs:service:DesiredCount
