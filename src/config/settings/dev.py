@@ -5,6 +5,8 @@ import boto3
 from config.secrets import get_secret
 from config.settings.base import *
 
+print(f"Django Settings Module: dev")
+
 APP_ENV = "dev"
 DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/django")
 SECRET_KEY = DJANGO_SECRET["key"]
