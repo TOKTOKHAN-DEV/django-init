@@ -14,13 +14,13 @@ dotenv.load_dotenv()
 
 APP_ENV = "dev"
 DEBUG = True
-
-ALLOWED_HOSTS += ["*"]
-
-CORS_ALLOW_ALL_ORIGINS = True
+SECRET_KEY = "pj%2ze09(g)i^joilp-f8gvs)6ou_m036u3ejs^ky&9nse5k92"
 
 API_URL = f"https://api.dev.{DOMAIN}"
 WEBSOCKET_URL = f"https://ws.dev.{DOMAIN}"
+
+ALLOWED_HOSTS = ["*"]
+CORS_ALLOW_ALL_ORIGINS = True
 
 # local database
 DATABASES = {
@@ -55,22 +55,12 @@ DATABASES = {
 # S3
 AWS_REGION = "ap-northeast-2"
 AWS_STORAGE_BUCKET_NAME = f"{PROJECT_NAME}-prod-bucket"
-AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com"
+AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=864000"}
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = "public-read"
 AWS_S3_SECURE_URLS = True
 
-
-# REDIS
-REDIS_HOST = "localhost"
-
-# CHANNELS
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
-}
 
 # CELERY
 CELERY_BROKER_URL = f"sqs://"
@@ -88,6 +78,7 @@ MEDIA_URL = "/_media/"
 # STATIC
 STATIC_ROOT = BASE_DIR / "_static"
 STATIC_URL = "/_static/"
+
 
 LOGGING = {
     "version": 1,

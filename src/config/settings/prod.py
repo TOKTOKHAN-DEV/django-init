@@ -9,13 +9,13 @@ from config.settings.base import *
 print(f"Django Settings Module: prod")
 
 APP_ENV = "prod"
-DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/django")
-SECRET_KEY = DJANGO_SECRET["key"]
-
 DEBUG = False
-ALLOWED_HOSTS += [f"api.{DOMAIN}", f"admin.{DOMAIN}"]
-CSRF_TRUSTED_ORIGINS = [f"https://admin.{DOMAIN}"]
+SECRET_KEY = get_secret(f"{PROJECT_NAME}/{APP_ENV}/django")["key"]
 
+API_URL = f"https://api.{DOMAIN}"
+WEBSOCKET_URL = f"https://ws.{DOMAIN}"
+
+ALLOWED_HOSTS = [f"api.{DOMAIN}", f"admin.{DOMAIN}"]
 METADATA_URI = os.environ.get("ECS_CONTAINER_METADATA_URI")
 if METADATA_URI:
     try:
@@ -24,14 +24,12 @@ if METADATA_URI:
         ALLOWED_HOSTS.append(data["Networks"][0]["IPv4Addresses"][0])
     except Exception as e:
         print(e, "no ec2 instance")
-
+CSRF_TRUSTED_ORIGINS = [f"https://admin.{DOMAIN}"]
 CORS_ALLOWED_ORIGINS = [
     f"https://{DOMAIN}",
     f"https://www.{DOMAIN}",
 ]
 
-API_URL = f"https://api.{DOMAIN}"
-WEBSOCKET_URL = f"https://ws.{DOMAIN}"
 
 DATABASE_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/db")
 DATABASES = {
@@ -53,19 +51,6 @@ DATABASES = {
     },
 }
 
-
-# REDIS
-REDIS_HOST = os.getenv("REDIS_HOST")
-
-# CHANNELS
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [(REDIS_HOST, 6379)],
-        },
-    },
-}
 
 # CELERY
 CELERY_BROKER_URL = f"sqs://"

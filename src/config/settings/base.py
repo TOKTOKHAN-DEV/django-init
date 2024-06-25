@@ -1,16 +1,16 @@
 import datetime
 from pathlib import Path
 
-from dotenv import load_dotenv
 from gunicorn.http import wsgi
-
-load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 
 PROJECT_NAME = "#{PROJECT_NAME}"
+SITE_NAME = "#{PROJECT_NAME}"
+SITE_LOGO = "img/logo.png"  # app/staticfiles/static/img/logo.png 변경
+DOMAIN = "domain.com"
 
 
 class Response(wsgi.Response):
@@ -21,10 +21,6 @@ class Response(wsgi.Response):
 
 wsgi.Response = Response
 
-
-SECRET_KEY = "pj%2ze09(g)i^joilp-f8gvs)6ou_m036u3ejs^ky&9nse5k92"
-
-ALLOWED_HOSTS = []
 
 LOCAL_APPS = [
     "app.staticfile",
@@ -135,9 +131,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-SITE_NAME = "#{PROJECT_NAME}"
-SITE_LOGO = "img/logo.png"  # app/staticfiles/static/img/logo.png 변경
-DOMAIN = "domain.com"
 
 # APPEND_SLASH
 APPEND_SLASH = False

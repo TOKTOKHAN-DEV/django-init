@@ -8,17 +8,16 @@ from config.settings.base import *
 print(f"Django Settings Module: dev")
 
 APP_ENV = "dev"
-DJANGO_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/django")
-SECRET_KEY = DJANGO_SECRET["key"]
-
 DEBUG = True
-ALLOWED_HOSTS = ["*"]
-CSRF_TRUSTED_ORIGINS = [f"https://admin.dev.{DOMAIN}"]
-
-CORS_ALLOW_ALL_ORIGINS = True
+SECRET_KEY = get_secret(f"{PROJECT_NAME}/{APP_ENV}/django")["key"]
 
 API_URL = f"https://api.dev.{DOMAIN}"
 WEBSOCKET_URL = f"https://ws.dev.{DOMAIN}"
+
+ALLOWED_HOSTS = ["*"]
+CSRF_TRUSTED_ORIGINS = [f"https://admin.dev.{DOMAIN}"]
+CORS_ALLOW_ALL_ORIGINS = True
+
 
 DATABASE_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/db")
 DATABASES = {
@@ -32,19 +31,6 @@ DATABASES = {
     },
 }
 
-
-# REDIS
-REDIS_HOST = os.getenv("REDIS_HOST")
-
-# CHANNELS
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [(REDIS_HOST, 6379)],
-        },
-    },
-}
 
 # CELERY
 CELERY_BROKER_URL = f"sqs://"
