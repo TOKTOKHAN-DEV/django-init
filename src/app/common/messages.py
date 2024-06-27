@@ -27,5 +27,4 @@ def send(user_id, event, data):
                 ),
             )
         except ClientError as e:
-            if e.response["Error"]["Code"] == "BadRequestException":
-                table.delete_item(Key={"connection_id": item["connection_id"]})
+            table.delete_item(Key={"connection_id": item["connection_id"]})

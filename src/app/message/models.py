@@ -23,29 +23,3 @@ class Message(BaseModel):
 
     def __str__(self):
         return self.text
-
-    def send(self, receiver_user_id):
-        dynamodb = boto3.resource("dynamodb")
-        table_name = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection"
-        table = dynamodb.Table(table_name)
-        response = table.query(IndexName="UserIdIndex", KeyConditionExpression=Key("user_id").eq(receiver_user_id))
-        apigw = boto3.client(
-            "apigatewaymanagementapi",
-            endpoint_url=f"https://ws.{settings.DOMAIN}",
-        )
-        for item in response["Items"]:
-            try:
-                apigw.post_to_connection(
-                    ConnectionId=item["connection_id"],
-                    Data=json.dumps(
-                        {
-                            "chat_id": self.chat_id,
-                            "user_id": self.user_id,
-                            "text": self.text,
-                            "image": self.image,
-                        }
-                    ),
-                )
-            except ClientError as e:
-                if e.response["Error"]["Code"] == "BadRequestException":
-                    table.delete_item(Key={"connection_id": item["connection_id"]})
