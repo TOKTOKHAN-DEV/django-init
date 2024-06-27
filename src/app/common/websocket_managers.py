@@ -11,10 +11,7 @@ class WebSocketManager:
         self.dynamodb = boto3.resource("dynamodb")
         self.table_name = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-connection"
         self.table = self.dynamodb.Table(self.table_name)
-        self.apigw = boto3.client(
-            "apigatewaymanagementapi",
-            endpoint_url=settings.WEBSOCKET_URL,
-        )
+        self.apigw = boto3.client("apigatewaymanagementapi", endpoint_url=settings.WEBSOCKET_URL)
 
     def send(self, user_id, event, data):
         response = self.table.query(IndexName="UserIdIndex", KeyConditionExpression=Key("user_id").eq(user_id))
