@@ -27,4 +27,5 @@ def send(user_id, event, data):
                 ),
             )
         except ClientError as e:
-            table.delete_item(Key={"connection_id": item["connection_id"]})
+            if e.response["Error"]["Code"] == "GoneException":
+                table.delete_item(Key={"connection_id": item["connection_id"]})
