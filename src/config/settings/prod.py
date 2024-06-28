@@ -24,6 +24,8 @@ if METADATA_URI:
         ALLOWED_HOSTS.append(data["Networks"][0]["IPv4Addresses"][0])
     except Exception as e:
         print(e, "no ec2 instance")
+if os.getenv("ALB_URL"):
+    ALLOWED_HOSTS += os.getenv("ALB_URL")
 CSRF_TRUSTED_ORIGINS = [f"https://admin.{DOMAIN}"]
 CORS_ALLOWED_ORIGINS = [
     f"https://{DOMAIN}",

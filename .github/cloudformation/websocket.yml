@@ -16,27 +16,6 @@ Conditions:
   IsProd: !Equals [!Ref ENV, 'prod']
 
 Resources:
-  ConnectionTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: !Sub '${ProjectName}-${ENV}-connection'
-      AttributeDefinitions:
-        - AttributeName: connection_id
-          AttributeType: S
-        - AttributeName: user_id
-          AttributeType: N
-      KeySchema:
-        - AttributeName: connection_id
-          KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
-      GlobalSecondaryIndexes:
-        - IndexName: UserIdIndex
-          KeySchema:
-            - AttributeName: user_id
-              KeyType: HASH
-          Projection:
-            ProjectionType: ALL
-
   WebsocketAPI:
     Type: AWS::ApiGatewayV2::Api
     Properties:
@@ -51,6 +30,50 @@ Resources:
       RouteKey: $connect
       AuthorizationType: NONE
       Target: !Join ["/", ["integrations", !Ref ConnectIntegration]]
+  ConnectRouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref WebsocketAPI
+      RouteId: !Ref ConnectRoute
+      RouteResponseKey: $default
+  ConnectIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref WebsocketAPI
+      IntegrationType: HTTP
+      IntegrationMethod: POST
+      IntegrationUri:
+        Fn::Join:
+          - ''
+          - - !ImportValue
+                'Fn::Sub': '${ProjectName}-${ENV}-ALBDNSName'
+            - '/v1/websocket_connection/connect/'
+      RequestTemplates:
+        "$default": !Sub
+          - |
+            {
+              "apiKey": "${ApiKey}",
+              "connectionId": "$context.connectionId",
+              "queryParams": {
+                #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))"
+                  #if($foreach.hasNext),#end
+                #end
+              }
+            }
+          - ApiKey: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-APIKey'}
+      TemplateSelectionExpression: \$default
+  ConnectIntegrationResponse:
+    Type: AWS::ApiGatewayV2::IntegrationResponse
+    Properties:
+      ApiId: !Ref WebsocketAPI
+      IntegrationId: !Ref ConnectIntegration
+      IntegrationResponseKey: /200/
+      ResponseTemplates:
+        "$default": | 
+          {}
+      TemplateSelectionExpression: \$default
+
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -58,200 +81,34 @@ Resources:
       RouteKey: $disconnect
       AuthorizationType: NONE
       Target: !Join ["/", ["integrations", !Ref DisconnectIntegration]]
-
-  ConnectIntegration:
-    Type: AWS::ApiGatewayV2::Integration
-    Properties:
-      ApiId: !Ref WebsocketAPI
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectFunction.Arn}/invocations'
-      IntegrationMethod: POST
   DisconnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
       ApiId: !Ref WebsocketAPI
-      IntegrationType: AWS_PROXY
-      IntegrationUri: !Sub 'arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DisconnectFunction.Arn}/invocations'
+      IntegrationType: HTTP
       IntegrationMethod: POST
+      IntegrationUri:
+        Fn::Join:
+          - ''
+          - - !ImportValue
+                'Fn::Sub': '${ProjectName}-${ENV}-ALBDNSName'
+            - '/v1/websocket_connection/disconnect/'
+      RequestTemplates:
+        "$default": !Sub
+          - |
+            {
+              "apiKey": "${ApiKey}",
+              "connectionId": "$context.connectionId",
+              "queryParams": {
+                #foreach($param in $input.params().querystring.keySet())
+                  "$param": "$util.escapeJavaScript($input.params().querystring.get($param))"
+                  #if($foreach.hasNext),#end
+                #end
+              }
+            }
+          - ApiKey: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-APIKey'}
+      TemplateSelectionExpression: \$default
 
-  ConnectFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: !Sub '${ProjectName}-${ENV}-connect-function'
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: python3.9
-      Handler: index.handler
-      Code:
-        ZipFile: |
-          import base64
-          import hashlib
-          import hmac
-          import json
-          import os
-          import time
-          
-          import boto3
-          
-          ddb = None
-          secretmanager = None
-          
-          project_name = os.getenv("PROJECT_NAME")
-          env = os.getenv("ENV")
-          
-          
-          def handler(event, context):
-              global ddb
-              global secretmanager
-          
-              if not ddb:
-                  ddb = boto3.resource("dynamodb")
-              if not secretmanager:
-                  secretmanager = boto3.client(
-                      service_name="secretsmanager",
-                      region_name="ap-northeast-2",
-                  )
-              table_name = os.getenv("TABLE_NAME")
-              table = ddb.Table(table_name)
-          
-              user_id = 0
-              access = event.get("queryStringParameters") and event["queryStringParameters"].get(
-                  "access"
-              )
-              if access:
-                  response = secretmanager.get_secret_value(
-                      SecretId=f"{project_name}/{env}/django"
-                  )
-                  secret = json.loads(response["SecretString"])
-                  payload = jwt_decode(access, secret["key"])
-                  user_id = payload["user_id"]
-                  if time.time() > payload["exp"]:
-                      raise Exception("expired access token.")
-              table.put_item(
-                  Item={
-                      "connection_id": event["requestContext"]["connectionId"],
-                      "user_id": user_id,
-                  },
-              )
-          
-              return {}
-          
-          
-          def jwt_decode(access, key):
-              token_parts = access.split(".")
-              header = token_parts[0]
-              payload = token_parts[1]
-              signature = token_parts[2]
-          
-              decoded_payload = base64.urlsafe_b64decode(payload + "=" * (4 - len(payload) % 4))
-          
-              expected_signature = hmac.new(
-                  key.encode("utf-8"),
-                  (header + "." + payload).encode("utf-8"),
-                  digestmod=hashlib.sha256,
-              ).digest()
-              signature = base64.urlsafe_b64decode(signature + "=" * (4 - len(signature) % 4))
-          
-              if not hmac.compare_digest(expected_signature, signature):
-                  raise ValueError("Invalid JWT signature")
-          
-              payload_data = json.loads(decoded_payload)
-          
-              return payload_data
-
-
-      Environment:
-        Variables:
-          PROJECT_NAME: !Ref ProjectName
-          ENV: !Ref ENV
-          TABLE_NAME: !Ref ConnectionTable
-  DisconnectFunction:
-    Type: AWS::Lambda::Function
-    Properties:
-      FunctionName: !Sub '${ProjectName}-${ENV}-disconnect-function'
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Runtime: python3.9
-      Handler: index.handler
-      Code:
-        ZipFile: |
-          import os
-
-          import boto3
-          
-          ddb = None
-          
-          
-          def handler(event, context):
-              global ddb
-          
-              if not ddb:
-                  ddb = boto3.resource("dynamodb")
-              table_name = os.getenv("TABLE_NAME")
-              table = ddb.Table(table_name)
-              table.delete_item(Key={"connection_id": event["requestContext"]["connectionId"]})
-          
-              return {}
-
-
-      Environment:
-        Variables:
-          TABLE_NAME: !Ref ConnectionTable
-
-  ConnectFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt ConnectFunction.Arn
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketAPI}/*"
-  DisconnectFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !GetAtt DisconnectFunction.Arn
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketAPI}/*"
-
-  LambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub '${ProjectName}-${ENV}-LambdaExecutionRole'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: LambdaBasicExecutionPolicy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: arn:aws:logs:*:*:*
-              - Effect: Allow
-                Action:
-                  - dynamodb:GetItem
-                  - dynamodb:PutItem
-                  - dynamodb:DeleteItem
-                Resource: !GetAtt ConnectionTable.Arn
-              - Effect: Allow
-                Action:
-                  - secretsmanager:GetResourcePolicy
-                  - secretsmanager:GetSecretValue
-                  - secretsmanager:DescribeSecret
-                  - secretsmanager:ListSecretVersionIds
-                  - secretsmanager:ListSecrets
-                Resource: '*'
-              - Effect: Allow
-                Action:
-                  - execute-api:ManageConnections
-                Resource:
-                  - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${WebsocketAPI}/*'
   Deployment:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
