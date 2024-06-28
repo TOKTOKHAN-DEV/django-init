@@ -30,6 +30,12 @@ Resources:
       RouteKey: $connect
       AuthorizationType: NONE
       Target: !Join ["/", ["integrations", !Ref ConnectIntegration]]
+  ConnectRouteResponse:
+    Type: AWS::ApiGatewayV2::RouteResponse
+    Properties:
+      ApiId: !Ref WebsocketAPI
+      RouteId: !Ref ConnectRoute
+      RouteResponseKey: $default
   ConnectIntegration:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
