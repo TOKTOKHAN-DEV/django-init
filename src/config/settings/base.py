@@ -37,6 +37,7 @@ LOCAL_APPS = [
     "app.sms_log.apps.SmsLogConfig",
     "app.celery_log.apps.CeleryLogConfig",
     "app.presigned_url.apps.PreSignedUrlConfig",
+    "app.websocket_connection.apps.WebsocketConnectionConfig",
 ]
 
 THIRD_PARTY_APPS = [
