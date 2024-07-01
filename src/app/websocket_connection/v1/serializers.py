@@ -7,7 +7,7 @@ from app.websocket_connection.models import WebsocketConnection
 
 
 class WebsocketConnectionSerializer(serializers.ModelSerializer):
-    access_token = serializers.CharField(write_only=True)
+    access_token = serializers.CharField(write_only=True, allow_null=True)
 
     class Meta:
         model = WebsocketConnection
