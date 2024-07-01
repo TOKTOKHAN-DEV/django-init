@@ -10,8 +10,8 @@ from app.websocket_connection.v1.serializers import WebsocketConnectionSerialize
 
 
 @extend_schema_view(
-    connect=extend_schema(summary="WebsocketConnection 등록"),
-    disconnect=extend_schema(summary="WebsocketConnection 삭제"),
+    connect=extend_schema(summary="WebsocketConnection 등록", exclude=True),
+    disconnect=extend_schema(summary="WebsocketConnection 삭제", exclude=True),
 )
 class WebsocketConnectionViewSet(
     GenericViewSet,
