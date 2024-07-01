@@ -242,8 +242,6 @@ Resources:
               Value: !Join ['.', ['config.settings', !Ref ENV]]
             - Name: ECS_IMAGE_PULL_BEHAVIOR
               Value: prefer-cached
-            - Name: ALB_URL
-              Value: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
           EntryPoint: [sh, -c]
           Command:
             - /bin/bash -c "python manage.py migrate && gunicorn"
