@@ -53,7 +53,7 @@ Resources:
           - |
             {
               "apiKey": "${ApiKey}",
-              "connectionId": "$context.connectionId",
+              "id": "$context.connectionId",
               "queryParams": {
                 #foreach($param in $input.params().querystring.keySet())
                   "$param": "$util.escapeJavaScript($input.params().querystring.get($param))"
@@ -68,7 +68,7 @@ Resources:
     Properties:
       ApiId: !Ref WebsocketAPI
       IntegrationId: !Ref ConnectIntegration
-      IntegrationResponseKey: /200/
+      IntegrationResponseKey: /201/
       ResponseTemplates:
         "$default": | 
           {}
@@ -98,7 +98,7 @@ Resources:
           - |
             {
               "apiKey": "${ApiKey}",
-              "connectionId": "$context.connectionId",
+              "id": "$context.connectionId",
               "queryParams": {
                 #foreach($param in $input.params().querystring.keySet())
                   "$param": "$util.escapeJavaScript($input.params().querystring.get($param))"
