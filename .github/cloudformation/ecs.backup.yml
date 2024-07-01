@@ -11,17 +11,7 @@ Parameters:
     AllowedValues:
       - dev
       - prod
-  Websocket:
-    Type: String
-    AllowedValues:
-      - true
-      - false
   Celery:
-    Type: String
-    AllowedValues:
-      - true
-      - false
-  Celerybeat:
     Type: String
     AllowedValues:
       - true
@@ -29,16 +19,14 @@ Parameters:
 
 Conditions:
   IsProd: !Equals [!Ref ENV, 'prod']
-  IsWebsocket: !Equals [!Ref Websocket, 'true']
   IsCelery: !Equals [!Ref Celery, 'true']
-  IsCelerybeat: !Equals [!Ref Celerybeat, 'true']
 
 Resources:
   # Secret Manager
   Secret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: !Sub '${ProjectName}/django/${ENV}'
+      Name: !Sub '${ProjectName}/${ENV}/django'
       GenerateSecretString:
         SecretStringTemplate: !Sub '{}'
         GenerateStringKey: 'key'
@@ -88,15 +76,6 @@ Resources:
       IpProtocol: tcp
       FromPort: 8080
       ToPort: 8081
-      SourceSecurityGroupId: !Ref SecurityGroup
-  SecurityGroupInboundRedis:
-    Type: AWS::EC2::SecurityGroupIngress
-    Condition: IsWebsocket
-    Properties:
-      GroupId: !Ref SecurityGroup
-      IpProtocol: tcp
-      FromPort: 6379
-      ToPort: 6379
       SourceSecurityGroupId: !Ref SecurityGroup
   ServiceAutoscalingRole:
     Type: AWS::IAM::Role
@@ -156,29 +135,6 @@ Resources:
           Value: true
         - Key: stickiness.type
           Value: lb_cookie
-  ALBTargetGroup8081:
-    Type: AWS::ElasticLoadBalancingV2::TargetGroup
-    Condition: IsWebsocket
-    DependsOn: ALB
-    Properties:
-      HealthCheckIntervalSeconds: 5
-      HealthCheckPath: /_health/
-      HealthCheckProtocol: HTTP
-      HealthCheckTimeoutSeconds: 2
-      HealthyThresholdCount: 2
-      Name: !Sub '${ProjectName}-${ENV}-tg-8081'
-      Port: 8081
-      Protocol: HTTP
-      TargetType: ip
-      UnhealthyThresholdCount: 2
-      VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
-      TargetGroupAttributes:
-        - Key: deregistration_delay.timeout_seconds
-          Value: 5
-        - Key: stickiness.enabled
-          Value: true
-        - Key: stickiness.type
-          Value: lb_cookie
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -194,10 +150,10 @@ Resources:
     Properties:
       Actions:
         - Type: forward
-          TargetGroupArn: !If [IsWebsocket, !Ref ALBTargetGroup8081, !Ref ALBTargetGroup8080]
+          TargetGroupArn: !Ref ALBTargetGroup8080
       Conditions:
         - Field: path-pattern
-          Values: !If [IsWebsocket, [/ws/*], [/]]
+          Values: [/]
       ListenerArn: !Ref ALBListener
       Priority: 1
   TaskDefinitionLogGroup:
@@ -205,12 +161,6 @@ Resources:
     Properties:
       LogGroupName: !Sub '/ecs/${ProjectName}/${ENV}'
       RetentionInDays: 14
-  PrivateDnsNamespace:
-    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
-    Condition: IsWebsocket
-    Properties:
-      Name: !Sub '${ProjectName}-${ENV}.ecs'
-      Vpc: { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC' }
 
   TaskRole:
     Type: AWS::IAM::Role
@@ -267,65 +217,7 @@ Resources:
             Action: 'sts:AssumeRole'
       ManagedPolicyArns:
         - 'arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy'
-  # Redis
-  ServiceRegistryRedis:
-    Type: AWS::ServiceDiscovery::Service
-    Condition: IsWebsocket
-    Properties:
-      Name: redis
-      NamespaceId: !Ref PrivateDnsNamespace
-      DnsConfig:
-        RoutingPolicy: MULTIVALUE
-        DnsRecords:
-          - Type: A
-            TTL: 60
-          - Type: SRV
-            TTL: 60
-  TaskDefinitionRedis:
-    Type: AWS::ECS::TaskDefinition
-    Condition: IsWebsocket
-    Properties:
-      Family: !Sub '${ProjectName}-${ENV}-redis-family'
-      TaskRoleArn: !GetAtt TaskRole.Arn
-      ExecutionRoleArn: !Ref ExecutionRole
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      Cpu: 0.5 vCPU
-      Memory: 1GB
-      ContainerDefinitions:
-        - Name: redis
-          Image: redis:6
-          Essential: true
-          StopTimeout: 5
-          PortMappings:
-            - ContainerPort: 6379
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref TaskDefinitionLogGroup
-              awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: /ecs
-  ServiceRedis:
-    Type: AWS::ECS::Service
-    Condition: IsWebsocket
-    Properties:
-      Cluster: !Ref Cluster
-      LaunchType: FARGATE
-      ServiceName: redis
-      SchedulingStrategy: REPLICA
-      TaskDefinition: !Ref TaskDefinitionRedis
-      DesiredCount: 1
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets:
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
-          SecurityGroups: [!Ref SecurityGroup]
-      ServiceRegistries:
-        - RegistryArn: !GetAtt ServiceRegistryRedis.Arn
-          Port: 6379
+
   # Web
   TaskDefinitionWeb:
     Type: AWS::ECS::TaskDefinition
@@ -348,13 +240,10 @@ Resources:
           Environment:
             - Name: DJANGO_SETTINGS_MODULE
               Value: !Join ['.', ['config.settings', !Ref ENV]]
-            - Name: REDIS_HOST
-              Value: !If
-                - IsWebsocket
-                - !Join [ '.', [ !GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs ] ]
-                - Ref: "AWS::NoValue"
             - Name: ECS_IMAGE_PULL_BEHAVIOR
               Value: prefer-cached
+            - Name: ALB_URL
+              Value: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
           EntryPoint: [sh, -c]
           Command:
             - /bin/bash -c "python manage.py migrate && gunicorn"
@@ -372,7 +261,7 @@ Resources:
       LaunchType: FARGATE
       ServiceName: web
       TaskDefinition: !Ref TaskDefinitionWeb
-      DesiredCount: 2
+      DesiredCount: 1
       NetworkConfiguration:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
@@ -388,8 +277,8 @@ Resources:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     DependsOn: ServiceWeb
     Properties:
-      MinCapacity: 2
-      MaxCapacity: 10
+      MinCapacity: 1
+      MaxCapacity: 5
       ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt ServiceWeb.Name]]
       RoleARN: !GetAtt ServiceAutoscalingRole.Arn
       ScalableDimension: ecs:service:DesiredCount
@@ -404,91 +293,6 @@ Resources:
         PredefinedMetricSpecification:
           PredefinedMetricType: ALBRequestCountPerTarget
           ResourceLabel: !Join ['/', [!GetAtt ALB.LoadBalancerFullName, !GetAtt ALBTargetGroup8080.TargetGroupFullName]]
-        TargetValue: 1000
-        ScaleInCooldown: 30
-        ScaleOutCooldown: 30
-  # Websocket
-  TaskDefinitionWebsocket:
-    Type: AWS::ECS::TaskDefinition
-    Condition: IsWebsocket
-    Properties:
-      Family: !Sub '${ProjectName}-${ENV}-websocket-family'
-      TaskRoleArn: !GetAtt TaskRole.Arn
-      ExecutionRoleArn: !Ref ExecutionRole
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      Cpu: .5 vCPU
-      Memory: 1GB
-      ContainerDefinitions:
-        - Name: websocket
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
-          Essential: true
-          StopTimeout: 5
-          PortMappings:
-            - ContainerPort: 8081
-          Environment:
-            - Name: DJANGO_SETTINGS_MODULE
-              Value: !Join ['.', ['config.settings', !Ref ENV]]
-            - Name: REDIS_HOST
-              Value: !If
-                - IsWebsocket
-                - !Join [ '.', [ !GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs ] ]
-                - Ref: "AWS::NoValue"
-            - Name: ECS_IMAGE_PULL_BEHAVIOR
-              Value: prefer-cached
-          EntryPoint: [sh, -c]
-          Command:
-            - /bin/bash -c "daphne -b 0.0.0.0 -p 8081 --ping-interval=10 config.asgi:application"
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref TaskDefinitionLogGroup
-              awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: /ecs
-  ServiceWebsocket:
-    Type: AWS::ECS::Service
-    Condition: IsWebsocket
-    DependsOn: ALBListenerRule
-    Properties:
-      Cluster: !Ref Cluster
-      LaunchType: FARGATE
-      ServiceName: websocket
-      TaskDefinition: !Ref TaskDefinitionWebsocket
-      DesiredCount: 1
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets:
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
-          SecurityGroups: [!Ref SecurityGroup]
-      LoadBalancers:
-        - ContainerName: websocket
-          ContainerPort: 8081
-          TargetGroupArn: !Ref ALBTargetGroup8081
-  ServiceScalingTargetWebsocket:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Condition: IsWebsocket
-    DependsOn: ServiceWebsocket
-    Properties:
-      MinCapacity: 1
-      MaxCapacity: 10
-      ResourceId: !Join ['/', [service, !Ref Cluster, !GetAtt ServiceWebsocket.Name]]
-      RoleARN: !GetAtt ServiceAutoscalingRole.Arn
-      ScalableDimension: ecs:service:DesiredCount
-      ServiceNamespace: ecs
-  ServiceScalingPolicyWebsocket:
-    Type: AWS::ApplicationAutoScaling::ScalingPolicy
-    Condition: IsWebsocket
-    Properties:
-      PolicyName: !Sub '${ProjectName}-${ENV}-asg-policy-websocket'
-      ScalingTargetId: !Ref ServiceScalingTargetWebsocket
-      PolicyType: TargetTrackingScaling
-      TargetTrackingScalingPolicyConfiguration:
-        PredefinedMetricSpecification:
-          PredefinedMetricType: ALBRequestCountPerTarget
-          ResourceLabel: !Join ['/', [!GetAtt ALB.LoadBalancerFullName, !GetAtt ALBTargetGroup8081.TargetGroupFullName]]
         TargetValue: 1000
         ScaleInCooldown: 30
         ScaleOutCooldown: 30
@@ -513,11 +317,6 @@ Resources:
           Environment:
             - Name: DJANGO_SETTINGS_MODULE
               Value: !Join ['.', ['config.settings', !Ref ENV]]
-            - Name: REDIS_HOST
-              Value: !If
-                - IsWebsocket
-                - !Join [ '.', [ !GetAtt ServiceRegistryRedis.Name, !Sub '${ProjectName}-${ENV}', ecs ] ]
-                - Ref: "AWS::NoValue"
             - Name: ECS_IMAGE_PULL_BEHAVIOR
               Value: prefer-cached
           EntryPoint: [sh, -c]
@@ -570,50 +369,102 @@ Resources:
         TargetValue: 75
         ScaleInCooldown: 30
         ScaleOutCooldown: 30
-  # Celerybeat
-  TaskDefinitionCelerybeat:
-    Type: AWS::ECS::TaskDefinition
-    Condition: IsCelerybeat
+#  # Celerybeat
+#  TaskDefinitionCelerybeat:
+#    Type: AWS::ECS::TaskDefinition
+#    Condition: IsCelerybeat
+#    Properties:
+#      Family: !Sub '${ProjectName}-${ENV}-celerybeat-family'
+#      TaskRoleArn: !GetAtt TaskRole.Arn
+#      ExecutionRoleArn: !Ref ExecutionRole
+#      NetworkMode: awsvpc
+#      RequiresCompatibilities:
+#        - FARGATE
+#      Cpu: .25 vCPU
+#      Memory: 0.5GB
+#      ContainerDefinitions:
+#        - Name: celerybeat
+#          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
+#          Essential: true
+#          Environment:
+#            - Name: DJANGO_SETTINGS_MODULE
+#              Value: !Join ['.', ['config.settings', !Ref ENV]]
+#            - Name: ECS_IMAGE_PULL_BEHAVIOR
+#              Value: prefer-cached
+#          EntryPoint: [sh, -c]
+#          Command:
+#            - /bin/bash -c "celery -A config.tasks beat"
+#          LogConfiguration:
+#            LogDriver: awslogs
+#            Options:
+#              awslogs-group: !Ref TaskDefinitionLogGroup
+#              awslogs-region: !Ref 'AWS::Region'
+#              awslogs-stream-prefix: /ecs
+#  ServiceCelerybeat:
+#    Type: AWS::ECS::Service
+#    Condition: IsCelerybeat
+#    Properties:
+#      Cluster: !Ref Cluster
+#      LaunchType: FARGATE
+#      ServiceName: celerybeat
+#      TaskDefinition: !Ref TaskDefinitionCelerybeat
+#      DesiredCount: 1
+#      NetworkConfiguration:
+#        AwsvpcConfiguration:
+#          AssignPublicIp: ENABLED
+#          Subnets:
+#            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
+#            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
+#          SecurityGroups: [ !Ref SecurityGroup ]
+
+
+  InvokeApiDestinationRole:
+    Type: 'AWS::IAM::Role'
     Properties:
-      Family: !Sub '${ProjectName}-${ENV}-celerybeat-family'
-      TaskRoleArn: !GetAtt TaskRole.Arn
-      ExecutionRoleArn: !Ref ExecutionRole
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      Cpu: .25 vCPU
-      Memory: 0.5GB
-      ContainerDefinitions:
-        - Name: celerybeat
-          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
-          Essential: true
-          Environment:
-            - Name: DJANGO_SETTINGS_MODULE
-              Value: !Join ['.', ['config.settings', !Ref ENV]]
-            - Name: ECS_IMAGE_PULL_BEHAVIOR
-              Value: prefer-cached
-          EntryPoint: [sh, -c]
-          Command:
-            - /bin/bash -c "celery -A config.tasks beat"
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref TaskDefinitionLogGroup
-              awslogs-region: !Ref 'AWS::Region'
-              awslogs-stream-prefix: /ecs
-  ServiceCelerybeat:
-    Type: AWS::ECS::Service
-    Condition: IsCelerybeat
+      RoleName: !Sub '${ProjectName}-${ENV}-InvokeApiDestinationRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'events.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub '${ProjectName}-${ENV}-InvokeApiDestinationPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'events:InvokeApiDestination'
+                Resource: '*'
+  RuleConnection:
+    Type: AWS::Events::Connection
+    DependsOn: ALB
     Properties:
-      Cluster: !Ref Cluster
-      LaunchType: FARGATE
-      ServiceName: celerybeat
-      TaskDefinition: !Ref TaskDefinitionCelerybeat
-      DesiredCount: 1
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
-          Subnets:
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
-          SecurityGroups: [ !Ref SecurityGroup ]
+      Name: !Sub '${ProjectName}-${ENV}-connection'
+      AuthorizationType: API_KEY
+      AuthParameters:
+        ApiKeyAuthParameters:
+          ApiKeyName: x-api-key
+          ApiKeyValue: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secret, ':SecretString:key}}' ] ]
+  RuleApiDestination:
+    Type: AWS::Events::ApiDestination
+    DependsOn: RuleConnection
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-api-destination'
+      ConnectionArn: !GetAtt RuleConnection.Arn
+      HttpMethod: POST
+      InvocationEndpoint: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
+      InvocationRateLimitPerSecond: 300
+
+Outputs:
+  ALBDNSName:
+    value: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
+    Export:
+      Name: !Sub '${ProjectName}-${ENV}-ALBDNSName'
+  APIKey:
+    value: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secret, ':SecretString:key}}' ] ]
+    Export:
+      Name: !Sub '${ProjectName}-${ENV}-APIKey'
