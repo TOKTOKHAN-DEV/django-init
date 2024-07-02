@@ -457,12 +457,12 @@ Resources:
       InvocationEndpoint: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
       InvocationRateLimitPerSecond: 300
 
-Outputs:
-  ALBDNSName:
-    value: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
-    Export:
-      Name: !Sub '${ProjectName}-${ENV}-ALBDNSName'
-  APIKey:
-    value: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secret, ':SecretString:key}}' ] ]
-    Export:
-      Name: !Sub '${ProjectName}-${ENV}-APIKey'
+#Outputs:
+#  ALBDNSName:
+#    value: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
+#    Export:
+#      Name: !Sub '${ProjectName}-${ENV}-ALBDNSName'
+#  APIKey:
+#    value: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secret, ':SecretString:key}}' ] ]
+#    Export:
+#      Name: !Sub '${ProjectName}-${ENV}-APIKey'
