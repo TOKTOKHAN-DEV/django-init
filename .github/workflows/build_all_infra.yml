@@ -133,8 +133,7 @@ jobs:
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
             ENV=${{ inputs.env }},
-            Celery=${{ inputs.celery }},
-            Celerybeat=${{ inputs.celerybeat }}
+            Celery=${{ inputs.celery }}
 
   build_rds:
     runs-on: ubuntu-latest
