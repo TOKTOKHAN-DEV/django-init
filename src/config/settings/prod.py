@@ -3,10 +3,8 @@ import os
 import boto3
 import requests
 
-from config.secrets import get_secret
+from app.common.secrets import get_secret
 from config.settings.base import *
-
-print(f"Django Settings Module: prod")
 
 APP_ENV = "prod"
 DEBUG = False

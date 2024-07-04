@@ -170,7 +170,7 @@ SIMPLE_JWT_ALGORITHM = "HS256"
 # DJANGO REST FRAMEWORK
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "config.authentication.Authentication",
+        "app.common.authentication.Authentication",
     ],
     "DEFAULT_RENDERER_CLASSES": [
         "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
@@ -183,11 +183,11 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "app.common.pagination.LimitOffsetPagination",
     "DEFAULT_FILTER_BACKENDS": [
-        "config.filter_backends.FilterBackend",
-        "config.filter_backends.OrderingFilter",
+        "app.common.filter_backends.FilterBackend",
+        "app.common.filter_backends.OrderingFilter",
     ],
-    "EXCEPTION_HANDLER": "config.exception_handler.custom_exception_handler",
-    "DEFAULT_SCHEMA_CLASS": "config.openapi.CustomAutoSchema",
+    "EXCEPTION_HANDLER": "app.common.exception_handler",
+    "DEFAULT_SCHEMA_CLASS": "app.common.openapi.CustomAutoSchema",
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "NON_FIELD_ERRORS_KEY": "non_field",
 }

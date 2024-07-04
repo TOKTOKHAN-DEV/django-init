@@ -5,10 +5,8 @@ import dotenv
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-from config.secrets import get_secret
+from app.common.secrets import get_secret
 from config.settings.base import *
-
-print(f"Django Settings Module: local")
 
 dotenv.load_dotenv()
 

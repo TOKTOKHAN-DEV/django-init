@@ -1,11 +1,7 @@
-import os
-
 import boto3
 
-from config.secrets import get_secret
+from app.common.secrets import get_secret
 from config.settings.base import *
-
-print(f"Django Settings Module: dev")
 
 APP_ENV = "dev"
 DEBUG = True
