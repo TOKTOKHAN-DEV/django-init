@@ -7,11 +7,6 @@ from drf_spectacular.views import SpectacularJSONAPIView, SpectacularRedocView, 
 
 from config.schedules import SCHEDULES
 
-
-def error_view(request):
-    raise Exception()
-
-
 api_urlpatterns = [
     path("", include("app.urls.api")),
     path("_health/", lambda request: HttpResponse()),
