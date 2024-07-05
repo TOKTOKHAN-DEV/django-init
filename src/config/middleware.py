@@ -39,7 +39,7 @@ class RequestLogMiddleware:
 
         # after
         response = self.get_response(request)
-        response["X-TraceId"] = request.trace_id
+        response["X-Trace-Id"] = request.trace_id
         if request.path == "/_health/":
             return response
         if response.status_code >= 500:
