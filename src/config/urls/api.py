@@ -12,15 +12,16 @@ def error_view(request):
     raise Exception()
 
 
-urlpatterns = [
+api_urlpatterns = [
     path("", include("app.urls.api")),
     path("_health/", lambda request: HttpResponse()),
     path("admin/", admin.site.urls),
 ]
 
 
-urlpatterns += [
-    path("openapi.json/", SpectacularJSONAPIView.as_view(patterns=urlpatterns), name="schema"),
+urlpatterns = [
+    *api_urlpatterns,
+    path("openapi.json/", SpectacularJSONAPIView.as_view(patterns=api_urlpatterns), name="schema"),
     path("swagger/", SpectacularSwaggerView.as_view(), name="swagger-ui"),
     path("redoc/", SpectacularRedocView.as_view(), name="redoc"),
 ]
