@@ -28,15 +28,43 @@ class RequestLogMiddleware:
 
     def __call__(self, request):
         # before
+        request.trace_id = (
+            str(int(timezone.localtime().timestamp() * 1000)) + "_" + "".join(random.choices(string.ascii_letters, k=4))
+        )
         request_body = request.body
 
-        response = self.get_response(request)
-
         # after
-        if request.path != "/_health/":
-            self._get_logger(response.status_code)(self._get_log_data(request, request_body, response))
+        response = self.get_response(request)
+        response["Trace-Id"] = request.trace_id
+        if request.path == "/_health/":
+            return response
+        if response.status_code >= 500:
+            return response
 
+        self._get_logger(response.status_code)(
+            self._get_log_message(
+                request.method,
+                response.status_code,
+                request.get_full_path(),
+                request.user.id or 0,
+                self._get_remote(request.META),
+                request.trace_id,
+                self._restore_request_body(request.content_type, request_body),
+            )
+        )
         return response
+
+    def process_exception(self, request, exception):
+        message = self._get_log_message(
+            request.method,
+            500,
+            request.get_full_path(),
+            request.user.id if request.user.id else 0,
+            self._get_remote(request.META),
+            request.trace_id,
+            self._restore_request_body(request.content_type, request.body),
+        )
+        logger.error(message, exc_info=True)
 
     @staticmethod
     def _get_logger(status_code):
@@ -47,16 +75,17 @@ class RequestLogMiddleware:
         else:
             return logger.error
 
-    def _get_log_data(self, request, request_body, response):
-        message = "HTTP {method} {status_code} {path} [{remote}] [{user}] {body}".format(
-            method=request.method,
-            status_code=response.status_code,
-            path=request.get_full_path(),
-            user=request.user.id if request.user.id else 0,
-            remote=self._get_remote(request.META),
-            body=self._restore_request_body(request.content_type, request_body),
-        )[:1000]
-        return message
+    @staticmethod
+    def _get_log_message(method, status_code, path, user, remote, trace_id, body=None):
+        return "HTTP {method} {status_code} {path} [{remote}] [{user}] [{trace_id}] {body}".format(
+            method=method,
+            status_code=status_code,
+            path=path,
+            user=user,
+            remote=remote,
+            trace_id=trace_id,
+            body=body,
+        )
 
     @staticmethod
     def _get_remote(meta):

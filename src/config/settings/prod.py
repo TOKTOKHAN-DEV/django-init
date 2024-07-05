@@ -99,7 +99,7 @@ LOGGING = {
             "level": "INFO",
             "class": "watchtower.CloudWatchLogHandler",
             "boto3_client": boto3_client,
-            "log_group": f"{PROJECT_NAME}/prod/info",
+            "log_group": f"{PROJECT_NAME}/{APP_ENV}/info",
             "log_group_retention_days": 14,
             "stream_name": "web-{strftime:%Y-%m-%d}",
             "filters": ["sensitive"],
@@ -108,7 +108,7 @@ LOGGING = {
             "level": "ERROR",
             "class": "watchtower.CloudWatchLogHandler",
             "boto3_client": boto3_client,
-            "log_group": f"{PROJECT_NAME}/prod/error",
+            "log_group": f"{PROJECT_NAME}/{APP_ENV}/error",
             "log_group_retention_days": 30,
             "stream_name": "web-{strftime:%Y-%m-%d}",
             "filters": ["sensitive"],
@@ -116,12 +116,8 @@ LOGGING = {
     },
     "loggers": {
         "request": {
-            "handlers": ["watchtower_info"],
+            "handlers": ["watchtower_info", "watchtower_error"],
             "level": "INFO",
-        },
-        "django.request": {
-            "handlers": ["watchtower_error"],
-            "level": "ERROR",
         },
     },
 }

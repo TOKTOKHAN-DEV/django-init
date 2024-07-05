@@ -64,7 +64,6 @@ DJANGO_APPS = [
 
 INSTALLED_APPS = LOCAL_APPS + THIRD_PARTY_APPS + DJANGO_APPS
 
-
 MIDDLEWARE = [
     "config.middleware.SwaggerLoginMiddleware",
     "django_hosts.middleware.HostsRequestMiddleware",
@@ -186,7 +185,7 @@ REST_FRAMEWORK = {
         "app.common.filter_backends.FilterBackend",
         "app.common.filter_backends.OrderingFilter",
     ],
-    "EXCEPTION_HANDLER": "app.common.exception_handler",
+    "EXCEPTION_HANDLER": "app.common.views.exception_handler",
     "DEFAULT_SCHEMA_CLASS": "app.common.openapi.CustomAutoSchema",
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "NON_FIELD_ERRORS_KEY": "non_field",
@@ -232,7 +231,7 @@ SPECTACULAR_SETTINGS = {
         }
     ],
     "PREPROCESSING_HOOKS": [
-        "config.spectacular_hooks.api_ordering",
+        "app.common.spectacular_hookss.api_ordering",
     ],
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",
