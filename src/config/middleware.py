@@ -1,6 +1,10 @@
 import json
 import logging
+import random
 import re
+import string
+
+from django.utils import timezone
 
 logger = logging.getLogger("request")
 
@@ -35,7 +39,7 @@ class RequestLogMiddleware:
 
         # after
         response = self.get_response(request)
-        response["Trace-Id"] = request.trace_id
+        response["X-TraceId"] = request.trace_id
         if request.path == "/_health/":
             return response
         if response.status_code >= 500:
