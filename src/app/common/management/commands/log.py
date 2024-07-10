@@ -29,13 +29,15 @@ class Command(BaseCommand):
         response = cloudwatch_client.get_log_events(
             logGroupIdentifier=log_group_arn,
             logStreamName=log_stream_name,
-            startFromHead=True,
             limit=100,
         )
         for log_event in response["events"]:
             print(
                 "{date} {log}".format(
-                    date=color_string("cyan", f"[{datetime.fromtimestamp(log_event['timestamp'] / 1000)}]"),
+                    date=color_string(
+                        "cyan",
+                        f"[{timezone.make_aware(timezone.datetime.fromtimestamp(log_event['timestamp'] / 1000))}]",
+                    ),
                     log=color_string("white", log_event["message"]),
                 )
             )
