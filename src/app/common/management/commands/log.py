@@ -24,8 +24,8 @@ class Command(BaseCommand):
 
     def get_last_log(self, log_group_arn):
         cloudwatch_client = boto3.client("logs")
-        log_streams_response = cloudwatch_client.describe_log_streams(logGroupIdentifier=log_group_arn)
-        log_stream_name = log_streams_response["logStreams"][-1]["logStreamName"]
+        log_streams_response = cloudwatch_client.describe_log_streams(logGroupIdentifier=log_group_arn, descending=True)
+        log_stream_name = log_streams_response["logStreams"][0]["logStreamName"]
         response = cloudwatch_client.get_log_events(
             logGroupIdentifier=log_group_arn,
             logStreamName=log_stream_name,
