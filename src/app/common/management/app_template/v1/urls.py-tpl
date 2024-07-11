@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from app.{{ app_name }}.v1.views import {{ camel_case_app_name }}ViewSet
 
 router = DefaultRouter()
-router.register("{{ app_name }}", {{ camel_case_app_name }}ViewSet)
+router.register("{{ app_name }}", {{ camel_case_app_name }}ViewSet, basename="{{ app_name }}")
 
 urlpatterns = [
     path("", include(router.urls)),
