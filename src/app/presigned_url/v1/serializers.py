@@ -66,7 +66,7 @@ class PresignedSerializer(serializers.Serializer):
         return response
 
     def get_object_key(self, s3_client, basename, file_name):
-        object_key = f"{basename}/{file_name}"
+        object_key = f"{basename}{file_name}"
         try:
             s3_client.head_object(
                 Bucket=settings.AWS_STORAGE_BUCKET_NAME,
