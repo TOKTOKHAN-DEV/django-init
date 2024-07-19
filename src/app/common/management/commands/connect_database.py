@@ -45,7 +45,7 @@ class Command(BaseCommand):
             component,
             "data-source",
             source="LOCAL",
-            name=f"{database['NAME']}@{database['HOST']}",
+            name=f"{settings.APP_ENV}",
             uuid=uuid,
         )
 
@@ -75,7 +75,10 @@ class Command(BaseCommand):
             component = project.find(".//component")
 
         data_source = ElementTree.SubElement(
-            component, "data-source", name=f"{database['NAME']}@{database['HOST']}", uuid=uuid
+            component,
+            "data-source",
+            name=f"{settings.APP_ENV}",
+            uuid=uuid,
         )
 
         ElementTree.SubElement(
