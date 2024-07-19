@@ -2,7 +2,7 @@ from django.conf import settings
 from drf_spectacular.openapi import AutoSchema
 from drf_spectacular.plumbing import is_basic_serializer
 from drf_spectacular.utils import inline_serializer
-from rest_framework import serializers
+from rest_framework import serializers, status
 
 
 class CommonErrorSerializer(serializers.Serializer):
@@ -15,10 +15,10 @@ class CustomAutoSchema(AutoSchema):
 
         if self.method in ["POST", "PUT", "PATCH"]:
             self._get_400_error(direction, response_bodies)
-        response_bodies[401] = self._get_common_error("401")
-        response_bodies[403] = self._get_common_error("403")
+        response_bodies[status.HTTP_401_UNAUTHORIZED] = self._get_common_error("401")
+        response_bodies[status.HTTP_403_FORBIDDEN] = self._get_common_error("403")
         if hasattr(self.view, "detail"):
-            response_bodies[404] = self._get_common_error("404")
+            response_bodies[status.HTTP_404_NOT_FOUND] = self._get_common_error("404")
         return response_bodies
 
     def _get_400_error(self, direction, response_bodies):
@@ -27,7 +27,7 @@ class CustomAutoSchema(AutoSchema):
         serializer = self.get_request_serializer()
         if serializer and is_basic_serializer(serializer):
             component_name = self._get_serializer_name(serializer, direction)
-            response_bodies[400] = self._get_response_for_code(
+            response_bodies[status.HTTP_400_BAD_REQUEST] = self._get_response_for_code(
                 inline_serializer(
                     name=f"{component_name}ErrorMessage",
                     fields={
@@ -37,7 +37,7 @@ class CustomAutoSchema(AutoSchema):
                         **self._get_fields(serializer),
                     },
                 ),
-                400,
+                status.HTTP_400_BAD_REQUEST,
             )
 
     def _get_common_error(self, status_code):
