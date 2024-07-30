@@ -231,7 +231,7 @@ SPECTACULAR_SETTINGS = {
         }
     ],
     "PREPROCESSING_HOOKS": [
-        "app.common.spectacular_hookss.api_ordering",
+        "app.common.spectacular_hooks.api_ordering",
     ],
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",
