@@ -1,7 +1,10 @@
 import datetime
 from pathlib import Path
 
+from dotenv import load_dotenv
 from gunicorn.http import wsgi
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
