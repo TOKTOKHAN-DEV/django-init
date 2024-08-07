@@ -1,7 +1,10 @@
 import datetime
 from pathlib import Path
 
+from dotenv import load_dotenv
 from gunicorn.http import wsgi
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
@@ -231,7 +234,7 @@ SPECTACULAR_SETTINGS = {
         }
     ],
     "PREPROCESSING_HOOKS": [
-        "app.common.spectacular_hookss.api_ordering",
+        "app.common.spectacular_hooks.api_ordering",
     ],
     "POSTPROCESSING_HOOKS": [
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",

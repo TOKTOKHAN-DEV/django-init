@@ -16,6 +16,7 @@ class LimitOffsetPagination(pagination.LimitOffsetPagination):
             OrderedDict(
                 [
                     ("count", self.count),
+                    ("is_next", self.offset + self.limit < self.count),
                     ("results", data),
                 ]
             )
