@@ -23,6 +23,9 @@ Resources:
       CidrBlock: 10.0.0.0/16
       EnableDnsSupport: 'true'
       EnableDnsHostnames: 'true'
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-vpc'
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -30,6 +33,9 @@ Resources:
       CidrBlock: 10.0.0.0/24
       AvailabilityZone: !Select [0, Fn::GetAZs: !Ref 'AWS::Region']
       MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-public-subnet-1'
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -37,20 +43,33 @@ Resources:
       CidrBlock: 10.0.1.0/24
       AvailabilityZone: !Select [1, Fn::GetAZs: !Ref 'AWS::Region']
       MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-public-subnet-2'
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
       AvailabilityZone: !Select [ 0, Fn::GetAZs: !Ref 'AWS::Region' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-private-subnet-1'
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref VPC
       CidrBlock: 10.0.3.0/24
       AvailabilityZone: !Select [ 1, Fn::GetAZs: !Ref 'AWS::Region' ]
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-private-subnet-2'
   InternetGateway:
     Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-igw'
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -60,6 +79,9 @@ Resources:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-public-routetable'
   PublicRoute:
     Type: AWS::EC2::Route
     DependsOn: AttachGateway
@@ -82,16 +104,25 @@ Resources:
     Condition: IsProd
     Properties:
       Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-eip'
   NatGateway:
     Type: AWS::EC2::NatGateway
     Condition: IsProd
     Properties:
       AllocationId: !GetAtt EIP.AllocationId
       SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-ngw'
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-private-routetable'
   PrivateRoute:
     Type: AWS::EC2::Route
     Condition: IsProd
@@ -158,6 +189,9 @@ Resources:
           sudo systemctl enable atd
           (crontab -l 2>/dev/null; echo "@reboot echo \"sudo shutdown -h now\" | at now + 2 hours") | crontab -
           sudo shutdown -h now
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${ENV}-bastion-host'
 
 
 Outputs:
