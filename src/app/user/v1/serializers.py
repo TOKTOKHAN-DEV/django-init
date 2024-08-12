@@ -10,16 +10,14 @@ from django.template import loader
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from app.email_log.models import EmailLog
-from app.user.models import Device, Social, SocialKindChoices, User
+from app.user.models import Device, SocialKindChoices, User
 from app.user.social_adapters import SocialAdapter
-from app.user.v1.examples import login_examples
 from app.user.validators import validate_password
 from app.verifier.models import EmailVerifier, PhoneVerifier
 from config.exception_handler import SocialAccountNotFoundError
@@ -40,7 +38,6 @@ class DeviceSerializer(serializers.ModelSerializer):
         }
 
 
-@extend_schema_serializer(examples=login_examples)
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True)

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from app.user.models import Device, Social, User
+from app.user.models import Device, User
 
 
 class DeviceInline(admin.TabularInline):
@@ -28,11 +28,6 @@ class UserAdmin(admin.ModelAdmin):
         instance.save()
 
         return instance
-
-
-@admin.register(Social)
-class SocialAdmin(admin.ModelAdmin):
-    pass
 
 
 @admin.register(Device)

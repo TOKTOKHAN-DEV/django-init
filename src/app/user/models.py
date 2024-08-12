@@ -79,12 +79,3 @@ class SocialKindChoices(models.TextChoices):
     FACEBOOK = "facebook", "페이스북"
     GOOGLE = "google", "구글"
     APPLE = "apple", "애플"
-
-
-class Social(BaseModel):
-    user = models.OneToOneField("user.User", on_delete=models.CASCADE)
-    kind = models.CharField(verbose_name="타입", max_length=16, choices=SocialKindChoices.choices)
-
-    class Meta:
-        verbose_name = "소셜"
-        verbose_name_plural = verbose_name
