@@ -10,6 +10,7 @@ from django.template import loader
 from django.utils import timezone
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from jwt import ExpiredSignatureError
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.settings import api_settings
@@ -20,7 +21,7 @@ from app.user.models import Device, SocialKindChoices, User
 from app.user.social_adapters import SocialAdapter
 from app.user.validators import validate_password
 from app.verifier.models import EmailVerifier, PhoneVerifier
-from config.exception_handler import SocialAccountNotFoundError
+from config.exception_handler import SocialUserNotFoundError
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -55,15 +56,7 @@ class UserLoginSerializer(serializers.Serializer):
             username=attrs["username"],
             password=attrs["password"],
         )
-        if user:
-            refresh = self.get_token(user)
-        else:
-            raise ValidationError(
-                {
-                    "email": ["인증정보가 일치하지 않습니다."],
-                    "password": ["인증정보가 일치하지 않습니다."],
-                }
-            )
+        refresh = user.get_token()
 
         data = dict()
         data["refresh_token"] = str(refresh)
@@ -101,20 +94,20 @@ class UserSocialLoginSerializer(serializers.Serializer):
         try:
             attrs["user"] = User.objects.get(email=social_email, password=make_password(None))
         except User.DoesNotExist:
-            social_token = jwt.encode(
+            register_token = jwt.encode(
                 payload={
                     "email": social_email,
                     "expired_at": timezone.now().timestamp() + 10 * 60,
                 },
                 key=settings.SECRET_KEY,
             )
-            raise SocialAccountNotFoundError(social_token)
+            raise SocialUserNotFoundError(register_token)
 
         return attrs
 
     @transaction.atomic
     def create(self, validated_data):
-        refresh = RefreshToken.for_user(validated_data["user"])
+        refresh = validated_data["user"].get_token()
         validated_data["access_token"] = refresh.access_token
         validated_data["refresh_token"] = refresh
         return validated_data
@@ -126,8 +119,8 @@ class UserSocialLoginSerializer(serializers.Serializer):
         raise ModuleNotFoundError(f"{state.capitalize()}Adapter class")
 
 
-class UserRegisterSerializer(serializers.Serializer):
-    social_token = serializers.CharField(write_only=True, required=False, help_text="소셜 로그인 토큰")
+class UserRegisterSerializer(serializers.ModelSerializer):
+    register_token = serializers.CharField(write_only=True, required=False, help_text="소셜 로그인 토큰")
     email = serializers.CharField(write_only=True, required=False)
     email_token = serializers.CharField(write_only=True, required=False, help_text="email verifier를 통해 얻은 token값입니다.")
     phone = serializers.CharField(write_only=True, required=False)
@@ -137,6 +130,20 @@ class UserRegisterSerializer(serializers.Serializer):
 
     access_token = serializers.CharField(read_only=True)
     refresh_token = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "register_token",
+            "email",
+            "email_token",
+            "phone",
+            "phone_token",
+            "password",
+            "password_confirm",
+            "access_token",
+            "refresh_token",
+        ]
 
     def get_fields(self):
         fields = super().get_fields()
@@ -156,7 +163,7 @@ class UserRegisterSerializer(serializers.Serializer):
         return fields
 
     def validate(self, attrs):
-        social_token = attrs.pop("social_token", None)
+        register_token = attrs.pop("register_token", None)
         email = attrs.get("email")
         email_token = attrs.pop("email_token", None)
         phone = attrs.get("phone")
@@ -165,10 +172,11 @@ class UserRegisterSerializer(serializers.Serializer):
         password = attrs.get("password")
         password_confirm = attrs.pop("password_confirm", None)
 
-        if social_token:
-            payload = jwt.decode(social_token, key=settings.SECRET_KEY, algorithms=settings.SIMPLE_JWT_ALGORITHM)
-            if payload["expired_at"] < timezone.now().timestamp():
-                raise ValidationError({"social_token": ["회원가입 토큰이 만료됐습니다."]})
+        if register_token:
+            try:
+                payload = jwt.decode(register_token, key=settings.SECRET_KEY, algorithms=settings.SIMPLE_JWT_ALGORITHM)
+            except ExpiredSignatureError:
+                raise ValidationError({"register_token": ["회원가입 토큰이 만료됐습니다."]})
             attrs["email"] = payload["email"]
 
             return attrs
