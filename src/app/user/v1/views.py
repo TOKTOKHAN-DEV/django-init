@@ -23,7 +23,7 @@ from app.user.v1.serializers import (
 
 @extend_schema_view(
     retrieve=extend_schema(summary="유저 조회"),
-    delete=extend_schema(summary="유저 삭제(탈퇴)"),
+    destroy=extend_schema(summary="유저 삭제(탈퇴)"),
     login=extend_schema(summary="유저 로그인"),
     swagger_login=extend_schema(exclude=True),
     social_login=extend_schema(
