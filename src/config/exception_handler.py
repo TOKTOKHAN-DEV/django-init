@@ -6,4 +6,4 @@ class SocialUserNotFoundError(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
 
     def __init__(self, detail):
-        self.detail = {"social_token": detail}
+        self.detail = {"register_token": detail}

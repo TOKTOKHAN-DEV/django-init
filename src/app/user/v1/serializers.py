@@ -92,7 +92,7 @@ class UserSocialLoginSerializer(serializers.Serializer):
         social_user_id = self.get_social_user_id(attrs["code"], attrs["state"])
         social_email = f"{social_user_id}@{attrs['state']}.social"
         try:
-            attrs["user"] = User.objects.get(email=social_email, password=make_password(None))
+            attrs["user"] = User.objects.get(email=social_email)
         except User.DoesNotExist:
             register_token = jwt.encode(
                 payload={
