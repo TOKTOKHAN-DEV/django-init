@@ -4,7 +4,10 @@ import random
 import re
 import string
 
+from django.core.exceptions import PermissionDenied, SuspiciousOperation
+from django.http import Http404
 from django.utils import timezone
+from rest_framework.exceptions import APIException
 
 logger = logging.getLogger("request")
 
@@ -59,6 +62,8 @@ class RequestLogMiddleware:
         return response
 
     def process_exception(self, request, exception):
+        if isinstance(exception, (Http404, PermissionDenied, SuspiciousOperation, APIException)):
+            return None
         message = self._get_log_message(
             request.method,
             500,
