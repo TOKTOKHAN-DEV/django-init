@@ -55,9 +55,7 @@ class PresignedSerializer(serializers.Serializer):
         response = s3_client.generate_presigned_post(
             settings.AWS_STORAGE_BUCKET_NAME,
             object_key,
-            Fields={"x-amz-tagging": "status=editing"},
             Conditions=[
-                {"x-amz-tagging": "status=editing"},
                 ["content-length-range", 0, 20971520],  # 20MB
                 ["starts-with", "$Content-Type", f"{file_type}/"],
             ],
