@@ -82,14 +82,15 @@ class UserLogoutSerializer(serializers.Serializer):
 
 
 class UserSocialLoginSerializer(serializers.Serializer):
-    code = serializers.CharField(write_only=True)
+    code = serializers.CharField(write_only=True, required=False)
+    social_access_token = serializers.CharField(write_only=True, required=False)
     state = serializers.ChoiceField(write_only=True, choices=SocialKindChoices.choices)
 
     access_token = serializers.CharField(read_only=True)
     refresh_token = serializers.CharField(read_only=True)
 
     def validate(self, attrs):
-        social_user_id = self.get_social_user_id(attrs["code"], attrs["state"])
+        social_user_id = self.get_social_user_id(attrs["code"], attrs['social_access_token'], attrs["state"])
         social_email = f"{social_user_id}@{attrs['state']}.social"
         try:
             attrs["user"] = User.objects.get(email=social_email)
@@ -112,10 +113,10 @@ class UserSocialLoginSerializer(serializers.Serializer):
         validated_data["refresh_token"] = refresh
         return validated_data
 
-    def get_social_user_id(self, code, state):
+    def get_social_user_id(self, code, access_token, state):
         for adapter_class in SocialAdapter.__subclasses__():
             if adapter_class.key == state:
-                return adapter_class(code, self.context["request"].META["HTTP_ORIGIN"]).get_social_user_id()
+                return adapter_class(code, access_token, self.context["request"].META["HTTP_ORIGIN"]).get_social_user_id()
         raise ModuleNotFoundError(f"{state.capitalize()}Adapter class")
 
 

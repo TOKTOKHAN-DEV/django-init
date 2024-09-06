@@ -8,9 +8,13 @@ from rest_framework.exceptions import ValidationError
 class SocialAdapter:
     key = None
 
-    def __init__(self, code, origin=None):
+    def __init__(self, code=None, access_token=None, origin=None):
         self.code = code
+        self.access_token = access_token
         self.origin = origin
+
+    def get_access_token(self):
+        raise NotImplementedError("Not Implemented 'get_access_token' method")
 
     def get_social_user_id(self):
         raise NotImplementedError("Not Implemented 'get_social_user_id' method")
@@ -19,7 +23,10 @@ class SocialAdapter:
 class KakaoAdapter(SocialAdapter):
     key = "kakao"
 
-    def get_social_user_id(self):
+    def get_access_token(self):
+        if not self.access_token:
+            self.access_token = self.get_access_token()
+
         url = "https://kauth.kakao.com/oauth/token"
         data = {
             "grant_type": "authorization_code",
@@ -33,20 +40,25 @@ class KakaoAdapter(SocialAdapter):
             raise ValidationError("KAKAO GET TOKEN API ERROR")
         data = response.json()
 
+        return data["access_token"]
+
+    def get_social_user_id(self):
         url = "https://kapi.kakao.com/v2/user/me"
-        headers = {"Authorization": f'Bearer {data["access_token"]}'}
+        headers = {"Authorization": f'Bearer {self.get_access_token()}'}
         response = requests.get(url=url, headers=headers)
         if not response.ok:
             raise ValidationError("KAKAO ME API ERROR")
         data = response.json()
 
-        return data["id"]
+        return data["id"], data["kakao_account"]
 
 
 class NaverAdapter(SocialAdapter):
     key = "naver"
 
-    def get_social_user_id(self):
+    def get_access_token(self):
+        if self.access_token:
+            return self.access_token
         url = "https://nid.naver.com/oauth2.0/token"
         data = {
             "grant_type": "authorization_code",
@@ -59,20 +71,26 @@ class NaverAdapter(SocialAdapter):
             raise ValidationError("NAVER GET TOKEN API ERROR")
         data = response.json()
 
+        return data["access_token"]
+
+    def get_social_user_id(self):
         url = "https://openapi.naver.com/v1/nid/me"
-        headers = {"Authorization": f'Bearer {data["access_token"]}'}
+        headers = {"Authorization": f'Bearer {self.get_access_token()}'}
         response = requests.post(url=url, headers=headers)
         if not response.ok:
             raise ValidationError("NAVER ME API ERROR")
         data = response.json()
 
-        return data["response"]["id"]
+        return data["response"]["id"], data["response"]
 
 
 class FacebookAdapter(SocialAdapter):
     key = "facebook"
 
-    def get_social_user_id(self):
+    def get_access_token(self):
+        if self.access_token:
+            return self.access_token
+
         url = "https://graph.facebook.com/v14.0/oauth/access_token"
         params = {
             "client_id": settings.FACEBOOK_CLIENT_ID,
@@ -84,10 +102,12 @@ class FacebookAdapter(SocialAdapter):
         if not response.ok:
             raise ValidationError(f"FACEBOOK GET TOKEN API ERROR: {response.text}")
         data = response.json()
+        return data["access_token"]
 
+    def get_social_user_id(self):
         url = "https://graph.facebook.com/v14.0/debug_token"
         params = {
-            "input_token": data["access_token"],
+            "input_token": self.get_access_token(),
             "access_token": f"{settings.FACEBOOK_CLIENT_ID}|{settings.FACEBOOK_CLIENT_ID}",
         }
         response = requests.get(url=url, params=params)
@@ -95,11 +115,16 @@ class FacebookAdapter(SocialAdapter):
             raise ValidationError(f"FACEBOOK ME API ERROR: {response.text}")
         data = response.json()
 
-        return data["data"]["user_id"]
+        return data["data"]["user_id"], data["data"]
 
 
 class GoogleAdapter(SocialAdapter):
     key = "google"
+
+    def get_access_token(self):
+        if not self.access_token:
+            return self.access_token
+        return None
 
     def get_social_user_id(self):
         url = "https://oauth2.googleapis.com/token"
@@ -123,9 +148,10 @@ class GoogleAdapter(SocialAdapter):
 class AppleAdapter(SocialAdapter):
     key = "apple"
 
-    def get_social_user_id(self):
+    def get_access_token(self):
+        if not self.access_token:
+            return self.access_token
         headers = {"kid": settings.APPLE_KEY_ID}
-
         payload = {
             "iss": settings.APPLE_TEAM_ID,
             "iat": timezone.datetime.now(),
@@ -133,14 +159,12 @@ class AppleAdapter(SocialAdapter):
             "aud": "https://appleid.apple.com",
             "sub": settings.APPLE_CLIENT_ID,
         }
-
         client_secret = jwt.encode(
             payload,
             settings.APPLE_CLIENT_SECRET,
             algorithm="ES256",
             headers=headers,
         )
-
         url = "https://appleid.apple.com/auth/token"
         data = {
             "grant_type": "authorization_code",
@@ -148,7 +172,6 @@ class AppleAdapter(SocialAdapter):
             "client_secret": client_secret,
             "code": self.code,
         }
-
         response = requests.post(
             url=url,
             data=data,
@@ -159,6 +182,24 @@ class AppleAdapter(SocialAdapter):
             raise ValidationError("APPLE GET TOKEN API ERROR")
 
         data = response.json()
-        decoded = jwt.decode(data["id_token"], options={"verify_signature": False})
+        return data["id_token"]
 
-        return decoded["sub"]
+
+    def get_social_user_id(self):
+        access_token = self.get_access_token()
+        key_payload = requests.get("https://appleid.apple.com/auth/keys").json()
+        kid = jwt.get_unverified_header(access_token)["kid"]
+        apple_public_key = RSAAlgorithm.from_jwk(
+            json.dumps(next(filter(lambda x: x["kid"] == kid, key_payload["keys"])))
+        )
+        apple_public_key_as_string = apple_public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+        decoded = jwt.decode(
+            access_token,
+            key=apple_public_key_as_string,
+            algorithms=["RS256"],
+            audience=settings.APPLE_APP_ID,
+        )
+        return decoded["sub"], decoded
