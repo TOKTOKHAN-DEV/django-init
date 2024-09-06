@@ -122,9 +122,7 @@ class GoogleAdapter(SocialAdapter):
     key = "google"
 
     def get_access_token(self):
-        if not self.access_token:
-            return self.access_token
-        return None
+        pass
 
     def get_social_user_id(self):
         url = "https://oauth2.googleapis.com/token"
