@@ -90,7 +90,7 @@ class UserSocialLoginSerializer(serializers.Serializer):
     refresh_token = serializers.CharField(read_only=True)
 
     def validate(self, attrs):
-        social_user_id = self.get_social_user_id(attrs["code"], attrs["social_access_token"], attrs["state"])
+        social_user_id, payload = self.get_social_user_id(attrs["code"], attrs["social_access_token"], attrs["state"])
         social_email = f"{social_user_id}@{attrs['state']}.social"
         try:
             attrs["user"] = User.objects.get(email=social_email)
