@@ -25,7 +25,7 @@ class KakaoAdapter(SocialAdapter):
 
     def get_access_token(self):
         if not self.access_token:
-            self.access_token = self.get_access_token()
+            return self.access_token
 
         url = "https://kauth.kakao.com/oauth/token"
         data = {
