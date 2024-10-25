@@ -192,6 +192,7 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "app.common.openapi.CustomAutoSchema",
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
     "NON_FIELD_ERRORS_KEY": "non_field",
+    "ENABLE_LIST_MECHANICS_ON_NON_2XX": [400],
 }
 
 

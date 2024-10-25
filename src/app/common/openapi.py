@@ -1,6 +1,6 @@
 from django.conf import settings
 from drf_spectacular.openapi import AutoSchema
-from drf_spectacular.plumbing import is_basic_serializer
+from drf_spectacular.plumbing import is_basic_serializer, is_list_serializer
 from drf_spectacular.utils import inline_serializer
 from rest_framework import serializers, status
 
@@ -10,6 +10,11 @@ class CommonErrorSerializer(serializers.Serializer):
 
 
 class CustomAutoSchema(AutoSchema):
+    def _get_paginator(self):
+        if self.method in ["POST", "PUT", "PATCH"]:
+            return None
+        return super()._get_paginator()
+
     def _get_response_bodies(self, direction="response"):
         response_bodies = super()._get_response_bodies(direction)
 
@@ -25,20 +30,36 @@ class CustomAutoSchema(AutoSchema):
         if response_bodies.get("400"):
             return None
         serializer = self.get_request_serializer()
-        if serializer and is_basic_serializer(serializer):
-            component_name = self._get_serializer_name(serializer, direction)
-            response_bodies[status.HTTP_400_BAD_REQUEST] = self._get_response_for_code(
-                inline_serializer(
-                    name=f"{component_name}ErrorMessage",
-                    fields={
-                        settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]: serializers.ListField(
-                            required=False, child=serializers.CharField()
-                        ),
-                        **self._get_fields(serializer),
-                    },
-                ),
-                status.HTTP_400_BAD_REQUEST,
-            )
+        if serializer:
+            if is_basic_serializer(serializer):
+                component_name = self._get_serializer_name(serializer, direction)
+                response_bodies["400"] = self._get_response_for_code(
+                    inline_serializer(
+                        name=f"{component_name}ErrorMessage",
+                        fields={
+                            settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]: serializers.ListField(
+                                required=False, child=serializers.CharField()
+                            ),
+                            **self._get_fields(serializer),
+                        },
+                    ),
+                    "400",
+                )
+            elif is_list_serializer(serializer):
+                component_name = self._get_serializer_name(serializer, direction)
+                response_bodies["400"] = self._get_response_for_code(
+                    inline_serializer(
+                        name=f"{component_name}ErrorMessage",
+                        fields={
+                            settings.REST_FRAMEWORK["NON_FIELD_ERRORS_KEY"]: serializers.ListField(
+                                required=False, child=serializers.CharField()
+                            ),
+                            **self._get_fields(serializer.child),
+                        },
+                        many=True,
+                    ),
+                    "400",
+                )
 
     def _get_common_error(self, status_code):
         return self._get_response_for_code(
