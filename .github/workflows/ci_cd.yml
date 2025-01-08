@@ -87,7 +87,7 @@ jobs:
 
       - name: Deploy Web Service
         if: steps.tf-web-download.outcome == 'success'
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.tf-web-render.outputs.task-definition }}
           cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
@@ -142,7 +142,7 @@ jobs:
 
       - name: Deploy Celery Service
         if: steps.tf-celery-download.outcome == 'success'
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.tf-celery-render.outputs.task-definition }}
           cluster: ${{ env.PROJECT_NAME }}-${{ env.PROJECT_ENV }}-ecs-cluster
