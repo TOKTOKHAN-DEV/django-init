@@ -1,5 +1,6 @@
 import random
 import string
+from urllib import parse
 
 import boto3
 from botocore.config import Config
@@ -16,6 +17,7 @@ class PresignedSerializer(serializers.Serializer):
     file_name = serializers.CharField(write_only=True)
     file_type = serializers.ChoiceField(choices=FileTypeChoices.choices, write_only=True)
     field_choice = serializers.ChoiceField(choices=FIELD_CHOICES, write_only=True)
+    is_download = serializers.BooleanField(write_only=True, required=False)
     url = serializers.URLField(read_only=True)
     fields = serializers.JSONField(read_only=True)
 
@@ -43,7 +45,7 @@ class PresignedSerializer(serializers.Serializer):
             return field.upload_to
         return None
 
-    def create_presigned_post(self, file_name, file_type, upload_path=None):
+    def create_presigned_post(self, file_name, file_type, is_download, upload_path=None):
         s3_config = Config(
             region_name="ap-northeast-2",
             signature_version="s3v4",
@@ -52,13 +54,21 @@ class PresignedSerializer(serializers.Serializer):
         basename = "/".join(["_media", upload_path])
         object_key = self.get_object_key(s3_client, basename, file_name)
 
+        fields = {}
+        conditions = [
+            ["content-length-range", 0, 20971520],  # 20MB
+            ["starts-with", "$Content-Type", f"{file_type}/"],
+        ]
+        if is_download:
+            fields.update({"Content-Disposition": f'attachment; filename="{parse.quote(file_name)}"'})
+            conditions.append({"Content-Disposition": f'attachment; filename="{parse.quote(file_name)}"'})
+
+
         response = s3_client.generate_presigned_post(
             settings.AWS_STORAGE_BUCKET_NAME,
             object_key,
-            Conditions=[
-                ["content-length-range", 0, 20971520],  # 20MB
-                ["starts-with", "$Content-Type", f"{file_type}/"],
-            ],
+            Fields=fields,
+            Conditions=conditions,
             ExpiresIn=360,
         )
         return response
