@@ -28,7 +28,7 @@ class KakaoAdapter(SocialAdapter):
     key = "kakao"
 
     def get_access_token(self):
-        if not self.access_token:
+        if self.access_token:
             return self.access_token
 
         url = "https://kauth.kakao.com/oauth/token"
@@ -150,42 +150,45 @@ class GoogleAdapter(SocialAdapter):
 class AppleAdapter(SocialAdapter):
     key = "apple"
 
+    def get_access_token(self):
+        if self.access_token:
+            return self.access_token
+        headers = {"kid": settings.APPLE_KEY_ID}
+        payload = {
+            "iss": settings.APPLE_TEAM_ID,
+            "iat": timezone.datetime.now(),
+            "exp": timezone.datetime.now() + timezone.timedelta(hours=1),
+            "aud": "https://appleid.apple.com",
+            "sub": settings.APPLE_CLIENT_ID,
+        }
+        client_secret = jwt.encode(
+            payload,
+            settings.APPLE_CLIENT_SECRET,
+            algorithm="ES256",
+            headers=headers,
+        )
+        url = "https://appleid.apple.com/auth/token"
+        data = {
+            "grant_type": "authorization_code",
+            "client_id": settings.APPLE_CLIENT_ID,
+            "client_secret": client_secret,
+            "code": self.code,
+        }
+        response = requests.post(
+            url=url,
+            data=data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+
+        if not response.ok:
+            raise ValidationError("APPLE GET TOKEN API ERROR")
+
+        data = response.json()
+        access_token = data["id_token"]
+        return access_token
+
     def get_social_user_id(self):
-        if not self.access_token:
-            headers = {"kid": settings.APPLE_KEY_ID}
-            payload = {
-                "iss": settings.APPLE_TEAM_ID,
-                "iat": timezone.datetime.now(),
-                "exp": timezone.datetime.now() + timezone.timedelta(hours=1),
-                "aud": "https://appleid.apple.com",
-                "sub": settings.APPLE_CLIENT_ID,
-            }
-            client_secret = jwt.encode(
-                payload,
-                settings.APPLE_CLIENT_SECRET,
-                algorithm="ES256",
-                headers=headers,
-            )
-            url = "https://appleid.apple.com/auth/token"
-            data = {
-                "grant_type": "authorization_code",
-                "client_id": settings.APPLE_CLIENT_ID,
-                "client_secret": client_secret,
-                "code": self.code,
-            }
-            response = requests.post(
-                url=url,
-                data=data,
-                headers={"Content-Type": "application/x-www-form-urlencoded"},
-            )
-
-            if not response.ok:
-                raise ValidationError("APPLE GET TOKEN API ERROR")
-
-            data = response.json()
-            access_token = data["id_token"]
-        else:
-            access_token = self.access_token
+        access_token = self.get_access_token()
 
         key_payload = requests.get("https://appleid.apple.com/auth/keys").json()
         kid = jwt.get_unverified_header(access_token)["kid"]
