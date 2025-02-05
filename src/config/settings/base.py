@@ -49,6 +49,7 @@ THIRD_PARTY_APPS = [
     "django_filters",
     "django_hosts",
     "drf_spectacular",
+    "drf_spectacular_sidecar",
     "storages",
     "ckeditor",
     "ckeditor_uploader",
@@ -198,6 +199,9 @@ REST_FRAMEWORK = {
 
 # SPECTACULAR
 SPECTACULAR_SETTINGS = {
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
     "TITLE": f"{SITE_NAME} API",
     "DESCRIPTION": f"""개발: [api.dev.{DOMAIN}](https://api.dev.{DOMAIN})<br/>운영: [api.{DOMAIN}](https://api.{DOMAIN})""",
     "VERSION": "1.0.0",

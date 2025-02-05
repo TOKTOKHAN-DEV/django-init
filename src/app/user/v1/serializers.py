@@ -149,18 +149,6 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     def get_fields(self):
         fields = super().get_fields()
 
-        if "email" in User.VERIFY_FIELDS:
-            fields["email_token"].required = True
-        if "email" in User.VERIFY_FIELDS or "email" in User.REGISTER_FIELDS:
-            fields["email"].required = True
-        if "phone" in User.VERIFY_FIELDS:
-            fields["phone_token"].required = True
-        if "phone" in User.VERIFY_FIELDS or "phone" in User.REGISTER_FIELDS:
-            fields["phone"].required = True
-        if "password" in User.REGISTER_FIELDS:
-            fields["password"].required = True
-            fields["password_confirm"].required = True
-
         return fields
 
     def validate(self, attrs):
