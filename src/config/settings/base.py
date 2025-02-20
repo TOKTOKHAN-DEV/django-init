@@ -245,7 +245,6 @@ SPECTACULAR_SETTINGS = {
         "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",
     ],
     "COMPONENT_SPLIT_REQUEST": True,
-    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
     "ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE": False,
 }
 
