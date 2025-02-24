@@ -1,9 +1,6 @@
 name: Initialize Project
 on:
   workflow_dispatch:
-  create:
-    branches:
-      - main
 
 jobs:
   initialize_project:
