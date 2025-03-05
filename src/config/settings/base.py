@@ -54,6 +54,7 @@ THIRD_PARTY_APPS = [
     "ckeditor",
     "ckeditor_uploader",
     "safedelete",
+    "django_celery_results",
 ]
 
 DJANGO_APPS = [
@@ -283,6 +284,7 @@ CELERY_TIMEZONE = "Asia/Seoul"
 CELERYD_SOFT_TIME_LIMIT = 300
 CELERYD_TIME_LIMIT = CELERYD_SOFT_TIME_LIMIT + 60
 CELERY_TASK_IGNORE_RESULT = True
+CELERY_RESULT_BACKEND = 'django-db'
 
 
 # KAKAO
