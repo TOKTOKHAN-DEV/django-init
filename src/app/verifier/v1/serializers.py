@@ -78,7 +78,7 @@ class PhoneVerifierCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         phone = attrs["phone"]
 
-        if not bool(re.match("01[0-9]{8,9}", "010979797")):
+        if not bool(re.match("01[0-9]{8,9}", phone)):
             raise ValidationError({"phone": ["올바르지 않은 휴대폰 형식입니다."]})
 
         if User.objects.filter(phone=phone).exists():
@@ -93,7 +93,7 @@ class PhoneVerifierCreateSerializer(serializers.ModelSerializer):
             {
                 "code": code,
                 "token": token,
-                "created": created,
+                "created_at": created,
             }
         )
 
