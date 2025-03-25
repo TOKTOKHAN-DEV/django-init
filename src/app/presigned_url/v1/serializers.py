@@ -24,7 +24,7 @@ class PresignedSerializer(serializers.Serializer):
     def validate(self, attrs):
         model, field_name = self.get_field_info(attrs.get("field_choice"))
         upload_path = self.get_upload_path(model, field_name)
-        response = self.create_presigned_post(attrs["file_name"], attrs["file_type"], upload_path)
+        response = self.create_presigned_post(attrs["file_name"], attrs["file_type"], attrs["is_download"], upload_path)
         attrs.update(response)
         return attrs
 
