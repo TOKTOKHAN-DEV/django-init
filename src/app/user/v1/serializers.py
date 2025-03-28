@@ -46,10 +46,6 @@ class UserLoginSerializer(serializers.Serializer):
     access_token = serializers.CharField(read_only=True)
     refresh_token = serializers.CharField(read_only=True)
 
-    @classmethod
-    def get_token(cls, user):
-        return RefreshToken.for_user(user)
-
     def validate(self, attrs):
         user = authenticate(
             request=self.context["request"],
