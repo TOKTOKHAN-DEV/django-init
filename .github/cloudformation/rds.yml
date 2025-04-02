@@ -69,8 +69,8 @@ Resources:
       Engine: postgres
       PubliclyAccessible: true
       DBInstanceClass: db.t4g.small
-      EngineVersion: 15.4
-      DBParameterGroupName: default.postgres15
+      EngineVersion: 16.4
+      DBParameterGroupName: default.postgres16
       Port: 5432
       DBName: !Ref ProjectName
       MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref RDSSecretDev, ':SecretString:username}}' ] ]
@@ -117,8 +117,8 @@ Resources:
       DBSubnetGroupName: !Ref RDSSubnetGroup
       DBClusterIdentifier: !Sub '${ProjectName}-${ENV}-db-cluster'
       Engine: aurora-postgresql
-      EngineVersion: 12.12
-      DBClusterParameterGroupName: default.aurora-postgresql12
+      EngineVersion: 16.4
+      DBClusterParameterGroupName: default.aurora-postgresql16
       Port: 5432
       DatabaseName: !Ref ProjectName
       MasterUsername: !Join ['', ['{{resolve:secretsmanager:', !Ref RDSSecret, ':SecretString:username}}' ]]
