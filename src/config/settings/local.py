@@ -76,6 +76,14 @@ STATIC_ROOT = BASE_DIR / "_static"
 STATIC_URL = "/_static/"
 
 
+# JWT
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": datetime.timedelta(days=30),
+    "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=365),
+    "ROTATE_REFRESH_TOKENS": True,
+}
+
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

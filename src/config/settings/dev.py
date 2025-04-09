@@ -58,6 +58,14 @@ STATICFILES_STORAGE = "config.storages.StaticStorage"
 STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{STATICFILES_LOCATION}/"
 
 
+# JWT
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": datetime.timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+}
+
+
 boto3_client = boto3.client("logs", region_name="ap-northeast-2")
 LOGGING = {
     "version": 1,

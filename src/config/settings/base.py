@@ -162,12 +162,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DATABASE_ROUTERS = ["config.router.Router"]
 
 
-# JWT
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": datetime.timedelta(hours=2),
-    "REFRESH_TOKEN_LIFETIME": datetime.timedelta(days=7),
-    "ROTATE_REFRESH_TOKENS": True,
-}
+# SIMPLE_JWT
 SIMPLE_JWT_ALGORITHM = "HS256"
 
 
