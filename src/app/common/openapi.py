@@ -87,7 +87,7 @@ class CustomAutoSchema(AutoSchema):
         map_serializer_field = super()._map_serializer_field(field, direction, bypass_extensions)
         if isinstance(field, serializers.MultipleChoiceField) or isinstance(field, serializers.ChoiceField):
             sorted_enum = sorted(map_serializer_field.get("enum"), key=lambda x: (x is None, x))
-            sorted_enum = list(filter(lambda x: x, sorted_enum))
+            sorted_enum = list(filter(lambda x: x is not None, sorted_enum))
             map_serializer_field.update(
                 {
                     "enum": sorted_enum,
