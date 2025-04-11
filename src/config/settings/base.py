@@ -201,7 +201,7 @@ SPECTACULAR_SETTINGS = {
     "TITLE": f"{SITE_NAME} API",
     "DESCRIPTION": f"""개발: [api.dev.{DOMAIN}](https://api.dev.{DOMAIN})<br/>운영: [api.{DOMAIN}](https://api.{DOMAIN})""",
     "VERSION": "1.0.0",
-    "SCHEMA_PATH_PREFIX": r"/v[0-9]",
+    "SCHEMA_PATH_PREFIX": "/v[0-9]",
     "DISABLE_ERRORS_AND_WARNINGS": True,
     "SORT_OPERATIONS": False,
     "SWAGGER_UI_SETTINGS": {
@@ -242,6 +242,7 @@ SPECTACULAR_SETTINGS = {
     ],
     "COMPONENT_SPLIT_REQUEST": True,
     "ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE": False,
+    "SORT_OPERATION_PARAMETERS": False,
 }
 
 
