@@ -54,14 +54,16 @@ class PresignedSerializer(serializers.Serializer):
         basename = "/".join(["_media", upload_path])
         object_key = self.get_object_key(s3_client, basename, file_name)
 
+        filename = parse.quote(file_name)
+
         fields = {}
         conditions = [
             ["content-length-range", 0, 20971520],  # 20MB
             ["starts-with", "$Content-Type", f"{file_type}/"],
         ]
         if is_download:
-            fields.update({"Content-Disposition": f'attachment; filename="{parse.quote(file_name)}"'})
-            conditions.append({"Content-Disposition": f'attachment; filename="{parse.quote(file_name)}"'})
+            fields.update({"Content-Disposition": f"attachment; filename=\"{filename}\"; filename*=UTF-8''{filename}"})
+            conditions.append({"Content-Disposition": f"attachment; filename=\"{filename}\"; filename*=UTF-8''{filename}"})
 
 
         response = s3_client.generate_presigned_post(
