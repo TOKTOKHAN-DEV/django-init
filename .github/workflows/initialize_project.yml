@@ -1,19 +1,33 @@
 name: Initialize Project
+
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   initialize_project:
     runs-on: ubuntu-latest
     steps:
-      - name: Set Project Name
-        run: |
-          echo PROJECT_NAME=$(echo "${{ github.repository }}" | sed "s|${{ github.repository_owner }}\/||g" | sed "s|-django||g") >> $GITHUB_ENV
-
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Check if already initialized
+        id: check_init
+        run: |
+          if grep -q "#{PROJECT_NAME}" src/config/settings/base.py; then
+            echo "needs_init=true" >> $GITHUB_OUTPUT
+          else
+            echo "needs_init=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set Project Name
+        if: steps.check_init.outputs.needs_init == 'true'
+        run: |
+          echo PROJECT_NAME=$(echo "${{ github.repository }}" | sed "s|${{ github.repository_owner }}\/||g" | sed "s|-django||g") >> $GITHUB_ENV
+
       - name: Change
+        if: steps.check_init.outputs.needs_init == 'true'
         run: |
           sed -i "s|#{PROJECT_NAME}|${PROJECT_NAME}|g" .idea/django.iml
           sed -i "s|#{PROJECT_NAME}|${PROJECT_NAME}|g" .idea/workspace.temp.xml
@@ -21,11 +35,14 @@ jobs:
           sed -i "s|#{PROJECT_NAME}|${PROJECT_NAME}|g" src/config/settings/base.py
 
       - name: Commit
+        if: steps.check_init.outputs.needs_init == 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          git commit -m "initial commit"
+          git commit -m "initialize project"
 
       - name: Push
+        if: steps.check_init.outputs.needs_init == 'true'
         uses: ad-m/github-push-action@master
+
