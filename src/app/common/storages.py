@@ -6,8 +6,8 @@ from storages.backends.s3boto3 import S3Boto3Storage
 class DefaultMediaStorage(S3Boto3Storage):
     location = ""
 
-    def generate_presigned_post(self, object_key):
-        object_key = self.get_available_name(f"{self.location}/{object_key}")
+    def generate_presigned_post(self, name):
+        object_key = self.get_available_name(name)
 
         content_type, _ = mimetypes.guess_type(object_key)
         if content_type is None:
@@ -22,7 +22,7 @@ class DefaultMediaStorage(S3Boto3Storage):
 
         response = self.bucket.meta.client.generate_presigned_post(
             self.bucket.name,
-            object_key,
+            f"{self.location}/{object_key}",
             Fields=fields,
             Conditions=conditions,
             ExpiresIn=360,
