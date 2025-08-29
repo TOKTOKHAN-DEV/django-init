@@ -60,11 +60,16 @@ Resources:
         Id: !Sub '${ProjectName}-${ENV}-bucket-policy'
         Version: 2012-10-17
         Statement:
-          - Sid: PublicReadForGetBucketObjects
+          - Sid: PublicReadAccess
             Effect: Allow
             Principal: '*'
             Action: 's3:GetObject'
             Resource: !Sub 'arn:aws:s3:::${S3Bucket}/*'
+          - Sid: PrivateFilesNoPublic
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:GetObject'
+            Resource: !Sub 'arn:aws:s3:::${S3Bucket}/_media/private/*'
 
 Outputs:
   S3BucketHost:
