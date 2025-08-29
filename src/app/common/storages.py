@@ -30,6 +30,13 @@ class DefaultMediaStorage(S3Boto3Storage):
         return response
 
 
+class StaticStorage(S3Boto3Storage):
+    location = "_static"
+    default_acl = "public-read"
+    file_overwrite = True
+    querystring_auth = False
+
+
 class PublicMediaStorage(DefaultMediaStorage):
     location = "_media/public"
     default_acl = "public-read"
@@ -42,10 +49,3 @@ class PrivateMediaStorage(DefaultMediaStorage):
     default_acl = "private"
     file_overwrite = False
     querystring_auth = True
-
-
-class StaticStorage(S3Boto3Storage):
-    location = "_static"
-    default_acl = "public-read"
-    file_overwrite = True
-    querystring_auth = False
