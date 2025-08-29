@@ -70,6 +70,9 @@ Resources:
             Principal: '*'
             Action: 's3:GetObject'
             Resource: !Sub 'arn:aws:s3:::${S3Bucket}/_media/private/*'
+            Condition:
+              StringNotEquals:
+                s3:authType: "REST-QUERY-STRING"
 
 Outputs:
   S3BucketHost:
