@@ -33,9 +33,9 @@ Resources:
         Rules:
           - ObjectOwnership: ObjectWriter
       PublicAccessBlockConfiguration:
-        BlockPublicAcls: false
-        BlockPublicPolicy: false
-        IgnorePublicAcls: false
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
         RestrictPublicBuckets: false
 #      LifecycleConfiguration:
 #        Rules:
@@ -67,23 +67,6 @@ Resources:
             Resource:
               - !Sub 'arn:aws:s3:::${S3Bucket}/_static/*'
               - !Sub 'arn:aws:s3:::${S3Bucket}/_media/public/*'
-          - Sid: PrivateFilesRootAndRoleAccess
-            Effect: Allow
-            Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
-            Action: 's3:GetObject'
-            Resource:
-              - !Sub 'arn:aws:s3:::${S3Bucket}/_media/private/*'
-          - Sid: PrivateFilesPresignedAccess
-            Effect: Allow
-            Principal: '*'
-            Action: 's3:GetObject'
-            Resource:
-              - !Sub 'arn:aws:s3:::${S3Bucket}/_media/private/*'
-            Condition:
-              StringNotEquals:
-                s3:authType: "REST-QUERY-STRING"
-
 Outputs:
   S3BucketHost:
     Value: !Sub '${ProjectName}-${ENV}-bucket'
