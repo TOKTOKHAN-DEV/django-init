@@ -67,7 +67,14 @@ Resources:
             Resource:
               - !Sub 'arn:aws:s3:::${S3Bucket}/_static/*'
               - !Sub 'arn:aws:s3:::${S3Bucket}/_media/public/*'
-          - Sid: PrivateFilesNoPublic
+          - Sid: PrivateFilesRootAndRoleAccess
+            Effect: Deny
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+            Action: 's3:GetObject'
+            Resource:
+              - !Sub 'arn:aws:s3:::${S3Bucket}/_media/private/*'
+          - Sid: PrivateFilesPresignedAccess
             Effect: Deny
             Principal: '*'
             Action: 's3:GetObject'
