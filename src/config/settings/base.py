@@ -4,11 +4,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 from gunicorn.http import wsgi
 
-load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
+load_dotenv(BASE_DIR / '.env')
 
 PROJECT_NAME = "#{PROJECT_NAME}"
 SITE_NAME = "#{PROJECT_NAME}"
