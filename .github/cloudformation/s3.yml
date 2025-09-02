@@ -34,8 +34,8 @@ Resources:
           - ObjectOwnership: ObjectWriter
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: false
+        IgnorePublicAcls: true
+        BlockPublicPolicy: false
         RestrictPublicBuckets: false
 #      LifecycleConfiguration:
 #        Rules:
