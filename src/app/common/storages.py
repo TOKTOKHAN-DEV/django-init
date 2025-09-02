@@ -31,18 +31,21 @@ class DefaultMediaStorage(S3Boto3Storage):
 
 
 class StaticStorage(S3Boto3Storage):
+    endpoint_url = "https://s3.ap-northeast-2.amazonaws.com"
     location = "_static"
     file_overwrite = True
     querystring_auth = False
 
 
 class PublicMediaStorage(DefaultMediaStorage):
+    endpoint_url = "https://s3.ap-northeast-2.amazonaws.com"
     location = "_media/public"
     file_overwrite = False
     querystring_auth = False
 
 
 class PrivateMediaStorage(DefaultMediaStorage):
+    endpoint_url = "https://s3.ap-northeast-2.amazonaws.com"
     location = "_media/private"
     file_overwrite = False
     querystring_auth = True
