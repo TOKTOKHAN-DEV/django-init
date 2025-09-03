@@ -6,8 +6,9 @@ from storages.backends.s3boto3 import S3Boto3Storage
 class DefaultMediaStorage(S3Boto3Storage):
     location = ""
 
-    def generate_presigned_post(self, name):
+    def generate_presigned_post(self, name, is_download=False):
         object_key = self.get_available_name(name)
+        file_name = name.rsplit("/", 1)[-1]
 
         content_type, _ = mimetypes.guess_type(object_key)
         if content_type is None:
@@ -17,8 +18,16 @@ class DefaultMediaStorage(S3Boto3Storage):
         }
         conditions = [
             {"Content-Type": content_type},
-            ["content-length-range", 0, 20971520],
+            ["content-length-range", 0, 20 * 1024 * 1024],
         ]  # 20MB  # 지정한 값과 같아야만 허용
+
+        if is_download:
+            fields.update(
+                {"Content-Disposition": f"attachment; filename=\"{file_name}\"; filename*=UTF-8''{file_name}"}
+            )
+            conditions.append(
+                {"Content-Disposition": f"attachment; filename=\"{file_name}\"; filename*=UTF-8''{file_name}"}
+            )
 
         response = self.bucket.meta.client.generate_presigned_post(
             self.bucket.name,
