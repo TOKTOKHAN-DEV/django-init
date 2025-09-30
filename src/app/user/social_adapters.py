@@ -1,4 +1,5 @@
 import json
+from urllib import parse
 
 import jwt
 import requests
@@ -126,25 +127,50 @@ class GoogleAdapter(SocialAdapter):
     key = "google"
 
     def get_access_token(self):
-        pass
+        if self.access_token:
+            return self.access_token
 
-    def get_social_user_id(self):
         url = "https://oauth2.googleapis.com/token"
         data = {
             "grant_type": "authorization_code",
             "client_id": settings.GOOGLE_CLIENT_ID,
             "client_secret": settings.GOOGLE_CLIENT_SECRET,
-            "redirect_uri": f"{self.origin}{settings.SOCIAL_REDIRECT_PATH}",
-            "code": self.code,
+            "redirect_uri": f"http://localhost:3001{settings.SOCIAL_REDIRECT_PATH}",
+            "code": parse.unquote(self.code),
         }
-        response = requests.post(url=url, data=data)
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+
+        response = requests.post(url=url, headers=headers, data=data)
         if not response.ok:
             raise ValidationError("GOOGLE GET TOKEN API ERROR")
         data = response.json()
+        return data["id_token"]
 
-        decoded = jwt.decode(data["id_token"], "", verify=False)
+    def get_social_user_id(self):
+        id_token = self.get_access_token()
 
-        return decoded["sub"]
+        google_keys_url = "https://www.googleapis.com/oauth2/v3/certs"
+        key_payload = requests.get(google_keys_url).json()
+
+        kid = jwt.get_unverified_header(id_token)["kid"]
+
+        google_public_key = RSAAlgorithm.from_jwk(
+            json.dumps(next(filter(lambda x: x["kid"] == kid, key_payload["keys"])))
+        )
+
+        google_public_key_as_string = google_public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+
+        decoded = jwt.decode(
+            id_token,
+            key=google_public_key_as_string,
+            algorithms=["RS256"],
+            audience=settings.GOOGLE_CLIENT_ID,
+            issuer="https://accounts.google.com",
+        )
+        return decoded["sub"], decoded.get("email", "")
 
 
 class AppleAdapter(SocialAdapter):
