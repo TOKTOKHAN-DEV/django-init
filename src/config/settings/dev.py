@@ -5,7 +5,8 @@ from config.settings.base import *
 
 APP_ENV = "dev"
 DEBUG = True
-SECRET_KEY = get_secret(f"{PROJECT_NAME}/{APP_ENV}/django")["key"]
+SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/django")
+SECRET_KEY = SECRET["key"]
 
 API_URL = f"https://api.dev.{DOMAIN}"
 WEBSOCKET_URL = f"https://ws.dev.{DOMAIN}"
