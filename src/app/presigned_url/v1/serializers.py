@@ -1,16 +1,8 @@
-import random
-import string
-from urllib import parse
-
-import boto3
-from botocore.config import Config
-from botocore.exceptions import ClientError
 from django.apps import apps
-from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from app.presigned_url.utils import FIELD_CHOICES, FileTypeChoices
+from app.presigned_url.utils import FIELD_CHOICES
 
 
 class PresignedSerializer(serializers.Serializer):
