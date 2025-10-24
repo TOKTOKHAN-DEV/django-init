@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster
+FROM python:3.11-slim-bookworm
 
 RUN apt-get update && apt-get install gcc libcurl4-openssl-dev libssl-dev -y && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir --upgrade pip
