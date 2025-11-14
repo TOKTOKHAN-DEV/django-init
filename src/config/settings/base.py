@@ -1,9 +1,6 @@
-import datetime
-from pathlib import Path
-
 from dotenv import load_dotenv
 from gunicorn.http import wsgi
-
+from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
@@ -70,8 +67,8 @@ DJANGO_APPS = [
 INSTALLED_APPS = LOCAL_APPS + THIRD_PARTY_APPS + DJANGO_APPS
 
 MIDDLEWARE = [
-    "config.middleware.SwaggerLoginMiddleware",
     "django_hosts.middleware.HostsRequestMiddleware",
+    "config.middleware.SwaggerLoginMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",

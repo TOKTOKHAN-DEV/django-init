@@ -1,3 +1,4 @@
+import datetime
 import os
 
 import boto3
@@ -11,8 +12,8 @@ APP_ENV = "dev"
 DEBUG = True
 SECRET_KEY = "pj%2ze09(g)i^joilp-f8gvs)6ou_m036u3ejs^ky&9nse5k92"
 
-API_URL = f"https://api.dev.{DOMAIN}"
-WEBSOCKET_URL = f"https://ws.dev.{DOMAIN}"
+API_URL = f"https://api.{APP_ENV}.{DOMAIN}"
+WEBSOCKET_URL = f"https://ws.{APP_ENV}.{DOMAIN}"
 
 ALLOWED_HOSTS = ["*"]
 CORS_ALLOW_ALL_ORIGINS = True
@@ -26,7 +27,7 @@ DATABASES = {
 }
 
 # remote database
-# DATABASE_SECRET = get_secret(f'{PROJECT_NAME}/dev/db')
+# DATABASE_SECRET = get_secret(f'{PROJECT_NAME}/{APP_ENV}/db')
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
@@ -49,7 +50,7 @@ DATABASES = {
 
 # S3
 AWS_REGION = "ap-northeast-2"
-AWS_STORAGE_BUCKET_NAME = f"{PROJECT_NAME}-dev-bucket"
+AWS_STORAGE_BUCKET_NAME = f"{PROJECT_NAME}-{APP_ENV}-bucket"
 AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
 AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=864000"}
 AWS_S3_FILE_OVERWRITE = False
@@ -60,8 +61,8 @@ AWS_S3_SECURE_URLS = True
 # CELERY
 CELERY_BROKER_URL = f"sqs://"
 CELERY_BROKER_TRANSPORT_OPTIONS = {
-    "region": "ap-northeast-2",
-    "queue_name_prefix": f"{PROJECT_NAME}-dev-",
+    "region": AWS_REGION,
+    "queue_name_prefix": f"{PROJECT_NAME}-{APP_ENV}-",
 }
 
 
@@ -72,8 +73,9 @@ MEDIA_URL = f"/{MEDIAFILES_LOCATION}/"
 
 
 # STATIC
-STATIC_ROOT = BASE_DIR / "_static"
-STATIC_URL = "/_static/"
+STATICFILES_LOCATION = "_static"
+STATIC_ROOT = BASE_DIR / STATICFILES_LOCATION
+STATIC_URL = f"/{STATICFILES_LOCATION}/"
 
 
 # JWT
