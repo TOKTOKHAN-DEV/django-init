@@ -28,6 +28,7 @@ wsgi.Response = Response
 LOCAL_APPS = [
     "app.staticfile",
     "app.common.apps.CommonConfig",
+    'app.admin_user.apps.AdminUserConfig',
     "app.chat.apps.ChatConfig",
     "app.message.apps.MessageConfig",
     "app.device.apps.DeviceConfig",
@@ -141,7 +142,7 @@ USE_TZ = True
 APPEND_SLASH = False
 
 # AUTH_USER_MODEL
-AUTH_USER_MODEL = "user.User"
+AUTH_USER_MODEL = "admin_user.AdminUser"
 
 # APPLICATION
 WSGI_APPLICATION = "config.wsgi.application"

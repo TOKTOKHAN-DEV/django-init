@@ -69,7 +69,7 @@ Resources:
       Engine: postgres
       PubliclyAccessible: true
       DBInstanceClass: db.t4g.small
-      EngineVersion: 16.4
+      EngineVersion: 16.11
       DBParameterGroupName: default.postgres16
       Port: 5432
       DBName: !Ref ProjectName
@@ -117,7 +117,7 @@ Resources:
       DBSubnetGroupName: !Ref RDSSubnetGroup
       DBClusterIdentifier: !Sub '${ProjectName}-${ENV}-db-cluster'
       Engine: aurora-postgresql
-      EngineVersion: 16.4
+      EngineVersion: 16.11
       DBClusterParameterGroupName: default.aurora-postgresql16
       Port: 5432
       DatabaseName: !Ref ProjectName
