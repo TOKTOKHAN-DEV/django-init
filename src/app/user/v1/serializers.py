@@ -17,7 +17,7 @@ from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from app.email_log.models import EmailLog
-from app.user.models import Device, SocialKindChoices, User
+from app.user.models import UserSocialKindChoices, User
 from app.user.social_adapters import SocialAdapter
 from app.user.validators import validate_password
 from app.verifier.models import EmailVerifier, PhoneVerifier
@@ -27,73 +27,72 @@ from config.exception_handler import SocialUserNotFoundError
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "email", "phone"]
+        fields = ["id", "username"]
 
 
-class DeviceSerializer(serializers.ModelSerializer):
+
+
+class UserLoginSerializer(serializers.ModelSerializer):
+    access_token = serializers.CharField(label="액세스토큰", read_only=True)
+    refresh_token = serializers.CharField(label="리프레시토큰", read_only=True)
+
     class Meta:
-        model = Device
-        fields = ["uid", "token"]
+        model = User
+        fields = [
+            "username",
+            "password",
+            "access_token",
+            "refresh_token",
+        ]
         extra_kwargs = {
-            "uid": {"validators": None},
+            "username": {"write_only": True, "validators": []},
+            "password": {"write_only": True},
         }
 
-
-class UserLoginSerializer(serializers.Serializer):
-    username = serializers.EmailField(write_only=True)
-    password = serializers.CharField(write_only=True)
-    device = DeviceSerializer(required=False, write_only=True, allow_null=True, help_text="모바일앱에서만 사용합니다.")
-    access_token = serializers.CharField(read_only=True)
-    refresh_token = serializers.CharField(read_only=True)
-
     def validate(self, attrs):
-        user = authenticate(
-            request=self.context["request"],
-            username=attrs["username"],
-            password=attrs["password"],
-        )
-        refresh = user.get_token()
-
-        data = dict()
-        data["refresh_token"] = str(refresh)
-        data["access_token"] = str(refresh.access_token)
-        if attrs.get("device"):
-            user.connect_device(**attrs["device"])
-
-        return data
+        try:
+            attrs["user"] = User.objects.get(username=attrs["username"])
+        except User.DoesNotExist:
+            raise ValidationError(["인증정보가 일치하지 않습니다."])
+        if not attrs["user"].check_password(attrs["password"]):
+            raise ValidationError(["인증정보가 일치하지 않습니다."])
+        return attrs
 
     def create(self, validated_data):
-        return validated_data
+        return validated_data["user"]
 
 
-class UserLogoutSerializer(serializers.Serializer):
-    uid = serializers.CharField(required=False, help_text="기기의 고유id")
-
-    def create(self, validated_data):
-        user = self.context["request"].user
-        if validated_data.get("uid"):
-            user.disconnect_device(validated_data["uid"])
-
-        return {}
-
-
-class UserSocialLoginSerializer(serializers.Serializer):
+class UserSocialLoginSerializer(serializers.ModelSerializer):
     code = serializers.CharField(write_only=True, required=False)
     social_access_token = serializers.CharField(write_only=True, required=False)
-    state = serializers.ChoiceField(write_only=True, choices=SocialKindChoices.choices)
+    state = serializers.ChoiceField(write_only=True, choices=UserSocialKindChoices.choices)
 
-    access_token = serializers.CharField(read_only=True)
-    refresh_token = serializers.CharField(read_only=True)
+    access_token = serializers.CharField(label="액세스토큰", read_only=True)
+    refresh_token = serializers.CharField(label="리프레시토큰", read_only=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "social_kind",
+            "code",
+            "social_access_token",
+            "access_token",
+            "refresh_token",
+        ]
 
     def validate(self, attrs):
-        social_user_id, payload = self.get_social_user_id(attrs["code"], attrs["social_access_token"], attrs["state"])
-        social_email = f"{social_user_id}@{attrs['state']}.social"
+        social_user_id, payload = self.get_social_user_id(
+            attrs["code"],
+            attrs["social_access_token"],
+            attrs["social_kind"],
+        )
+        username = f"{social_user_id}@{attrs['social_kind']}"
         try:
-            attrs["user"] = User.objects.get(email=social_email)
+            attrs["user"] = User.objects.get(username=username)
         except User.DoesNotExist:
             register_token = jwt.encode(
                 payload={
-                    "email": social_email,
+                    "username": username,
                     "expired_at": timezone.now().timestamp() + 10 * 60,
                 },
                 key=settings.SECRET_KEY,
@@ -102,76 +101,49 @@ class UserSocialLoginSerializer(serializers.Serializer):
 
         return attrs
 
-    @transaction.atomic
-    def create(self, validated_data):
-        refresh = validated_data["user"].get_token()
-        validated_data["access_token"] = refresh.access_token
-        validated_data["refresh_token"] = refresh
-        return validated_data
-
-    def get_social_user_id(self, code, access_token, state):
+    def get_social_user_id(self, code, access_token, social_kind):
         for adapter_class in SocialAdapter.__subclasses__():
-            if adapter_class.key == state:
-                return adapter_class(code, access_token, self.context["request"].META["HTTP_ORIGIN"]).get_social_user_id()
-        raise ModuleNotFoundError(f"{state.capitalize()}Adapter class")
+            if adapter_class.key == social_kind:
+                return adapter_class(
+                    code,
+                    access_token,
+                    self.context["request"].META["HTTP_ORIGIN"],
+                ).get_social_user_id()
+        raise ModuleNotFoundError(f"{social_kind.capitalize()}Adapter class")
+
+    def create(self, validated_data):
+        return validated_data["user"]
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     register_token = serializers.CharField(write_only=True, required=False, help_text="소셜 로그인 토큰")
-    email = serializers.CharField(write_only=True, required=False)
-    email_token = serializers.CharField(write_only=True, required=False, help_text="email verifier를 통해 얻은 token값입니다.")
-    phone = serializers.CharField(write_only=True, required=False)
-    phone_token = serializers.CharField(write_only=True, required=False, help_text="phone verifier를 통해 얻은 token값입니다.")
     password = serializers.CharField(write_only=True, required=False)
     password_confirm = serializers.CharField(write_only=True, required=False)
 
-    access_token = serializers.CharField(read_only=True)
-    refresh_token = serializers.CharField(read_only=True)
+    access_token = serializers.CharField(label="액세스토큰", read_only=True)
+    refresh_token = serializers.CharField(label="리프레시토큰", read_only=True)
 
     class Meta:
         model = User
         fields = [
             "register_token",
-            "email",
-            "email_token",
-            "phone",
-            "phone_token",
             "password",
             "password_confirm",
             "access_token",
             "refresh_token",
         ]
 
-    def get_fields(self):
-        fields = super().get_fields()
-
-        return fields
-
     def validate(self, attrs):
-        register_token = attrs.pop("register_token", None)
-        if register_token:
-            try:
-                payload = jwt.decode(register_token, key=settings.SECRET_KEY, algorithms=settings.SIMPLE_JWT_ALGORITHM)
-            except ExpiredSignatureError:
-                raise ValidationError({"register_token": ["회원가입 토큰이 만료됐습니다."]})
-            attrs["email"] = payload["email"]
-
-            return attrs
-
+        if User.objects.filter(username=attrs["username"]).exists():
+            raise ValidationError({"username": ["이미 사용중인 유저네임입니다."]})
         return attrs
 
-    @transaction.atomic
     def create(self, validated_data):
-        user = User.objects.create_user(
-            **validated_data,
-        )
-
-        refresh = RefreshToken.for_user(user)
-
-        return {
-            "access_token": refresh.access_token,
-            "refresh_token": refresh,
-        }
+        password = validated_data.pop("password", None)
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
 
 
 class UserRefreshSerializer(serializers.Serializer):

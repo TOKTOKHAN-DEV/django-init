@@ -26,7 +26,7 @@ class AdminUserAdminForm(forms.ModelForm):
         instance = super().save(commit=False)
         password = self.cleaned_data.get("password")
         if password:
-            instance.password = make_password(password)
+            instance.set_password(password)
         if commit:
             instance.save()
         return instance
