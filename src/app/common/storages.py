@@ -1,10 +1,14 @@
 import mimetypes
+from urllib.parse import unquote
 
 from storages.backends.s3boto3 import S3Boto3Storage
 
 
 class DefaultMediaStorage(S3Boto3Storage):
     location = ""
+
+    def url(self, name, format=None, **kwargs):
+        return unquote(super().url(name, format, **kwargs))
 
     def generate_presigned_post(self, name, is_download=False):
         object_key = self.get_available_name(name)
