@@ -25,8 +25,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ["id", "username"]
 
 
-
-
 class UserLoginSerializer(serializers.ModelSerializer):
     access_token = serializers.CharField(label="액세스토큰", read_only=True)
     refresh_token = serializers.CharField(label="리프레시토큰", read_only=True)
