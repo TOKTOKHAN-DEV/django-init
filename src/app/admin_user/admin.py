@@ -16,6 +16,7 @@ class AdminUserAdminForm(forms.ModelForm):
     class Meta:
         model = AdminUser
         fields = "__all__"
+        exclude = ["password"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -23,8 +24,8 @@ class AdminUserAdminForm(forms.ModelForm):
             self.fields["password"].required = True
 
     def save(self, commit=True):
+        password = self.cleaned_data.pop("password", None)
         instance = super().save(commit=False)
-        password = self.cleaned_data.get("password")
         if password:
             instance.set_password(password)
         if commit:
