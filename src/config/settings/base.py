@@ -263,6 +263,7 @@ ALARMTALK_CLIENT_SECRET = "**"
 
 
 # CKEDITOR
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 CKEDITOR_5_CONFIGS = {
     "default": {
         "toolbar": {
