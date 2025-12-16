@@ -48,17 +48,10 @@
 
 ## Install Virtual Environment & Dependency
 ```
-# __PROJECT_ROOT__/backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+# __PROJECT_ROOT__/src
+uv sync
 ```
 
-
-## Create Dummy Data
-```
-python manage.py dummy [app_name.model_name] -n 10
-```
 
 
 ## Run Server
