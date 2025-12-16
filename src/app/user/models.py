@@ -1,8 +1,9 @@
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
-from app.common.models import BaseModel
+from app.common.models import BaseModelMixin
 
 
 class UserSocialKindChoices(models.TextChoices):
@@ -13,18 +14,18 @@ class UserSocialKindChoices(models.TextChoices):
     APPLE = "apple", "애플"
 
 
-class User(BaseModel):
+class User(BaseModelMixin, AbstractBaseUser):
     username = models.CharField(verbose_name="유저네임", max_length=100, unique=True)
     password = models.CharField(verbose_name="비밀번호", max_length=128)
     social_kind = models.CharField(
         verbose_name="소셜",
         max_length=10,
-        choices=UserSocialKindChoices.choices,
+        choices=UserSocialKindChoices,
         null=True,
         blank=True,
         editable=False,
     )
-
+    last_login = None
     is_authenticated = True
     is_active = True
     USERNAME_FIELD = "username"
