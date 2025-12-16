@@ -45,9 +45,3 @@ class User(BaseModelMixin, AbstractBaseUser):
     @property
     def refresh_token(self):
         return RefreshToken.for_user(self)
-
-    def set_password(self, password):
-        self.password = make_password(password)
-
-    def check_password(self, password):
-        return check_password(password, self.password)
