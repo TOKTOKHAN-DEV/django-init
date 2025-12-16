@@ -27,6 +27,7 @@ class User(BaseModel):
 
     is_authenticated = True
     is_active = True
+    USERNAME_FIELD = "username"
 
     class Meta:
         db_table = "user"

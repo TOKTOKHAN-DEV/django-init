@@ -2,7 +2,6 @@ import json
 import subprocess
 
 from django.core.management import BaseCommand, CommandError
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from app.user.models import User
 
@@ -24,8 +23,7 @@ class Command(BaseCommand):
                 user = User.objects.get(**{User.USERNAME_FIELD: username})
         except User.DoesNotExist as e:
             raise CommandError(e)
-        refresh = RefreshToken.for_user(user)
-        response = {"accessToken": str(refresh.access_token), "refreshToken": str(refresh)}
+        response = {"accessToken": str(user.access_token), "refreshToken": user.refresh_token}
         print("\033[32m" + json.dumps(response) + "\033[0m")
         self.set_clipboard_text(response["accessToken"])
 
