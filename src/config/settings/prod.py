@@ -1,3 +1,4 @@
+import datetime
 import os
 
 import boto3
@@ -74,7 +75,6 @@ STATIC_URL = f"/{STATICFILES_LOCATION}/"
 MEDIAFILES_LOCATION = "_media"
 DEFAULT_FILE_STORAGE = "app.common.storages.PublicMediaStorage"
 MEDIA_URL = f"/{MEDIAFILES_LOCATION}/"
-
 
 
 # JWT

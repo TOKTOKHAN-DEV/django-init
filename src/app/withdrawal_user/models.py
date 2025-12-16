@@ -1,8 +1,8 @@
 from app.common.models import BaseModel
-from app.user.models import BaseUser, User
+from app.user.models import User
 
 
-class WithdrawalUser(BaseUser):
+class WithdrawalUser(User):
     is_active = None
     is_staff = None
     is_superuser = None

@@ -13,7 +13,7 @@ from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from app.email_log.models import EmailLog
-from app.user.models import UserSocialKindChoices, User
+from app.user.models import User, UserSocialKindChoices
 from app.user.social_adapters import SocialAdapter
 from app.user.validators import validate_password
 from config.exception_handler import SocialUserNotFoundError

@@ -1,14 +1,12 @@
-import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
 from gunicorn.http import wsgi
 
-
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-load_dotenv(BASE_DIR / '.env')
+load_dotenv(BASE_DIR / ".env")
 
 PROJECT_NAME = "#{PROJECT_NAME}"
 SITE_NAME = "#{PROJECT_NAME}"
@@ -28,7 +26,7 @@ wsgi.Response = Response
 LOCAL_APPS = [
     "app.staticfile",
     "app.common.apps.CommonConfig",
-    'app.admin_user.apps.AdminUserConfig',
+    "app.admin_user.apps.AdminUserConfig",
     "app.chat.apps.ChatConfig",
     "app.message.apps.MessageConfig",
     "app.device.apps.DeviceConfig",
@@ -281,11 +279,11 @@ CELERY_TIMEZONE = "Asia/Seoul"
 CELERYD_SOFT_TIME_LIMIT = 300
 CELERYD_TIME_LIMIT = CELERYD_SOFT_TIME_LIMIT + 60
 CELERY_TASK_ACKS_LATE = True
-CELERY_RESULT_BACKEND = 'django-db'
+CELERY_RESULT_BACKEND = "django-db"
 CELERY_WORKER_MAX_TASKS_PER_CHILD = 500
 
 # SOCIAL
-SOCIAL_REDIRECT_PATH = '/social/callback'
+SOCIAL_REDIRECT_PATH = "/social/callback"
 
 # KAKAO
 KAKAO_CLIENT_ID = "**"
