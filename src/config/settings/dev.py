@@ -35,30 +35,32 @@ DATABASES = {
 CELERY_BROKER_URL = f"sqs://"
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     "region": "ap-northeast-2",
-    "queue_name_prefix": f"{PROJECT_NAME}-dev-",
+    "queue_name_prefix": f"{PROJECT_NAME}-{APP_ENV}-",
 }
 
 
 # S3
-AWS_REGION = "ap-northeast-2"
-AWS_STORAGE_BUCKET_NAME = f"{PROJECT_NAME}-dev-bucket"
-AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+AWS_STORAGE_BUCKET_NAME = f"{PROJECT_NAME}-{APP_ENV}-bucket"
 AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=864000"}
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = "public-read"
-AWS_S3_SECURE_URLS = True
 
 
-# MEDIA
-MEDIAFILES_LOCATION = "_media"
-DEFAULT_FILE_STORAGE = "config.storages.MediaStorage"
-MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{MEDIAFILES_LOCATION}/"
-
+# STORAGES
+STORAGES = {
+    "default": {
+        "BACKEND": "app.common.storages.PublicMediaStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "app.common.storages.StaticStorage",
+    },
+}
 
 # STATIC
 STATICFILES_LOCATION = "_static"
-STATICFILES_STORAGE = "config.storages.StaticStorage"
-STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{STATICFILES_LOCATION}/"
+STATIC_URL = f"/{STATICFILES_LOCATION}/"
+
+# MEDIA
+MEDIAFILES_LOCATION = "_media"
+MEDIA_URL = f"/{MEDIAFILES_LOCATION}/"
 
 
 # JWT

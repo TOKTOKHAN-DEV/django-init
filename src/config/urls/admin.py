@@ -10,7 +10,7 @@ from django.utils.safestring import mark_safe
 # admin.site.index_title = "메인페이지의 '사이트 관리' 제목 변경"
 
 urlpatterns = [
-    path("ckeditor/", include("ckeditor_uploader.urls")),
+    path("ckeditor5/", include("django_ckeditor_5.urls")),
     *static(settings.STATIC_URL, document_root=settings.STATIC_ROOT),
     *static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT),
     path("", admin.site.urls),

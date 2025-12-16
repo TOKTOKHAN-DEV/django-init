@@ -50,10 +50,8 @@ THIRD_PARTY_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "storages",
-    "ckeditor",
-    "ckeditor_uploader",
-    "safedelete",
     "django_celery_results",
+    "ordered_model",
 ]
 
 DJANGO_APPS = [
@@ -265,10 +263,17 @@ ALARMTALK_CLIENT_SECRET = "**"
 
 
 # CKEDITOR
-CKEDITOR_UPLOAD_PATH = "ckeditor/"
-CKEDITOR_CONFIGS = {
+CKEDITOR_5_CONFIGS = {
     "default": {
-        "width": "100%",
+        "toolbar": {
+            "items": [
+                "heading",
+                "|",
+                "bold",
+                "link",
+                "imageUpload",
+            ],
+        }
     },
 }
 

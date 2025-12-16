@@ -2,16 +2,13 @@ from drf_spectacular.utils import extend_schema, extend_schema_view, inline_seri
 from rest_framework import mixins, serializers, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 from app.user.models import User
 from app.user.v1.serializers import (
     UserLoginSerializer,
-    UserLogoutSerializer,
     UserPasswordResetConfirmSerializer,
     UserPasswordResetSerializer,
     UserRefreshSerializer,
@@ -92,13 +89,6 @@ class UserViewSet(
         3. 소셜 회원가입
             - `isRegister: true`인 경우 `access`, `refresh`를 저장 후 로그인 처리를 합니다.
             - `isRegister: false`인 경우 `socialToken`을 사용해 회원가입을 진행합니다.
-        """
-        return self._create(request, *args, **kwargs)
-
-    @action(methods=["POST"], detail=False, serializer_class=UserLogoutSerializer)
-    def logout(self, request, *args, **kwargs):
-        """
-        모바일앱에서만 사용하며, 유저와 디바이스 토큰의 연결을 끊어주기위해 사용합니다.
         """
         return self._create(request, *args, **kwargs)
 

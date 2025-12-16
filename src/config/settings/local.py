@@ -2,8 +2,6 @@ import datetime
 import os
 
 import boto3
-import sentry_sdk
-from sentry_sdk.integrations.django import DjangoIntegration
 
 from app.common.secrets import get_secret
 from config.settings.base import *
@@ -27,7 +25,7 @@ DATABASES = {
 }
 
 # remote database
-# DATABASE_SECRET = get_secret(f'{PROJECT_NAME}/dev/db')
+# DATABASE_SECRET = get_secret(f'{PROJECT_NAME}/{APP_ENV}/db')
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
@@ -48,22 +46,17 @@ DATABASES = {
 # }
 
 
-# S3
-AWS_REGION = "ap-northeast-2"
-AWS_STORAGE_BUCKET_NAME = f"{PROJECT_NAME}-dev-bucket"
-AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
-AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=864000"}
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = "public-read"
-AWS_S3_SECURE_URLS = True
-
-
 # CELERY
 CELERY_BROKER_URL = f"sqs://"
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     "region": "ap-northeast-2",
-    "queue_name_prefix": f"{PROJECT_NAME}-dev-",
+    "queue_name_prefix": f"{PROJECT_NAME}-{APP_ENV}-",
 }
+
+
+# S3
+AWS_STORAGE_BUCKET_NAME = f"{PROJECT_NAME}-{APP_ENV}-bucket"
+AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=864000"}
 
 
 # MEDIA

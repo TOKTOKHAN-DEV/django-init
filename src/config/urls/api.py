@@ -16,6 +16,7 @@ api_urlpatterns = [
 
 urlpatterns = [
     *api_urlpatterns,
+    path("ckeditor5/", include("django_ckeditor_5.urls")),
     path("openapi.json/", SpectacularJSONAPIView.as_view(patterns=api_urlpatterns), name="schema"),
     path("swagger/", SpectacularSwaggerView.as_view(), name="swagger-ui"),
     path("redoc/", SpectacularRedocView.as_view(), name="redoc"),

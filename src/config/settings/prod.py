@@ -56,24 +56,31 @@ DATABASES = {
 CELERY_BROKER_URL = f"sqs://"
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     "region": "ap-northeast-2",
-    "queue_name_prefix": f"{PROJECT_NAME}-prod-",
+    "queue_name_prefix": f"{PROJECT_NAME}-{APP_ENV}-",
 }
 
 
 # S3
-AWS_STORAGE_BUCKET_NAME = f"{PROJECT_NAME}-prod-bucket"
+AWS_STORAGE_BUCKET_NAME = f"{PROJECT_NAME}-{APP_ENV}-bucket"
 AWS_S3_OBJECT_PARAMETERS = {"CacheControl": "max-age=864000"}
 
 
+# STORAGES
+STORAGES = {
+    "default": {
+        "BACKEND": "app.common.storages.PublicMediaStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "app.common.storages.StaticStorage",
+    },
+}
+
 # STATIC
 STATICFILES_LOCATION = "_static"
-STATICFILES_STORAGE = "app.common.storages.StaticStorage"
 STATIC_URL = f"/{STATICFILES_LOCATION}/"
-
 
 # MEDIA
 MEDIAFILES_LOCATION = "_media"
-DEFAULT_FILE_STORAGE = "app.common.storages.PublicMediaStorage"
 MEDIA_URL = f"/{MEDIAFILES_LOCATION}/"
 
 
