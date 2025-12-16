@@ -1,5 +1,4 @@
 from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
