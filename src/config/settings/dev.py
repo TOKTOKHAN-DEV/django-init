@@ -18,11 +18,11 @@ CSRF_TRUSTED_ORIGINS = [f"https://admin.dev.{DOMAIN}"]
 CORS_ALLOW_ALL_ORIGINS = True
 
 
-DATABASE_SECRET = get_secret(f"{PROJECT_NAME}/{APP_ENV}/db")
+DATABASE_SECRET = get_secret(f"{PROJECT_NAME}/db")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": DATABASE_SECRET["dbname"],
+        "NAME": f'{DATABASE_SECRET["dbname"]}-dev',
         "USER": DATABASE_SECRET["username"],
         "PASSWORD": DATABASE_SECRET["password"],
         "HOST": DATABASE_SECRET["host"],
