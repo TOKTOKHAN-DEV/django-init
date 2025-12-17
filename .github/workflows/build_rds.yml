@@ -2,13 +2,11 @@ name: Build RDS
 on:
   workflow_dispatch:
     inputs:
-      env:
-        description: Environment
-        type: choice
-        required: true
-        options:
-          - prod
-          - dev
+      private:
+        description: Private Subnet
+        type: boolean
+        default: false
+        required: false
 
 jobs:
   set_environment:
@@ -39,8 +37,8 @@ jobs:
       - name: Build RDS
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: ${{ needs.set_environment.outputs.project_name }}-${{ inputs.env }}-rds
+          name: ${{ needs.set_environment.outputs.project_name }}-rds
           template: .github/cloudformation/rds.yml
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
-            ENV=${{ inputs.env }}
+            Private=${{ inputs.private }}

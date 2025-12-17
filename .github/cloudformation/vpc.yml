@@ -6,14 +6,14 @@ Description:
 Parameters:
   ProjectName:
     Type: String
-  ENV:
+  Private:
     Type: String
     AllowedValues:
-      - dev
-      - prod
+      - true
+      - false
 
 Conditions:
-  IsProd: !Equals [!Ref ENV, 'prod']
+  IsPrivate: !Equals [!Ref Private, 'true']
 
 Resources:
   # VPC
@@ -25,7 +25,7 @@ Resources:
       EnableDnsHostnames: 'true'
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-vpc'
+          Value: !Sub '${ProjectName}-vpc'
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -35,7 +35,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-public-subnet-1'
+          Value: !Sub '${ProjectName}-public-subnet-1'
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -45,7 +45,7 @@ Resources:
       MapPublicIpOnLaunch: true
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-public-subnet-2'
+          Value: !Sub '${ProjectName}-public-subnet-2'
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -54,7 +54,7 @@ Resources:
       AvailabilityZone: !Select [ 0, Fn::GetAZs: !Ref 'AWS::Region' ]
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-private-subnet-1'
+          Value: !Sub '${ProjectName}-private-subnet-1'
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
@@ -63,13 +63,13 @@ Resources:
       AvailabilityZone: !Select [ 1, Fn::GetAZs: !Ref 'AWS::Region' ]
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-private-subnet-2'
+          Value: !Sub '${ProjectName}-private-subnet-2'
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-igw'
+          Value: !Sub '${ProjectName}-igw'
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -81,7 +81,7 @@ Resources:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-public-routetable'
+          Value: !Sub '${ProjectName}-public-routetable'
   PublicRoute:
     Type: AWS::EC2::Route
     DependsOn: AttachGateway
@@ -101,31 +101,31 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
   EIP:
     Type: AWS::EC2::EIP
-    Condition: IsProd
+    Condition: IsPrivate
     Properties:
       Domain: vpc
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-eip'
+          Value: !Sub '${ProjectName}-eip'
   NatGateway:
     Type: AWS::EC2::NatGateway
-    Condition: IsProd
+    Condition: IsPrivate
     Properties:
       AllocationId: !GetAtt EIP.AllocationId
       SubnetId: !Ref PublicSubnet2
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-ngw'
+          Value: !Sub '${ProjectName}-ngw'
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-private-routetable'
+          Value: !Sub '${ProjectName}-private-routetable'
   PrivateRoute:
     Type: AWS::EC2::Route
-    Condition: IsProd
+    Condition: IsPrivate
     DependsOn: NatGateway
     Properties:
       RouteTableId: !Ref PrivateRouteTable
@@ -143,9 +143,9 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
   BastionHostSecurityGroup:
     Type: AWS::EC2::SecurityGroup
-    Condition: IsProd
+    Condition: IsPrivate
     Properties:
-      GroupDescription: !Sub '${ProjectName}-${ENV}-bastion-sg'
+      GroupDescription: !Sub '${ProjectName}-bastion-sg'
       VpcId: !Ref VPC
       SecurityGroupEgress:
         - IpProtocol: -1
@@ -154,7 +154,7 @@ Resources:
           CidrIp: 0.0.0.0/0
   InstanceRole:
     Type: AWS::IAM::Role
-    Condition: IsProd
+    Condition: IsPrivate
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -167,13 +167,13 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
-    Condition: IsProd
+    Condition: IsPrivate
     Properties:
       Roles:
         - !Ref InstanceRole
   BastionHost:
     Type: AWS::EC2::Instance
-    Condition: IsProd
+    Condition: IsPrivate
     Properties:
       InstanceType: t3.micro
       ImageId: ami-0ac9b8202b45eeb08
@@ -191,28 +191,28 @@ Resources:
           sudo shutdown -h now
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-${ENV}-bastion-host'
+          Value: !Sub '${ProjectName}-bastion-host'
 
 
 Outputs:
   VPC:
     Value: !Ref VPC
     Export:
-      Name: !Sub '${ProjectName}-${ENV}-VPC'
+      Name: !Sub '${ProjectName}-VPC'
   PublicSubnet1:
     Value: !Ref PublicSubnet1
     Export:
-      Name: !Sub '${ProjectName}-${ENV}-PublicSubnet1'
+      Name: !Sub '${ProjectName}-PublicSubnet1'
   PublicSubnet2:
     Value: !Ref PublicSubnet2
     Export:
-      Name: !Sub '${ProjectName}-${ENV}-PublicSubnet2'
+      Name: !Sub '${ProjectName}-PublicSubnet2'
   PrivateSubnet1:
     Value: !Ref PrivateSubnet1
     Export:
-      Name: !Sub '${ProjectName}-${ENV}-PrivateSubnet1'
+      Name: !Sub '${ProjectName}-PrivateSubnet1'
   PrivateSubnet2:
     Value: !Ref PrivateSubnet2
     Export:
-      Name: !Sub '${ProjectName}-${ENV}-PrivateSubnet2'
+      Name: !Sub '${ProjectName}-PrivateSubnet2'
 

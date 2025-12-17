@@ -11,6 +11,11 @@ Parameters:
     AllowedValues:
       - dev
       - prod
+  Private:
+    Type: String
+    AllowedValues:
+      - true
+      - false
   Celery:
     Type: String
     AllowedValues:
@@ -18,7 +23,7 @@ Parameters:
       - false
 
 Conditions:
-  IsProd: !Equals [!Ref ENV, 'prod']
+  IsPrivate: !Equals [!Ref Private, 'true']
   IsCelery: !Equals [!Ref Celery, 'true']
 
 Resources:
@@ -44,7 +49,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: !Sub '${ProjectName}-${ENV}-ecs-cluster-sg'
-      VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
+      VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-VPC'}
   SecurityGroupInboundSSH:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -107,8 +112,8 @@ Resources:
       IpAddressType: ipv4
       Scheme: internet-facing
       Subnets:
-        - {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1'}
-        - {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2'}
+        - {'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet1'}
+        - {'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet2'}
       SecurityGroups: [!Ref SecurityGroup]
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
@@ -127,7 +132,7 @@ Resources:
       Protocol: HTTP
       TargetType: ip
       UnhealthyThresholdCount: 2
-      VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-VPC'}
+      VpcId: {'Fn::ImportValue': !Sub '${ProjectName}-VPC'}
       TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: 5
@@ -264,8 +269,8 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           Subnets:
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
+            - !If [ IsPrivate, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet1' } ]
+            - !If [ IsPrivate, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet2' } ]
           SecurityGroups: [!Ref SecurityGroup]
       LoadBalancers:
         - ContainerName: web
@@ -340,8 +345,8 @@ Resources:
         AwsvpcConfiguration:
           AssignPublicIp: ENABLED
           Subnets:
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
-            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
+            - !If [ IsPrivate, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet1' } ]
+            - !If [ IsPrivate, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet2' } ]
           SecurityGroups: [ !Ref SecurityGroup ]
   ServiceScalingTargetCelery:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
@@ -411,8 +416,8 @@ Resources:
 #        AwsvpcConfiguration:
 #          AssignPublicIp: ENABLED
 #          Subnets:
-#            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet1' } ]
-#            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-${ENV}-PublicSubnet2' } ]
+#            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet1' } ]
+#            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet2' } ]
 #          SecurityGroups: [ !Ref SecurityGroup ]
 
 

@@ -9,6 +9,11 @@ on:
         options:
           - prod
           - dev
+      private:
+        description: Private Subnet
+        type: boolean
+        default: false
+        required: false
       websocket:
         description: Websocket
         type: boolean
@@ -104,11 +109,11 @@ jobs:
       - name: Build VPC
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: ${{ needs.set_environment.outputs.project_name }}-${{ inputs.env }}-vpc
+          name: ${{ needs.set_environment.outputs.project_name }}-vpc
           template: .github/cloudformation/vpc.yml
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
-            ENV=${{ inputs.env }}
+            Private=${{ inputs.private }}
 
   build_ecs:
     runs-on: ubuntu-latest
@@ -133,6 +138,7 @@ jobs:
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
             ENV=${{ inputs.env }},
+            Private=${{ inputs.private }},
             Celery=${{ inputs.celery }}
 
   build_rds:
@@ -152,11 +158,11 @@ jobs:
       - name: Build RDS
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
-          name: ${{ needs.set_environment.outputs.project_name }}-${{ inputs.env }}-rds
+          name: ${{ needs.set_environment.outputs.project_name }}-rds
           template: .github/cloudformation/rds.yml
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
-            ENV=${{ inputs.env }}
+            Private=${{ inputs.private }}
 
   build_s3:
     runs-on: ubuntu-latest
