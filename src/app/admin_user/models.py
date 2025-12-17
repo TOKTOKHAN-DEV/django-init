@@ -7,7 +7,7 @@ from app.common.models import BaseModel
 class AdminUserManager(BaseUserManager):
     def create_superuser(self, username, password, **extra_fields):
         username = self.model.normalize_username(username)
-        user = self.model(username=username, **extra_fields)
+        user = self.model(username=username, is_superuser=True, **extra_fields)
         user.set_password(password)
         user.save()
         return user
@@ -19,6 +19,7 @@ class AdminUser(AbstractBaseUser):
     name = models.CharField(verbose_name="이름", max_length=20, null=True, blank=True)
     email = models.EmailField(verbose_name="이메일", null=True, blank=True)
     phone = models.CharField(verbose_name="휴대폰", max_length=11, null=True, blank=True)
+    is_superuser = models.BooleanField(verbose_name="최고관리자")
 
     last_login = None
     is_staff = True

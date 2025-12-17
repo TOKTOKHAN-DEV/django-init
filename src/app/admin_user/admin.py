@@ -36,4 +36,26 @@ class AdminUserAdminForm(forms.ModelForm):
 @admin.register(AdminUser)
 class AdminUserAdmin(admin.ModelAdmin):
     form = AdminUserAdminForm
-    list_display = ["id", "username", "name", "email", "phone"]
+    list_display = ["id", "username", "name", "email", "phone", "is_superuser"]
+    search_fields = ["username", "name", "email", "phone"]
+    search_help_text = "유저네임, 이름, 이메일, 휴대폰번호로 검색하세요."
+    fields = [
+        "username",
+        "password",
+        "name",
+        "email",
+        "phone",
+        "is_superuser",
+    ]
+
+    def has_add_permission(self, request):
+        return request.user.is_superuser
+
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser and request.user != obj
