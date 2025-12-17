@@ -23,7 +23,7 @@ class Command(BaseCommand):
                 user = User.objects.get(**{User.USERNAME_FIELD: username})
         except User.DoesNotExist as e:
             raise CommandError(e)
-        response = {"accessToken": str(user.access_token), "refreshToken": user.refresh_token}
+        response = {"accessToken": str(user.access_token), "refreshToken": str(user.refresh_token)}
         print("\033[32m" + json.dumps(response) + "\033[0m")
         self.set_clipboard_text(response["accessToken"])
 

@@ -1116,6 +1116,71 @@ wheels = [
 ]
 
 [[package]]
+name = "project-name"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "black" },
+    { name = "boto3" },
+    { name = "celery" },
+    { name = "django" },
+    { name = "django-celery-results" },
+    { name = "django-ckeditor-5" },
+    { name = "django-cors-headers" },
+    { name = "django-extensions" },
+    { name = "django-filter" },
+    { name = "django-hosts" },
+    { name = "django-import-export" },
+    { name = "django-ordered-model" },
+    { name = "django-storages" },
+    { name = "djangorestframework" },
+    { name = "djangorestframework-camel-case" },
+    { name = "djangorestframework-simplejwt" },
+    { name = "drf-spectacular" },
+    { name = "drf-spectacular-sidecar" },
+    { name = "firebase-admin" },
+    { name = "gunicorn" },
+    { name = "isort" },
+    { name = "pillow" },
+    { name = "psycopg2-binary" },
+    { name = "pycurl" },
+    { name = "python-dotenv" },
+    { name = "requests" },
+    { name = "watchtower" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "black", specifier = ">=25.12.0" },
+    { name = "boto3", specifier = ">=1.42.10" },
+    { name = "celery", specifier = ">=5.6.0" },
+    { name = "django", specifier = "==5.1" },
+    { name = "django-celery-results", specifier = ">=2.6.0" },
+    { name = "django-ckeditor-5", specifier = ">=0.2.18" },
+    { name = "django-cors-headers", specifier = ">=4.9.0" },
+    { name = "django-extensions", specifier = ">=4.1" },
+    { name = "django-filter", specifier = ">=25.1" },
+    { name = "django-hosts", specifier = ">=7.0.0" },
+    { name = "django-import-export", specifier = ">=4.3.14" },
+    { name = "django-ordered-model", specifier = ">=3.7.4" },
+    { name = "django-storages", specifier = ">=1.14.6" },
+    { name = "djangorestframework", specifier = ">=3.16.1" },
+    { name = "djangorestframework-camel-case", specifier = ">=1.4.2" },
+    { name = "djangorestframework-simplejwt", specifier = ">=5.5.1" },
+    { name = "drf-spectacular", specifier = ">=0.29.0" },
+    { name = "drf-spectacular-sidecar", specifier = ">=2025.12.1" },
+    { name = "firebase-admin", specifier = ">=7.1.0" },
+    { name = "gunicorn", specifier = ">=23.0.0" },
+    { name = "isort", specifier = ">=7.0.0" },
+    { name = "pillow", specifier = ">=12.0.0" },
+    { name = "psycopg2-binary", specifier = ">=2.9.11" },
+    { name = "pycurl", specifier = ">=7.45.7" },
+    { name = "python-dotenv", specifier = ">=1.2.1" },
+    { name = "requests", specifier = ">=2.32.5" },
+    { name = "watchtower", specifier = ">=3.4.0" },
+]
+
+[[package]]
 name = "prompt-toolkit"
 version = "3.0.52"
 source = { registry = "https://pypi.org/simple" }
@@ -1506,71 +1571,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/11/00/416d2ba54d7d58a7f7c61bf62dfeb48fd553cf49614daf83312f2d2c156e/tablib-3.9.0.tar.gz", hash = "sha256:1b6abd8edb0f35601e04c6161d79660fdcde4abb4a54f66cc9f9054bd55d5fe2", size = 125565 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/66/6b/32e51d847148b299088fc42d3d896845fd09c5247190133ea69dbe71ba51/tablib-3.9.0-py3-none-any.whl", hash = "sha256:eda17cd0d4dda614efc0e710227654c60ddbeb1ca92cdcfc5c3bd1fc5f5a6e4a", size = 49580 },
-]
-
-[[package]]
-name = "test"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "black" },
-    { name = "boto3" },
-    { name = "celery" },
-    { name = "django" },
-    { name = "django-celery-results" },
-    { name = "django-ckeditor-5" },
-    { name = "django-cors-headers" },
-    { name = "django-extensions" },
-    { name = "django-filter" },
-    { name = "django-hosts" },
-    { name = "django-import-export" },
-    { name = "django-ordered-model" },
-    { name = "django-storages" },
-    { name = "djangorestframework" },
-    { name = "djangorestframework-camel-case" },
-    { name = "djangorestframework-simplejwt" },
-    { name = "drf-spectacular" },
-    { name = "drf-spectacular-sidecar" },
-    { name = "firebase-admin" },
-    { name = "gunicorn" },
-    { name = "isort" },
-    { name = "pillow" },
-    { name = "psycopg2-binary" },
-    { name = "pycurl" },
-    { name = "python-dotenv" },
-    { name = "requests" },
-    { name = "watchtower" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "black", specifier = ">=25.12.0" },
-    { name = "boto3", specifier = ">=1.42.10" },
-    { name = "celery", specifier = ">=5.6.0" },
-    { name = "django", specifier = "==5.1" },
-    { name = "django-celery-results", specifier = ">=2.6.0" },
-    { name = "django-ckeditor-5", specifier = ">=0.2.18" },
-    { name = "django-cors-headers", specifier = ">=4.9.0" },
-    { name = "django-extensions", specifier = ">=4.1" },
-    { name = "django-filter", specifier = ">=25.1" },
-    { name = "django-hosts", specifier = ">=7.0.0" },
-    { name = "django-import-export", specifier = ">=4.3.14" },
-    { name = "django-ordered-model", specifier = ">=3.7.4" },
-    { name = "django-storages", specifier = ">=1.14.6" },
-    { name = "djangorestframework", specifier = ">=3.16.1" },
-    { name = "djangorestframework-camel-case", specifier = ">=1.4.2" },
-    { name = "djangorestframework-simplejwt", specifier = ">=5.5.1" },
-    { name = "drf-spectacular", specifier = ">=0.29.0" },
-    { name = "drf-spectacular-sidecar", specifier = ">=2025.12.1" },
-    { name = "firebase-admin", specifier = ">=7.1.0" },
-    { name = "gunicorn", specifier = ">=23.0.0" },
-    { name = "isort", specifier = ">=7.0.0" },
-    { name = "pillow", specifier = ">=12.0.0" },
-    { name = "psycopg2-binary", specifier = ">=2.9.11" },
-    { name = "pycurl", specifier = ">=7.45.7" },
-    { name = "python-dotenv", specifier = ">=1.2.1" },
-    { name = "requests", specifier = ">=2.32.5" },
-    { name = "watchtower", specifier = ">=3.4.0" },
 ]
 
 [[package]]
