@@ -28,7 +28,7 @@ Resources:
           CidrIp: 0.0.0.0/0
 
   # DEV
-  RDSSecretDev:
+  RDSSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
       Name: !Sub '${ProjectName}/db'
@@ -38,14 +38,14 @@ Resources:
         GenerateStringKey: 'password'
         PasswordLength: 30
         ExcludeCharacters: '"@/\&;='
-  RDSSecretAttachmentDev:
+  RDSSecretAttachment:
     Type: AWS::SecretsManager::SecretTargetAttachment
-    DependsOn: RDSDBInstanceDev
+    DependsOn: RDSDBInstance
     Properties:
-      SecretId: !Ref RDSSecretDev
-      TargetId: !Ref RDSDBInstanceDev
+      SecretId: !Ref RDSSecret
+      TargetId: !Ref RDSDBInstance
       TargetType: AWS::RDS::DBInstance
-  RDSSubnetGroupDev:
+  RDSSubnetGroup:
     Type: AWS::RDS::DBSubnetGroup
     Properties:
       DBSubnetGroupName: !Sub '${ProjectName}-db-subnet-group'
@@ -53,14 +53,14 @@ Resources:
       SubnetIds:
         - !If [ IsPrivate, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet1' } ]
         - !If [ IsPrivate, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet2' } ]
-  RDSDBInstanceDev:
+  RDSDBInstance:
     Type: AWS::RDS::DBInstance
     DeletionPolicy: Snapshot
-    DependsOn: RDSSecretDev
+    DependsOn: RDSSecret
     Properties:
       DBInstanceIdentifier: !Sub '${ProjectName}-db-instance'
       AllocatedStorage: 50
-      DBSubnetGroupName: !Ref RDSSubnetGroupDev
+      DBSubnetGroupName: !Ref RDSSubnetGroup
       Engine: postgres
       PubliclyAccessible: true
       DBInstanceClass: db.t4g.small
@@ -68,8 +68,8 @@ Resources:
       DBParameterGroupName: default.postgres16
       Port: 5432
       DBName: !Ref ProjectName
-      MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref RDSSecretDev, ':SecretString:username}}' ] ]
-      MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref RDSSecretDev, ':SecretString:password}}' ] ]
+      MasterUsername: !Join [ '', [ '{{resolve:secretsmanager:', !Ref RDSSecret, ':SecretString:username}}' ] ]
+      MasterUserPassword: !Join [ '', [ '{{resolve:secretsmanager:', !Ref RDSSecret, ':SecretString:password}}' ] ]
       VPCSecurityGroups: [ !GetAtt SecurityGroup.GroupId ]
       EnableCloudwatchLogsExports:
         - postgresql
