@@ -1,4 +1,4 @@
-# #{PROJECT_NAME} [![](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/) [![](https://img.shields.io/badge/django-4.2-green.svg)](https://www.python.org/downloads/) [![](https://img.shields.io/badge/drf-3.14-red.svg)](https://www.python.org/downloads/)  
+# #{PROJECT_NAME} [![](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/) [![](https://img.shields.io/badge/django-5.1-green.svg)](https://www.python.org/downloads/) [![](https://img.shields.io/badge/drf-3.16-red.svg)](https://www.python.org/downloads/)  
 
 ## Root Directory Structure
 ```
