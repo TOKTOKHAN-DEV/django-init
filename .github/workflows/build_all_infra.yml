@@ -107,10 +107,35 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: Build VPC
+        continue-on-error: true
         uses: aws-actions/aws-cloudformation-github-deploy@v1
         with:
           name: ${{ needs.set_environment.outputs.project_name }}-vpc
           template: .github/cloudformation/vpc.yml
+          parameter-overrides: >-
+            ProjectName=${{ needs.set_environment.outputs.project_name }},
+            Private=${{ inputs.private }}
+
+  build_rds:
+    runs-on: ubuntu-latest
+    needs: [ set_environment, build_vpc ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Build RDS
+        continue-on-error: true
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: ${{ needs.set_environment.outputs.project_name }}-rds
+          template: .github/cloudformation/rds.yml
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
             Private=${{ inputs.private }}
@@ -141,28 +166,6 @@ jobs:
             Private=${{ inputs.private }},
             Celery=${{ inputs.celery }}
 
-  build_rds:
-    runs-on: ubuntu-latest
-    needs: [ set_environment, build_vpc ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
-
-      - name: Build RDS
-        uses: aws-actions/aws-cloudformation-github-deploy@v1
-        with:
-          name: ${{ needs.set_environment.outputs.project_name }}-rds
-          template: .github/cloudformation/rds.yml
-          parameter-overrides: >-
-            ProjectName=${{ needs.set_environment.outputs.project_name }},
-            Private=${{ inputs.private }}
 
   build_s3:
     runs-on: ubuntu-latest
