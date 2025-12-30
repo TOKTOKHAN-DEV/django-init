@@ -58,7 +58,7 @@ class UserLoginSerializer(serializers.ModelSerializer):
 class UserSocialLoginSerializer(serializers.ModelSerializer):
     code = serializers.CharField(write_only=True, required=False)
     social_access_token = serializers.CharField(write_only=True, required=False)
-    state = serializers.ChoiceField(write_only=True, choices=UserSocialKindChoices.choices)
+    state = serializers.ChoiceField(write_only=True, choices=UserSocialKindChoices)
 
     access_token = serializers.CharField(label="액세스토큰", read_only=True)
     refresh_token = serializers.CharField(label="리프레시토큰", read_only=True)
@@ -69,6 +69,7 @@ class UserSocialLoginSerializer(serializers.ModelSerializer):
             "social_kind",
             "code",
             "social_access_token",
+            "state",
             "access_token",
             "refresh_token",
         ]
