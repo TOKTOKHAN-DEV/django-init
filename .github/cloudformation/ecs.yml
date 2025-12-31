@@ -324,7 +324,7 @@ Resources:
               Value: prefer-cached
           EntryPoint: [sh, -c]
           Command:
-            - /bin/bash -c "celery -A config.tasks worker"
+            - /bin/bash -c "celery -A config.tasks worker --loglevel=info"
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -396,7 +396,7 @@ Resources:
 #              Value: prefer-cached
 #          EntryPoint: [sh, -c]
 #          Command:
-#            - /bin/bash -c "celery -A config.tasks beat"
+#            - /bin/bash -c "celery -A config.tasks beat --loglevel=info"
 #          LogConfiguration:
 #            LogDriver: awslogs
 #            Options:
