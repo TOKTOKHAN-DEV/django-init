@@ -26,11 +26,12 @@ class DefaultMediaStorage(S3Boto3Storage):
         ]  # 20MB  # 지정한 값과 같아야만 허용
 
         if is_download:
+            encoded_filename = quote(file_name)
             fields.update(
-                {"Content-Disposition": f"attachment; filename=\"{file_name}\"; filename*=UTF-8''{file_name}"}
+                {"Content-Disposition": f"attachment; filename=\"{file_name}\"; filename*=UTF-8''{encoded_filename}"}
             )
             conditions.append(
-                {"Content-Disposition": f"attachment; filename=\"{file_name}\"; filename*=UTF-8''{file_name}"}
+                {"Content-Disposition": f"attachment; filename=\"{file_name}\"; filename*=UTF-8''{encoded_filename}"}
             )
 
         response = self.bucket.meta.client.generate_presigned_post(
