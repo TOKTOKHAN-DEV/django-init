@@ -5,4 +5,4 @@ from app.{{ app_name }}.models import {{ camel_case_app_name }}
 
 @admin.register({{ camel_case_app_name }})
 class {{ camel_case_app_name }}Admin(admin.ModelAdmin):
-    pass
+    list_display = ["id"]

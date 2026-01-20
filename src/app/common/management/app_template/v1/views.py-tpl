@@ -36,9 +36,5 @@ class {{ camel_case_app_name }}ViewSet(
         queryset = super().get_queryset()
         return queryset
 
-    # 특정 action에 다른 Filter를 설정해야하는 경우 사용
-    def get_filterset_class(self):
-        return getattr(self, "filterset_class", None)
-
-    def partial_update(self, request, *args, **kwargs):
+    def patch(self, request, *args, **kwargs):
         raise MethodNotAllowed("patch")
