@@ -420,28 +420,6 @@ Resources:
 #            - !If [ IsProd, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet2' } ]
 #          SecurityGroups: [ !Ref SecurityGroup ]
 
-
-  InvokeApiDestinationRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      RoleName: !Sub '${ProjectName}-${ENV}-InvokeApiDestinationRole'
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: 'Allow'
-            Principal:
-              Service:
-                - 'events.amazonaws.com'
-            Action: 'sts:AssumeRole'
-      Policies:
-        - PolicyName: !Sub '${ProjectName}-${ENV}-InvokeApiDestinationPolicy'
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: 'Allow'
-                Action:
-                  - 'events:InvokeApiDestination'
-                Resource: '*'
   RuleConnection:
     Type: AWS::Events::Connection
     DependsOn: ALB
@@ -461,6 +439,63 @@ Resources:
       HttpMethod: POST
       InvocationEndpoint: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
       InvocationRateLimitPerSecond: 300
+  InvokeApiDestinationRole:
+    Type: AWS::IAM::Role
+    DependsOn: RuleApiDestination
+    Properties:
+      RoleName: !Sub '${ProjectName}-${ENV}-InvokeApiDestinationRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'events.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub '${ProjectName}-${ENV}-InvokeApiDestinationPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'events:InvokeApiDestination'
+                Resource: !GetAtt RuleApiDestination.Arn
+  Rule:
+    Type: AWS::Events::Rule
+    DependsOn: InvokeApiDestinationRole
+    Properties:
+      Name: !Sub '${ProjectName}-${ENV}-rule'
+      EventPattern: !Sub '{"source":["${ProjectName}-${ENV}.scheduler"]}'
+      State: ENABLED
+      EventBusName: default
+      Targets:
+          Arn: !GetAtt RuleApiDestination.Arn
+          RoleArn: !GetAtt InvokeApiDestinationRole.Arn
+          HttpParameters:
+            PathParameterValues:
+              - $.state.path
+  EventBridgeSchedulerRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub '${ProjectName}-${ENV}-EventBridgeSchedulerRole'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: 'Allow'
+            Principal:
+              Service:
+                - 'scheduler.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: !Sub '${ProjectName}-${ENV}-EventBridgeSchedulerPolicy'
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'events:PutEvents'
+                Resource: !Sub 'arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default'
 
 #Outputs:
 #  ALBDNSName:
