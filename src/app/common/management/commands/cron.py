@@ -14,7 +14,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         autodiscover()
         schedules = registry.all()
-        scheduler = boto3.client("scheduler")
+        scheduler = boto3.client("scheduler", region_name="ap-northeast-2")
 
         for name in schedules:
             try:
