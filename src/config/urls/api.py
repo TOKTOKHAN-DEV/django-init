@@ -5,7 +5,9 @@ from django.http import HttpResponse
 from django.urls import include, path
 from drf_spectacular.views import SpectacularJSONAPIView, SpectacularRedocView, SpectacularSwaggerView
 
-from app.common.schedule_registry import registry
+from app.common.schedule_registry import autodiscover, registry
+
+autodiscover()
 
 api_urlpatterns = [
     path("", include("app.urls.api")),
