@@ -16,11 +16,9 @@ class Command(BaseCommand):
         schedules = registry.all()
         scheduler = boto3.client("scheduler", region_name="ap-northeast-2")
 
-        for name in schedules:
-            try:
-                scheduler.delete_schedule(Name=f"{self.prefix}{name}")
-            except scheduler.exceptions.ResourceNotFoundException:
-                pass
+        schedules_response = scheduler.list_schedules(NamePrefix=self.prefix)["Schedules"]
+        for schedule in schedules_response:
+            scheduler.delete_schedule(Name=schedule["Name"])
 
         for name, entry in schedules.items():
             if not entry.cron_expression:
