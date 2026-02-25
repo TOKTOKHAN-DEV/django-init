@@ -470,6 +470,7 @@ Resources:
       State: ENABLED
       EventBusName: default
       Targets:
+        - Id: !Sub '${ProjectName}-${ENV}-target'
           Arn: !GetAtt RuleApiDestination.Arn
           RoleArn: !GetAtt InvokeApiDestinationRole.Arn
           HttpParameters:
