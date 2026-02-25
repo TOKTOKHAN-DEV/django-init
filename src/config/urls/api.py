@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from django.urls import include, path
 from drf_spectacular.views import SpectacularJSONAPIView, SpectacularRedocView, SpectacularSwaggerView
 
-from config.schedules import SCHEDULES
+from app.common.schedule_registry import registry
 
 api_urlpatterns = [
     path("", include("app.urls.api")),
@@ -22,7 +22,7 @@ urlpatterns = [
     path("redoc/", SpectacularRedocView.as_view(), name="redoc"),
 ]
 
-urlpatterns += [schedule_data["path"] for schedule_data in SCHEDULES.values()]
+urlpatterns += [path(f"schedule/{entry.path}", entry.view_class.as_view()) for entry in registry.all().values()]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

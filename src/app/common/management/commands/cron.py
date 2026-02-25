@@ -1,66 +1,43 @@
+import json
+
 import boto3
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from app.common.utils import color_string
-from config.schedules import SCHEDULES
+from app.common.schedule_registry import autodiscover, registry
 
 
 class Command(BaseCommand):
     help = "cron을 등록합니다."
+    prefix = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-cron-"
 
     def handle(self, *args, **options):
-        self._delete_rule(SCHEDULES.keys())
-        for name, value in SCHEDULES.items():
-            self._update_or_create_rule(name, str(value["path"].pattern), value["cron"])
+        autodiscover()
+        schedules = registry.all()
+        scheduler = boto3.client("scheduler")
 
-    def _delete_rule(self, names):
-        event_client = boto3.client("events", region_name="ap-northeast-2")
-        prefix = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-"
-        rules = event_client.list_rules(NamePrefix=prefix, Limit=100)["Rules"]
-        for rule in rules:
-            name = rule["Name"].replace(prefix, "")
-            if name not in names:
-                print(color_string("red", f"'{name}' 스케줄이 제거됐습니다."))
-                event_client.remove_targets(
-                    Rule=rule["Arn"].split("/", 1)[-1],
-                    Ids=[rule["Name"]],
-                )
-                event_client.delete_rule(Name=rule["Name"])
+        for name in schedules:
+            try:
+                scheduler.delete_schedule(Name=f"{self.prefix}{name}")
+            except scheduler.exceptions.ResourceNotFoundException:
+                pass
 
-    def _update_or_create_rule(self, name, path, cron_expression):
-        iam_client = boto3.client("iam", region_name="ap-northeast-2")
-        event_client = boto3.client("events", region_name="ap-northeast-2")
-        prefix = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-"
-        rule_name = prefix + name
-
-        api_destination_name = f"{prefix}api-destination"
-        api_destination_arn = event_client.describe_api_destination(Name=api_destination_name)["ApiDestinationArn"]
-
-        role = iam_client.get_role(RoleName=f"{prefix}InvokeApiDestinationRole")["Role"]
-
-        rule = event_client.put_rule(
-            Name=rule_name,
-            ScheduleExpression=f"cron({cron_expression})",
-            State="ENABLED",
-        )
-
-        event_client.update_api_destination(
-            Name=api_destination_name,
-            InvocationEndpoint=f"{settings.API_URL}/*",
-        )
-
-        event_client.put_targets(
-            Rule=rule["RuleArn"].split("/", 1)[-1],
-            Targets=[
-                {
-                    "Id": rule_name,
-                    "Arn": api_destination_arn,
-                    "RoleArn": role["Arn"],
-                    "HttpParameters": {
-                        "PathParameterValues": [path],
+        for name, entry in schedules.items():
+            if not entry.cron_expression:
+                continue
+            scheduler.create_schedule(
+                Name=f"{self.prefix}{name}",
+                ScheduleExpression=f"cron({entry.cron_expression})",
+                ScheduleExpressionTimezone="Asia/Seoul",
+                FlexibleTimeWindow={"Mode": "OFF"},
+                Target={
+                    "Arn": f"arn:aws:events:ap-northeast-2:{settings.AWS_ACCOUNT_ID}:event-bus/default",
+                    "RoleArn": f"arn:aws:iam::{settings.AWS_ACCOUNT_ID}:role/{settings.PROJECT_NAME}-{settings.APP_ENV}-EventBridgeSchedulerRole",
+                    "EventBridgeParameters": {
+                        "DetailType": "Scheduled Event",
+                        "Source": f"{settings.PROJECT_NAME}-{settings.APP_ENV}.scheduler",
                     },
-                }
-            ],
-        )
-        print(color_string("green", f"'{name}' 스케줄이 등록됐습니다. {cron_expression}"))
+                    "Input": json.dumps({"path": f"schedule/{entry.path}"}),
+                    "RetryPolicy": {"MaximumRetryAttempts": 0},
+                },
+            )
