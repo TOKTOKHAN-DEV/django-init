@@ -26,7 +26,12 @@ class ScheduleClient:
                     "DetailType": "Scheduled Event",
                     "Source": f"{self.prefix}.scheduler",
                 },
-                "Input": json.dumps({"path": f"schedule/{path}"}),
+                "Input": json.dumps(
+                    {
+                        "id": name,
+                        "path": f"schedule/{path}",
+                    }
+                ),
                 "RetryPolicy": {"MaximumRetryAttempts": 0},
             },
         )
