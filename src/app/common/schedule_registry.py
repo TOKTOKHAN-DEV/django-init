@@ -33,7 +33,7 @@ class ScheduleRegistry:
 
 
 registry = ScheduleRegistry()
-scheduler = registry.register
+schedule = registry.register
 
 
 def autodiscover():

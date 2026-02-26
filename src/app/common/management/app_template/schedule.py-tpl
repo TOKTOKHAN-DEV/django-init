@@ -1,8 +1,8 @@
-from app.common.schedule_registry import scheduler
+from app.common.schedule_registry import schedule
 from app.common.views import ScheduleView
 
 
-@scheduler(name="{{ app_name }}", path="{{ app_name }}/test/", cron_expression=None)
+@schedule(name="{{ app_name }}", path="{{ app_name }}/", cron_expression=None)
 class {{ camel_case_app_name }}Schedule(ScheduleView):
     def schedule(self):
         pass

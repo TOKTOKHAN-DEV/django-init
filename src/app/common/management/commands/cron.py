@@ -21,16 +21,16 @@ class Command(BaseCommand):
             InvocationEndpoint=f"{settings.API_URL}/*",
         )
 
-        scheduler_client = boto3.client("scheduler", region_name="ap-northeast-2")
+        schedule_client = boto3.client("scheduler", region_name="ap-northeast-2")
 
-        schedules_response = scheduler_client.list_schedules(NamePrefix=self.prefix)["Schedules"]
+        schedules_response = schedule_client.list_schedules(NamePrefix=self.prefix)["Schedules"]
         for schedule in schedules_response:
-            scheduler_client.delete_schedule(Name=schedule["Name"])
+            schedule_client.delete_schedule(Name=schedule["Name"])
 
         for name, entry in schedules.items():
             if not entry.cron_expression:
                 continue
-            scheduler_client.create_schedule(
+            schedule_client.create_schedule(
                 Name=f"{self.prefix}cron-{name}",
                 ScheduleExpression=f"cron({entry.cron_expression})",
                 ScheduleExpressionTimezone="Asia/Seoul",
