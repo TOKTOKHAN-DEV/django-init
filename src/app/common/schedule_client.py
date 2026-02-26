@@ -24,7 +24,7 @@ class ScheduleClient:
                 "RoleArn": f"arn:aws:iam::{settings.AWS_ACCOUNT_ID}:role/{settings.PROJECT_NAME}-{settings.APP_ENV}-EventBridgeSchedulerRole",
                 "EventBridgeParameters": {
                     "DetailType": "Scheduled Event",
-                    "Source": f"{settings.PROJECT_NAME}-{settings.APP_ENV}.schedule",
+                    "Source": f"{settings.PROJECT_NAME}-{settings.APP_ENV}.scheduler",
                 },
                 "Input": json.dumps({"path": f"schedule/{path}"}),
                 "RetryPolicy": {"MaximumRetryAttempts": 0},
