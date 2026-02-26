@@ -9,22 +9,29 @@ from app.common.schedule_registry import autodiscover, registry
 
 class Command(BaseCommand):
     help = "cron을 등록합니다."
-    prefix = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-cron-"
+    prefix = f"{settings.PROJECT_NAME}-{settings.APP_ENV}-"
 
     def handle(self, *args, **options):
         autodiscover()
         schedules = registry.all()
-        scheduler = boto3.client("scheduler", region_name="ap-northeast-2")
 
-        schedules_response = scheduler.list_schedules(NamePrefix=self.prefix)["Schedules"]
+        event_client = boto3.client("events", region_name="ap-northeast-2")
+        event_client.update_api_destination(
+            Name=f"{self.prefix}api-destination",
+            InvocationEndpoint=f"{settings.API_URL}/*",
+        )
+
+        scheduler_client = boto3.client("scheduler", region_name="ap-northeast-2")
+
+        schedules_response = scheduler_client.list_schedules(NamePrefix=self.prefix)["Schedules"]
         for schedule in schedules_response:
-            scheduler.delete_schedule(Name=schedule["Name"])
+            scheduler_client.delete_schedule(Name=schedule["Name"])
 
         for name, entry in schedules.items():
             if not entry.cron_expression:
                 continue
-            scheduler.create_schedule(
-                Name=f"{self.prefix}{name}",
+            scheduler_client.create_schedule(
+                Name=f"{self.prefix}cron-{name}",
                 ScheduleExpression=f"cron({entry.cron_expression})",
                 ScheduleExpressionTimezone="Asia/Seoul",
                 FlexibleTimeWindow={"Mode": "OFF"},
