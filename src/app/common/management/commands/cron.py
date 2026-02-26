@@ -34,5 +34,4 @@ class Command(BaseCommand):
                 f"{self.prefix}cron-{name}",
                 f"cron({entry.cron_expression})",
                 path=entry.path,
-                data=None,
             )

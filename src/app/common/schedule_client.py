@@ -12,7 +12,7 @@ class ScheduleClient:
         response = self.client.list_schedules(NamePrefix=self.prefix)
         return response["Schedules"]
 
-    def create(self, name, expression, path, data=None):
+    def create(self, name, expression, path):
         self.client.create_schedule(
             Name=name,
             ScheduleExpression=expression,
@@ -26,7 +26,7 @@ class ScheduleClient:
                     "DetailType": "Scheduled Event",
                     "Source": f"{settings.PROJECT_NAME}-{settings.APP_ENV}.schedule",
                 },
-                "Input": json.dumps({"path": f"schedule/{path}", "data": data}),
+                "Input": json.dumps({"path": f"schedule/{path}"}),
                 "RetryPolicy": {"MaximumRetryAttempts": 0},
             },
         )
