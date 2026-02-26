@@ -24,7 +24,7 @@ class Command(BaseCommand):
 
         client = ScheduleClient()
         for schedule in client.list():
-            client.delete(name=schedule["name"])
+            client.delete(name=schedule["Name"])
 
         for name, entry in schedules.items():
             if not entry.cron_expression:
