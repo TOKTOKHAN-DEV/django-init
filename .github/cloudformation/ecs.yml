@@ -475,7 +475,7 @@ Resources:
           RoleArn: !GetAtt InvokeApiDestinationRole.Arn
           HttpParameters:
             PathParameterValues:
-              - $.state.path
+              - $.detail.path
   EventBridgeSchedulerRole:
     Type: AWS::IAM::Role
     Properties:
