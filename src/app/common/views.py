@@ -15,7 +15,7 @@ class SchedulerView(APIView):
     permission_classes = [IsScheduler]
 
     def schedule(self):
-        raise NotImplemented("Not implemented yet")
+        raise NotImplementedError("Not implemented yet")
 
     def post(self, request, *args, **kwargs):
         self.schedule()

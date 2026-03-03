@@ -53,7 +53,7 @@ DATABASES = {
 
 
 # CELERY
-CELERY_BROKER_URL = f"sqs://"
+CELERY_BROKER_URL = "sqs://"
 CELERY_BROKER_TRANSPORT_OPTIONS = {
     "region": "ap-northeast-2",
     "queue_name_prefix": f"{PROJECT_NAME}-{APP_ENV}-",
