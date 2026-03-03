@@ -1,9 +1,8 @@
 [project]
-name = "#{PROJECT_NAME}"
+name = "django-init"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
-    "black>=25.12.0",
     "boto3>=1.42.10",
     "celery>=5.6.0",
     "django==5.1",
@@ -23,20 +22,27 @@ dependencies = [
     "drf-spectacular-sidecar>=2025.12.1",
     "firebase-admin>=7.1.0",
     "gunicorn>=23.0.0",
-    "isort>=7.0.0",
     "pillow>=12.0.0",
     "psycopg2-binary>=2.9.11",
     "pycurl>=7.45.7",
     "python-dotenv>=1.2.1",
     "requests>=2.32.5",
+    "ruff>=0.15.4",
     "watchtower>=3.4.0",
 ]
 
-[tool.isort]
-multi_line_output = 3
-include_trailing_comma = true
-use_parentheses = true
-line_length = 120
+[tool.ruff]
+line-length = 120
+target-version = "py311"
 
-[tool.black]
-line_length = 120
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+]
+ignore = ["F401"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

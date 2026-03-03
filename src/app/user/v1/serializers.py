@@ -31,20 +31,13 @@ class UserLoginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            "username",
-            "password",
-            "access_token",
-            "refresh_token",
-        ]
-        extra_kwargs = {
-            "username": {"write_only": True, "validators": []},
-            "password": {"write_only": True},
-        }
+        fields = ["username", "password", "access_token", "refresh_token"]
+        extra_kwargs = {"username": {"write_only": True, "validators": []}, "password": {"write_only": True}}
 
     def validate(self, attrs):
         try:
             attrs["user"] = User.objects.get(username=attrs["username"])
+
         except User.DoesNotExist:
             raise ValidationError(["인증정보가 일치하지 않습니다."])
         if not attrs["user"].check_password(attrs["password"]):
@@ -65,30 +58,18 @@ class UserSocialLoginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            "social_kind",
-            "code",
-            "social_access_token",
-            "state",
-            "access_token",
-            "refresh_token",
-        ]
+        fields = ["social_kind", "code", "social_access_token", "state", "access_token", "refresh_token"]
 
     def validate(self, attrs):
         social_user_id, payload = self.get_social_user_id(
-            attrs["code"],
-            attrs["social_access_token"],
-            attrs["social_kind"],
+            attrs["code"], attrs["social_access_token"], attrs["social_kind"]
         )
         username = f"{social_user_id}@{attrs['social_kind']}"
         try:
             attrs["user"] = User.objects.get(username=username)
         except User.DoesNotExist:
             register_token = jwt.encode(
-                payload={
-                    "username": username,
-                    "expired_at": timezone.now().timestamp() + 10 * 60,
-                },
+                payload={"username": username, "expired_at": timezone.now().timestamp() + 10 * 60},
                 key=settings.SECRET_KEY,
             )
             raise SocialUserNotFoundError(register_token)
@@ -99,9 +80,7 @@ class UserSocialLoginSerializer(serializers.ModelSerializer):
         for adapter_class in SocialAdapter.__subclasses__():
             if adapter_class.key == social_kind:
                 return adapter_class(
-                    code,
-                    access_token,
-                    self.context["request"].META["HTTP_ORIGIN"],
+                    code, access_token, self.context["request"].META["HTTP_ORIGIN"]
                 ).get_social_user_id()
         raise ModuleNotFoundError(f"{social_kind.capitalize()}Adapter class")
 
@@ -119,13 +98,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            "register_token",
-            "password",
-            "password_confirm",
-            "access_token",
-            "refresh_token",
-        ]
+        fields = ["register_token", "password", "password_confirm", "access_token", "refresh_token"]
 
     def validate(self, attrs):
         if User.objects.filter(username=attrs["username"]).exists():
@@ -194,11 +167,7 @@ class UserPasswordResetSerializer(serializers.Serializer):
             "protocol": "https" if request.is_secure() else "http",
         }
         content = loader.render_to_string("password_reset_email.html", context)
-        email_log = EmailLog.objects.create(
-            to_set=[user.email],
-            title=subject,
-            content=content,
-        )
+        email_log = EmailLog.objects.create(to_set=[user.email], title=subject, content=content)
         email_log.send()
 
 
