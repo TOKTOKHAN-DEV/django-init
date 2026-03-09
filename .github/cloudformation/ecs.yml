@@ -235,6 +235,9 @@ Resources:
         - FARGATE
       Cpu: 1 vCPU
       Memory: 2GB
+      RuntimePlatform:
+        CpuArchitecture: ARM64
+        OperatingSystemFamily: LINUX
       ContainerDefinitions:
         - Name: web
           Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
@@ -312,6 +315,9 @@ Resources:
         - FARGATE
       Cpu: .25 vCPU
       Memory: 0.5GB
+      RuntimePlatform:
+        CpuArchitecture: ARM64
+        OperatingSystemFamily: LINUX
       ContainerDefinitions:
         - Name: celery
           Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
@@ -385,6 +391,9 @@ Resources:
 #        - FARGATE
 #      Cpu: .25 vCPU
 #      Memory: 0.5GB
+#      RuntimePlatform:
+#        CpuArchitecture: ARM64
+#        OperatingSystemFamily: LINUX
 #      ContainerDefinitions:
 #        - Name: celerybeat
 #          Image: !Sub '${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ProjectName}-backend:${ENV}'
