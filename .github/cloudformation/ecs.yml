@@ -499,11 +499,11 @@ Resources:
                 Resource: !Sub 'arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default'
 
 #Outputs:
-#  ALBDNSName:
-#    value: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
-#    Export:
-#      Name: !Sub '${ProjectName}-${ENV}-ALBDNSName'
-#  APIKey:
-#    value: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secret, ':SecretString:key}}' ] ]
-#    Export:
-#      Name: !Sub '${ProjectName}-${ENV}-APIKey'
+ ALBDNSName:
+   value: !Join [ '/', ['https:/', !GetAtt ALB.DNSName, '*' ] ]
+   Export:
+     Name: !Sub '${ProjectName}-${ENV}-ALBDNSName'
+ APIKey:
+   value: !Join [ '', [ '{{resolve:secretsmanager:', !Ref Secret, ':SecretString:key}}' ] ]
+   Export:
+     Name: !Sub '${ProjectName}-${ENV}-APIKey'
