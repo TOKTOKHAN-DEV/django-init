@@ -42,9 +42,6 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Sub '${ProjectName}-${ENV}-ecs-cluster'
-      ClusterSettings:
-        - Name: containerInsights
-          Value: enabled
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
