@@ -114,8 +114,7 @@ jobs:
           name: ${{ needs.set_environment.outputs.project_name }}-vpc
           template: .github/cloudformation/vpc.yml
           parameter-overrides: >-
-            ProjectName=${{ needs.set_environment.outputs.project_name }},
-            Private=${{ inputs.private }}
+            ProjectName=${{ needs.set_environment.outputs.project_name }}
 
   build_rds:
     runs-on: ubuntu-latest
@@ -164,7 +163,6 @@ jobs:
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
             ENV=${{ inputs.env }},
-            Private=${{ inputs.private }},
             Celery=${{ inputs.celery }}
 
 

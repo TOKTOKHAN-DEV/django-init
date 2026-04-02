@@ -6,6 +6,14 @@ Description:
 Parameters:
   ProjectName:
     Type: String
+  Private:
+    Type: String
+    AllowedValues:
+      - true
+      - false
+
+Conditions:
+  IsPrivate: !Equals [!Ref Private, 'true']
 
 Resources:
   # VPC
@@ -91,78 +99,23 @@ Resources:
     Properties:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicRouteTable
-
-  NatInstanceSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: !Sub '${ProjectName}-nat-instance-sg'
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: -1
-          CidrIp: 10.0.0.0/16
-      SecurityGroupEgress:
-        - IpProtocol: -1
-          CidrIp: 0.0.0.0/0
-      Tags:
-        - Key: Name
-          Value: !Sub '${ProjectName}-nat-instance-sg'
-
-  NatInstanceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ec2.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-      Tags:
-        - Key: Name
-          Value: !Sub '${ProjectName}-nat-instance-role'
-
-  NatInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Roles:
-        - !Ref NatInstanceRole
-
-  NatInstance:
-    Type: AWS::EC2::Instance
-    DependsOn: AttachGateway
-    Properties:
-      InstanceType: t4g.nano
-      ImageId: ami-0f0ea0757eea9a79b
-      IamInstanceProfile: !Ref NatInstanceProfile
-      SubnetId: !Ref PublicSubnet1
-      SecurityGroupIds:
-        - !Ref NatInstanceSG
-      SourceDestCheck: false
-      UserData:
-        Fn::Base64: |
-          #!/bin/bash
-          echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
-          sysctl -p
-          dnf install -y iptables-services
-          iptables -t nat -A POSTROUTING -o ens5 -j MASQUERADE
-          service iptables save
-          systemctl enable iptables
-      Tags:
-        - Key: Name
-          Value: !Sub '${ProjectName}-nat-instance'
-
-  NatEIP:
+  EIP:
     Type: AWS::EC2::EIP
+    Condition: IsPrivate
     Properties:
       Domain: vpc
-      InstanceId: !Ref NatInstance
       Tags:
         - Key: Name
-          Value: !Sub '${ProjectName}-nat-eip'
-
-
+          Value: !Sub '${ProjectName}-eip'
+  NatGateway:
+    Type: AWS::EC2::NatGateway
+    Condition: IsPrivate
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-ngw'
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -172,11 +125,12 @@ Resources:
           Value: !Sub '${ProjectName}-private-routetable'
   PrivateRoute:
     Type: AWS::EC2::Route
-    DependsOn: NatInstance
+    Condition: IsPrivate
+    DependsOn: NatGateway
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: '0.0.0.0/0'
-      InstanceId: !Ref NatInstance
+      NatGatewayId: !Ref NatGateway
   PrivateSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -187,6 +141,57 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnet2
       RouteTableId: !Ref PrivateRouteTable
+  BastionHostSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Condition: IsPrivate
+    Properties:
+      GroupDescription: !Sub '${ProjectName}-bastion-sg'
+      VpcId: !Ref VPC
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Condition: IsPrivate
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Condition: IsPrivate
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+  BastionHost:
+    Type: AWS::EC2::Instance
+    Condition: IsPrivate
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-0ac9b8202b45eeb08
+      IamInstanceProfile: !Ref InstanceProfile
+      SubnetId: !Ref PrivateSubnet1
+      SecurityGroupIds:
+        - !Ref BastionHostSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo yum install -y at
+          sudo systemctl start atd
+          sudo systemctl enable atd
+          (crontab -l 2>/dev/null; echo "@reboot echo \"sudo shutdown -h now\" | at now + 2 hours") | crontab -
+          sudo shutdown -h now
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-bastion-host'
 
 
 Outputs:

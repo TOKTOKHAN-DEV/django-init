@@ -6,14 +6,6 @@ Description:
 Parameters:
   ProjectName:
     Type: String
-  Private:
-    Type: String
-    AllowedValues:
-      - true
-      - false
-
-Conditions:
-  IsPrivate: !Equals [!Ref Private, 'true']
 
 Resources:
   SecurityGroup:
@@ -51,8 +43,8 @@ Resources:
       DBSubnetGroupName: !Sub '${ProjectName}-db-subnet-group'
       DBSubnetGroupDescription: !Sub '${ProjectName}-db-subnet-group'
       SubnetIds:
-        - !If [ IsPrivate, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet1' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet1' } ]
-        - !If [ IsPrivate, { 'Fn::ImportValue': !Sub '${ProjectName}-PrivateSubnet2' }, { 'Fn::ImportValue': !Sub '${ProjectName}-PublicSubnet2' } ]
+        - Fn::ImportValue: !Sub '${ProjectName}-PrivateSubnet1'
+        - Fn::ImportValue: !Sub '${ProjectName}-PrivateSubnet2'
   RDSDBInstance:
     Type: AWS::RDS::DBInstance
     DeletionPolicy: Snapshot
@@ -62,7 +54,7 @@ Resources:
       AllocatedStorage: 50
       DBSubnetGroupName: !Ref RDSSubnetGroup
       Engine: postgres
-      PubliclyAccessible: !If [IsPrivate, false, true]
+      PubliclyAccessible: false
       DBInstanceClass: db.t4g.small
       EngineVersion: 16.11
       DBParameterGroupName: default.postgres16

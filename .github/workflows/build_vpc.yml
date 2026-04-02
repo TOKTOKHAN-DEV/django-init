@@ -1,12 +1,7 @@
 name: Build VPC
 on:
   workflow_dispatch:
-    inputs:
-      private:
-        description: Private Subnet
-        type: boolean
-        default: false
-        required: false
+
 
 jobs:
   set_environment:
@@ -40,5 +35,4 @@ jobs:
           name: ${{ needs.set_environment.outputs.project_name }}-vpc
           template: .github/cloudformation/vpc.yml
           parameter-overrides: >-
-            ProjectName=${{ needs.set_environment.outputs.project_name }},
-            Private=${{ inputs.private }}
+            ProjectName=${{ needs.set_environment.outputs.project_name }}

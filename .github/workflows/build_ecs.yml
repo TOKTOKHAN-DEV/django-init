@@ -9,11 +9,6 @@ on:
         options:
           - prod
           - dev
-      private:
-        description: Private Subnet
-        type: boolean
-        default: false
-        required: false
       celery:
         description: Celery
         type: boolean
@@ -106,5 +101,4 @@ jobs:
           parameter-overrides: >-
             ProjectName=${{ needs.set_environment.outputs.project_name }},
             ENV=${{ inputs.env }},
-            Private=${{ inputs.private }},
             Celery=${{ inputs.celery }}
