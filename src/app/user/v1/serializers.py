@@ -32,7 +32,10 @@ class UserLoginSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ["username", "password", "access_token", "refresh_token"]
-        extra_kwargs = {"username": {"write_only": True, "validators": []}, "password": {"write_only": True}}
+        extra_kwargs = {
+            "username": {"write_only": True, "validators": []},
+            "password": {"write_only": True},
+        }
 
     def validate(self, attrs):
         try:
@@ -58,7 +61,14 @@ class UserSocialLoginSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["social_kind", "code", "social_access_token", "state", "access_token", "refresh_token"]
+        fields = [
+            "social_kind",
+            "code",
+            "social_access_token",
+            "state",
+            "access_token",
+            "refresh_token",
+        ]
 
     def validate(self, attrs):
         social_user_id, payload = self.get_social_user_id(
@@ -69,7 +79,10 @@ class UserSocialLoginSerializer(serializers.ModelSerializer):
             attrs["user"] = User.objects.get(username=username)
         except User.DoesNotExist:
             register_token = jwt.encode(
-                payload={"username": username, "expired_at": timezone.now().timestamp() + 10 * 60},
+                payload={
+                    "username": username,
+                    "expired_at": timezone.now().timestamp() + 10 * 60,
+                },
                 key=settings.SECRET_KEY,
             )
             raise SocialUserNotFoundError(register_token)
@@ -98,7 +111,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["register_token", "password", "password_confirm", "access_token", "refresh_token"]
+        fields = [
+            "register_token",
+            "password",
+            "password_confirm",
+            "access_token",
+            "refresh_token",
+        ]
 
     def validate(self, attrs):
         if User.objects.filter(username=attrs["username"]).exists():
