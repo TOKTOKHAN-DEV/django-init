@@ -21,8 +21,25 @@ class Command(TemplateCommand):
             **options,
         )
 
+    def validate_name(self, name, name_or_dir="name"):
+        if name is None:
+            raise CommandError(
+                "you must provide {an} {type} name".format(
+                    an=self.a_or_an,
+                    type=self.app_or_project,
+                )
+            )
+        if not name.isidentifier():
+            raise CommandError(
+                "'{name}' is not a valid {type} {noun}.".format(
+                    name=name,
+                    type=self.app_or_project,
+                    noun=name_or_dir,
+                )
+            )
+
     def _create_app(self, app_name, template_name, **options):
-        target = f"app/{app_name}"
+        target = settings.BASE_DIR / "app" / app_name
         top_dir = os.path.abspath(os.path.expanduser(target))
         try:
             self._make_dirs(top_dir)
