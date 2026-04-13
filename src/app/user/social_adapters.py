@@ -12,11 +12,24 @@ from rest_framework.exceptions import ValidationError
 
 class SocialAdapter:
     key = None
+    _registry = {}
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if cls.key:
+            cls._registry[cls.key] = cls
 
     def __init__(self, code=None, access_token=None, origin=None):
         self.code = code
         self.access_token = access_token
         self.origin = origin
+
+    @classmethod
+    def get_adapter(cls, key):
+        adapter_class = cls._registry.get(key)
+        if not adapter_class:
+            raise ValueError(f"Unsupported social kind: {key}")
+        return adapter_class
 
     def get_access_token(self):
         raise NotImplementedError("Not Implemented 'get_access_token' method")
@@ -49,7 +62,7 @@ class KakaoAdapter(SocialAdapter):
 
     def get_social_user_id(self):
         url = "https://kapi.kakao.com/v2/user/me"
-        headers = {"Authorization": f'Bearer {self.get_access_token()}'}
+        headers = {"Authorization": f"Bearer {self.get_access_token()}"}
         response = requests.get(url=url, headers=headers)
         if not response.ok:
             raise ValidationError("KAKAO ME API ERROR")
@@ -80,7 +93,7 @@ class NaverAdapter(SocialAdapter):
 
     def get_social_user_id(self):
         url = "https://openapi.naver.com/v1/nid/me"
-        headers = {"Authorization": f'Bearer {self.get_access_token()}'}
+        headers = {"Authorization": f"Bearer {self.get_access_token()}"}
         response = requests.post(url=url, headers=headers)
         if not response.ok:
             raise ValidationError("NAVER ME API ERROR")

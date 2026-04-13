@@ -90,12 +90,8 @@ class UserSocialLoginSerializer(serializers.ModelSerializer):
         return attrs
 
     def get_social_user_id(self, code, access_token, social_kind):
-        for adapter_class in SocialAdapter.__subclasses__():
-            if adapter_class.key == social_kind:
-                return adapter_class(
-                    code, access_token, self.context["request"].META["HTTP_ORIGIN"]
-                ).get_social_user_id()
-        raise ModuleNotFoundError(f"{social_kind.capitalize()}Adapter class")
+        adapter_class = SocialAdapter.get_adapter(social_kind)
+        return adapter_class(code, access_token, self.context["request"].META["HTTP_ORIGIN"]).get_social_user_id()
 
     def create(self, validated_data):
         return validated_data["user"]
