@@ -14,15 +14,15 @@ class SocialAdapter:
     key = None
     _registry = {}
 
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if cls.key:
-            cls._registry[cls.key] = cls
-
     def __init__(self, code=None, access_token=None, origin=None):
         self.code = code
         self.access_token = access_token
         self.origin = origin
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if cls.key:
+            cls._registry[cls.key] = cls
 
     @classmethod
     def get_adapter(cls, key):
