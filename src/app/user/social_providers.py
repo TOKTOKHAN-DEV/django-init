@@ -1,3 +1,4 @@
+import datetime
 import json
 from urllib import parse
 
@@ -5,7 +6,6 @@ import jwt
 import requests
 from cryptography.hazmat.primitives import serialization
 from django.conf import settings
-from django.utils import timezone
 from jwt.algorithms import RSAAlgorithm
 from rest_framework.exceptions import ValidationError
 
@@ -195,8 +195,8 @@ class AppleProvider(SocialProvider):
         headers = {"kid": settings.APPLE_KEY_ID}
         payload = {
             "iss": settings.APPLE_TEAM_ID,
-            "iat": timezone.datetime.now(),
-            "exp": timezone.datetime.now() + timezone.timedelta(hours=1),
+            "iat": datetime.datetime.now(),
+            "exp": datetime.datetime.now() + datetime.timedelta(hours=1),
             "aud": "https://appleid.apple.com",
             "sub": settings.APPLE_CLIENT_ID,
         }
