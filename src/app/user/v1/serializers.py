@@ -14,7 +14,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from app.email_log.models import EmailLog
 from app.user.models import User, UserSocialKindChoices
-from app.user.social_adapters import SocialAdapter
+from app.user.social_providers import SocialProvider
 from app.user.validators import validate_password
 from config.exception_handler import SocialUserNotFoundError
 
@@ -90,8 +90,8 @@ class UserSocialLoginSerializer(serializers.ModelSerializer):
         return attrs
 
     def get_social_user_id(self, code, access_token, social_kind):
-        adapter_class = SocialAdapter.get_adapter(social_kind)
-        return adapter_class(code, access_token, self.context["request"].META["HTTP_ORIGIN"]).get_social_user_id()
+        provider = SocialProvider.resolve(social_kind, code, access_token, self.context["request"].META["HTTP_ORIGIN"])
+        return provider.get_social_user_id()
 
     def create(self, validated_data):
         return validated_data["user"]

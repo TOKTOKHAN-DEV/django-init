@@ -10,7 +10,7 @@ from jwt.algorithms import RSAAlgorithm
 from rest_framework.exceptions import ValidationError
 
 
-class SocialAdapter:
+class SocialProvider:
     key = None
     _registry = {}
 
@@ -25,11 +25,11 @@ class SocialAdapter:
             cls._registry[cls.key] = cls
 
     @classmethod
-    def get_adapter(cls, key):
-        adapter_class = cls._registry.get(key)
-        if not adapter_class:
+    def resolve(cls, key, code=None, access_token=None, origin=None):
+        provider_class = cls._registry.get(key)
+        if not provider_class:
             raise ValueError(f"Unsupported social kind: {key}")
-        return adapter_class
+        return provider_class(code, access_token, origin)
 
     def get_access_token(self):
         raise NotImplementedError("Not Implemented 'get_access_token' method")
@@ -38,7 +38,7 @@ class SocialAdapter:
         raise NotImplementedError("Not Implemented 'get_social_user_id' method")
 
 
-class KakaoAdapter(SocialAdapter):
+class KakaoProvider(SocialProvider):
     key = "kakao"
 
     def get_access_token(self):
@@ -71,7 +71,7 @@ class KakaoAdapter(SocialAdapter):
         return data["id"], data["kakao_account"]
 
 
-class NaverAdapter(SocialAdapter):
+class NaverProvider(SocialProvider):
     key = "naver"
 
     def get_access_token(self):
@@ -102,7 +102,7 @@ class NaverAdapter(SocialAdapter):
         return data["response"]["id"], data["response"]
 
 
-class FacebookAdapter(SocialAdapter):
+class FacebookProvider(SocialProvider):
     key = "facebook"
 
     def get_access_token(self):
@@ -136,7 +136,7 @@ class FacebookAdapter(SocialAdapter):
         return data["data"]["user_id"], data["data"]
 
 
-class GoogleAdapter(SocialAdapter):
+class GoogleProvider(SocialProvider):
     key = "google"
 
     def get_access_token(self):
@@ -186,7 +186,7 @@ class GoogleAdapter(SocialAdapter):
         return decoded["sub"], decoded.get("email", "")
 
 
-class AppleAdapter(SocialAdapter):
+class AppleProvider(SocialProvider):
     key = "apple"
 
     def get_access_token(self):
