@@ -200,6 +200,10 @@ Resources:
                   - 'secretsmanager:DescribeSecret'
                   - 'secretsmanager:ListSecretVersionIds'
                   - 'secretsmanager:ListSecrets'
+                  - "scheduler:CreateSchedule"
+                  - "scheduler:DeleteSchedule"
+                  - "scheduler:GetSchedule"
+                  - "scheduler:UpdateSchedule"
                 Resource: '*'
   ExecutionRole:
     Type: AWS::IAM::Role
